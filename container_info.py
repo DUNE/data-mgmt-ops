@@ -148,5 +148,3 @@ usage_by_container(kafka)
 
 # continuation of Kafka Scripts
 kafka.close(timeout = 300)
-                                                                                                                                      167,9         Bot
-
