@@ -99,18 +99,17 @@ def rucio_container_size_summary(target_container_list):
 # Gives you the usage per scope. 
 #This function intentionally does not take inconsideration of duplicate datasets within a container. 
 def rucio_scope_size_summary():
-    sum_of_scopes = {}
     usage_per_scope = []
     all_rses = rseclient.list_rses()
     for rse in all_rses:
-        sumof_datasets = {}
+        sum_of_scopes = {}
         rse_datasets = replicaclient.list_datasets_per_rse(rse['rse'])
         for dataset in rse_datasets:
                try:
                    sum_of_scopes[dataset['scope']] += dataset['bytes']
                except KeyError:
                    sum_of_scopes.update({dataset['scope']: dataset['bytes']})
-        print(sum_of_scopes)
+        print(sum_of_scopes, rse['rse'])
         for key in sum_of_scopes:
             mytoday = datetime.today()
             usage_per_scope.append({'scope': key, 'country': rse['country_name'], 'rse': rse['rse'], 'usage': sum_of_scopes[key],'timestamp': mytoday.isoformat()})
