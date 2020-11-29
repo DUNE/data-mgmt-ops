@@ -1,0 +1,17 @@
+# This file is where you define your pipelines. You can define multiple.
+# # For more information on multiple pipelines, see the documentation:
+# #   https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html
+#
+- pipeline.id: replica
+  path.config: "/usr/share/logstash/pipeline/replica.conf"
+
+- pipeline.id: rse
+  path.config: "/usr/share/logstash/pipeline/rse.conf"
+
+- pipeline.id: did
+  path.config: "/usr/share/logstash/pipeline/did.conf"
+
+- pipeline.id: account
+  path.config: "/usr/share/logstash/pipeline/account.conf"
+#- pipeline.id: request
+#  path.config: "/usr/share/logstash/pipeline/request.conf"
