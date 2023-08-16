@@ -4,14 +4,16 @@ import collections
 import re
 import json
 import logging
+import time #added
 from rucio.client.rseclient import RSEClient
 from rucio.client.didclient import DIDClient
 from rucio.client.replicaclient import ReplicaClient
 from kafka import KafkaProducer
 from datetime import datetime
 
+print('Start Time:', datetime.now()) # Delete later
 
-rucio_account = 'navila'
+rucio_account = 'jyeung'
 # DID Client
 didclient  = DIDClient(account = rucio_account)
 
@@ -24,7 +26,7 @@ rselist = rseclient.list_rses()
 
 # kafka scripts
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(name)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(name)s - %(message)s')
 
 def vs(doc):
     return json.dumps(doc).encode(encoding='utf-8',errors='replace')
@@ -76,10 +78,32 @@ def rucio_container_size_summary(target_container_list):
     total_container_size = 0
     all_rses = rseclient.list_rses()
     for rse in all_rses:
+        print('Current RSE:', rse['rse'])
         sumof_datasets = {}
-        rse_datasets = replicaclient.list_datasets_per_rse(rse['rse'])
+
+        for i in range(10):
+            try:
+                rse_datasets = replicaclient.list_datasets_per_rse(rse['rse'])
+                break
+            except:
+                print('Rucio Encountered an Error. Retrying...')
+                time.sleep(30)
+                if i == 9:
+                    print('Too many failed attempts. Shutting down')
+
         for dataset in rse_datasets:
-            parentdids = didclient.list_parent_dids(scope = dataset['scope'], name = dataset['name'])
+            print(f"Dataset - Scope: {dataset['scope']}, Name: {dataset['name']}")
+
+            for i in range(10):
+                try:
+                    parentdids = didclient.list_parent_dids(scope = dataset['scope'], name = dataset['name'])
+                    break
+                except:
+                    print('Rucio Encountered an Error. Retrying...')
+                    time.sleep(30)
+                    if i ==9:
+                        print('Too many failed attempts. Shutting down')
+            
             for parentdid_info in parentdids:
                 for targetcontainer in target_container_list:
                     if parentdid_info['scope'] == targetcontainer['scope'] and parentdid_info['name'] == targetcontainer['name']:
@@ -109,7 +133,7 @@ def rucio_scope_size_summary():
                    sum_of_scopes[dataset['scope']] += dataset['bytes']
                except KeyError:
                    sum_of_scopes.update({dataset['scope']: dataset['bytes']})
-        print(sum_of_scopes, rse['rse'])
+        print((sum_of_scopes, rse['rse']))
         for key in sum_of_scopes:
             mytoday = datetime.today()
             usage_per_scope.append({'scope': key, 'country': rse['country_name'], 'rse': rse['rse'], 'usage': sum_of_scopes[key],'timestamp': mytoday.isoformat()})
@@ -120,7 +144,7 @@ def rucio_scope_size_summary():
 def usage_by_scope(kafka):
     rucio_scope_size = rucio_scope_size_summary()
     for doc in rucio_scope_size:
-        logger.debug(doc)
+        logger.info(doc)
         kafka.send(topic = scope_kafka_topic, value = doc)
         kafka.flush(timeout = 200)
 usage_by_scope(kafka)
@@ -129,18 +153,26 @@ usage_by_scope(kafka)
 def usage_by_container(kafka):
     target_container_list = []
     count = 0
-    file1 = open('container_list.txt', 'r')
+    file1 = open('container_list.txt', 'r') # REVERT BACk
     for line in file1:
+         print()
+         print('CURRENT CONTAINER:', line)
+         print()
          count += 1
          scope_and_name = line.split(':')
+         print()
+         print('Scope and Name:', scope_and_name)
+         print()
          scope = scope_and_name[0]
          name = scope_and_name[1].strip()
          target_container_list.insert(len(target_container_list), { 'scope': scope , 'name': name })
-         container_size = rucio_container_size_summary(target_container_list)
-         for doc in container_size:
-             logger.debug(doc)
-             kafka.send(topic = container_kafka_topic, value = doc)
-             kafka.flush(timeout = 300)
+    container_size = rucio_container_size_summary(target_container_list)
+    for doc in container_size:
+        logger.info(doc)
+        print(doc) # DELETE LATER
+        kafka.send(topic = container_kafka_topic, value = doc)
+        kafka.flush(timeout = 300)
+    print('Usage By Container Loop Completed at:', datetime.now())
  #close files
     file1.close()
 usage_by_container(kafka)
