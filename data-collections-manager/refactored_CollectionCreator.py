@@ -7,8 +7,6 @@ for dunepro use only
 import sys
 import os
 import argparse
-import ast
-import subprocess
 import json
 
 import samweb_client
