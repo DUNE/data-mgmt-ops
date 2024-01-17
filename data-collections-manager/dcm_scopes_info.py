@@ -22,7 +22,11 @@ rule_client = RuleClient()
 client = Client(account="dunepro")
 scope_client = ScopeClient()
 
-
+no_dunepro = ['ivm.A', 'user.jperry', 'user.illingwo',
+              'user.bjwhite', 'user.timm', 'test', 'wyuantest',
+              'user.wyuan', 'testpro', 'amcnab_test', 'calcuttj_test',
+              'dc4-interactive-tests', 'usertests', 'lbne', 'justin-logs'
+             ]
 def get_info(scope, datasets):
     """
     Get replication rule information for specified datasets.
@@ -35,8 +39,12 @@ def get_info(scope, datasets):
     info = []
     if scope is not None:
         scopes = [scope]
+    else:
+        scopes = scope_client.list_scopes()
 
     for scope in scopes:
+        if scope in no_dunepro:
+            continue
         for mdata in rule_client.list_replication_rules({'scope': scope}):
             if datasets:
                 # check a given dataset/container
@@ -69,12 +77,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--scope', type=str, help='If scope is not specify, it would look at every scope in rucio')
     parser.add_argument('--datasets_file', type=str, help='file with datasets list')
-    parser.add_argument('--out_put_file', default='test.sjon', type=str, help='name of the json file containing the information')
+    parser.add_argument('--output_file', default='test.json', type=str, help='name of the json file containing the information')
     args = parser.parse_args()
     scope = args.scope
-    if not scope:
-        print("must provide a scope")
-        sys.exit(0)
     datasets = []
     if args.datasets_file:
         with open(args.datasets_file) as file:
@@ -84,6 +89,6 @@ if __name__ == "__main__":
 
     info = get_info(scope, datasets)
     json = json.dumps(info)
-    f = open(args.out_put_file, 'w')
+    f = open(args.output_file, 'w')
     f.write(json)
     f.close()
