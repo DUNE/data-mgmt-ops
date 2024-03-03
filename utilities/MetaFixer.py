@@ -189,6 +189,8 @@ class MetaFixer:
     def dupfinder(self,filemd=None):
         ' loop over parents, look for children and look for duplicates'
         thedid = "%s:%s"%(filemd["namespace"],filemd["name"])
+        md = filemd["metadata"]
+        tag = "%s_%s_%s_%s_%s"%(md["core.application.version"],md["core.data_tier"],md["core.data_stream"],md["dune.campaign"],md["core.file_format"])
         if self.verbose:
             print ("---------------------------\n")
             print ("thefile",thedid)
@@ -210,14 +212,21 @@ class MetaFixer:
                     continue
                 count = 0
                 for child in children:
-                    #print (child) 
-                    count += 1
+                    
                     childmd = mc_client.get_file(fid=child["fid"],with_metadata=True,with_provenance=True)
+                    cm = childmd["metadata"]
+                    #print ("child", jsondump(childmd))
+                    ctag = "%s_%s_%s_%s_%s"%(cm["core.application.version"],cm["core.data_tier"],cm["core.data_stream"],cm["dune.campaign"],cm["core.file_format"])
+
                     childdid = "%s:%s"%(childmd["namespace"],childmd["name"])
                     #print (childdid)
-                    message = "%s, ERROR duplicate child %d, %s\n"%(thedid,count, childdid)
-                    print (message)
-                    self.errfile.write(message)
+                    if ctag == tag:
+                        count += 1
+                        
+                        if count > 1:
+                            message = "%s, ERROR duplicate child %d, %s %s\n"%(thedid,count, childdid,ctag)
+                            print (message)
+                            self.errfile.write(message)
 
                 
         
@@ -244,7 +253,8 @@ if __name__ == '__main__':
     data_tier = "full-reconstructed"
     workflow = 1630
     FIX = False
-    test = "parentage"
+    TESTME = False
+    test = "duplicates"
     if len(sys.argv) < 2:
         print ("normally should add a data_tier, and workflow #, default to %s, %s"%(data_tier, workflow))
         print ("to actually run, the 3rd argument needs to be run '")
@@ -254,17 +264,21 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         if sys.argv[3] == "run":
             FIX = True  
+        if sys.argv[3] == "test":
+            TESTME = True
 
     for workflow in range(1610,1630):
         
         testquery = ""
-        test = "parentage"
         if test == "parentage":
-            testquery =  "files from dune:all where core.data_tier='%s'  and core.run_type='fardet-vd' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
+            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
         print ("top level query metacat query \" ",testquery, "\"")
         if test == "duplicates":
 
             testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
+
+        if TESTME:
+            testquery += " limit 100"
         print (testquery)
 
         #parentquery = (parentchecker(testquery))
