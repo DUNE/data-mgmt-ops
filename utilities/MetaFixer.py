@@ -255,7 +255,7 @@ if __name__ == '__main__':
         if sys.argv[3] == "run":
             FIX = True  
 
-    for workflow in range(1629,1630):
+    for workflow in range(1610,1630):
         
         testquery = ""
         test = "parentage"
