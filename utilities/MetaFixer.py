@@ -260,7 +260,7 @@ if __name__ == '__main__':
         testquery = ""
         test = "parentage"
         if test == "parentage":
-            testquery =  "files from dune:all where core.data_tier='%s'  and core.run_type='fardet-vd' and dune.workflow['workflow_id'] in (%d) limit 10 "%(data_tier,workflow)
+            testquery =  "files from dune:all where core.data_tier='%s'  and core.run_type='fardet-vd' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
         print ("top level query metacat query \" ",testquery, "\"")
         if test == "duplicates":
 
