@@ -39,9 +39,9 @@ mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
 
 
 class MetaFixer:
-    ''' Class to create data collections'''
+    ''' Class to check and fix metadata'''
 
-    def __init__(self,verbose=False,errname="error.txt",fix=None):
+    def __init__(self,verbose=False,errname="error.txt",test=None,fix=None):
         ''' 
         __init__ initialization, does very little
 
@@ -55,6 +55,7 @@ class MetaFixer:
         self.skip=0
         self.errfile=open(errname,'w')
         self.errfile.write(errname+"\n")
+        self.test=test
 
     
     
@@ -102,10 +103,9 @@ class MetaFixer:
             except:
                 print ("failed at file",count,thedid)
                 break
-            self.checker(md,check="parentage")
-            # if self.verbose:
-            #     print(json.dumps(md,indent=4))
-            # count namespaces
+            
+            self.checker(md,test)
+
             value = file["namespace"]
             if value in typecount["namespace"]:
                 typecount["namespace"][value] +=1
@@ -139,6 +139,8 @@ class MetaFixer:
     def checker(self, filemd=None,check="parentage"):
         ' check various aspects of the file '
         did = "%s:%s"%(filemd["namespace"],filemd["name"])
+        if check == "duplicates":
+            self.dupfinder(filemd=filemd)
         if check == "parentage":
             if "parents" in filemd and len(filemd["parents"])> 0:
                 # has some parentage, look at it. 
@@ -184,7 +186,43 @@ class MetaFixer:
                 else:
                     self.errfile.write("%s, no parents or core.parents\n"%did)
 
+    def dupfinder(self,filemd=None):
+        ' loop over parents, look for children and look for duplicates'
+        thedid = "%s:%s"%(filemd["namespace"],filemd["name"])
+        if self.verbose:
+            print ("---------------------------\n")
+            print ("thefile",thedid)
+        if "parents" in filemd and len(filemd["parents"])> 0:
+            # has some parentage, look at it. 
+            parents = filemd["parents"]
+            for p in parents:
+                parentmd = mc_client.get_file(fid=p["fid"],with_metadata=True,with_provenance=True)
+                if self.verbose:
+                    print ("the parent, %s:%s"%(parentmd["namespace"],parentmd["name"]))
+                children = parentmd["children"]
+                if len(children) == 0:
+                    message = "%s, ERROR no children\n"%(thedid)
+                    self.errfile.write(message)
+                    print (message)
+                if self.verbose:
+                    print ("had %d children"%len(children))
+                if len(children) == 1:
+                    continue
+                count = 0
+                for child in children:
+                    #print (child) 
+                    count += 1
+                    childmd = mc_client.get_file(fid=child["fid"],with_metadata=True,with_provenance=True)
+                    childdid = "%s:%s"%(childmd["namespace"],childmd["name"])
+                    #print (childdid)
+                    message = "%s, ERROR duplicate child %d, %s\n"%(thedid,count, childdid)
+                    print (message)
+                    self.errfile.write(message)
+
                 
+        
+
+
 
     def cleanup(self):
         self.errfile.close()
@@ -198,13 +236,15 @@ def parentchecker(query):
 
 
 
+
+
                     
 if __name__ == '__main__':
 
     data_tier = "full-reconstructed"
     workflow = 1630
     FIX = False
-    
+    test = "parentage"
     if len(sys.argv) < 2:
         print ("normally should add a data_tier, and workflow #, default to %s, %s"%(data_tier, workflow))
         print ("to actually run, the 3rd argument needs to be run '")
@@ -215,13 +255,18 @@ if __name__ == '__main__':
         if sys.argv[3] == "run":
             FIX = True  
 
-    for workflow in range(1610,1630):
+    for workflow in range(1629,1630):
         
-
-
-        testquery =  "files from dune:all where core.data_tier='%s' and core.run_type='fardet-vd' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
+        testquery = ""
+        test = "parentage"
+        if test == "parentage":
+            testquery =  "files from dune:all where core.data_tier='%s'  and core.run_type='fardet-vd' and dune.workflow['workflow_id'] in (%d) limit 10 "%(data_tier,workflow)
         print ("top level query metacat query \" ",testquery, "\"")
-        
+        if test == "duplicates":
+
+            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
+        print (testquery)
+
         #parentquery = (parentchecker(testquery))
         #print ("parent checker",parentquery)
         summary = mc_client.query(query=testquery,summary="count")
@@ -230,9 +275,9 @@ if __name__ == '__main__':
         # if 0 == checksummary["count"]:
         #     print ("you seem to have parents for all files - quitting")
         #     sys.exit(0)
-        now = datetime.datetime.now().timestamp()
+        now = "%10.0f"%datetime.datetime.now().timestamp()
 
-        fixer=MetaFixer(verbose=False,errname="error_%s_%d_%s.txt"%(data_tier,workflow,now),fix=FIX)
+        fixer=MetaFixer(verbose=False,errname="%s_%s_%d_%s.txt"%(test,data_tier,workflow,now),test=test, fix=FIX)
         thelimit=100
         theskip=0
         for i in range(0, 100000):
