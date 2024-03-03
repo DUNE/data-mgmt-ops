@@ -53,7 +53,7 @@ FAST = False
 if len(sys.argv) > 1 and sys.argv[1] == "fast":
     FAST = True
 
-for workflow in range(1500,1700) :
+for workflow in range(1610,1630) :
     for data_tier in ["full-reconstructed","root-tuple-virtual"]:
         #if data_tier != "full-reconstructed": continue
         testquery="files from dune:all where core.data_tier='%s' and core.run_type='fardet-vd' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
