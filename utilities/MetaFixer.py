@@ -219,15 +219,23 @@ class MetaFixer:
                     
                     childmd = mc_client.get_file(fid=child["fid"],with_metadata=True,with_provenance=True)
                     cm = childmd["metadata"]
-                    #print ("child", jsondump(childmd))
-                    ctag = "%s_%s_%s_%s_%s_%s_%s"%(childmd["namespace"],cm["core.application.version"],md["core.application.name"],cm["core.data_tier"],cm["core.data_stream"],cm["dune.campaign"],cm["core.file_format"])
-
                     childdid = "%s:%s"%(childmd["namespace"],childmd["name"])
+                    if childdid == thedid:
+                        continue
+                    #print ("child", jsondump(childmd))
+                    ctag = "BAD"
+                    try:
+                        ctag = "%s_%s_%s_%s_%s_%s_%s"%(childmd["namespace"],cm["core.application.version"],md["core.application.name"],cm["core.data_tier"],cm["core.data_stream"],cm["dune.campaign"],cm["core.file_format"])
+                    except:
+                        error = "%s, ERROR ctag couldn't be made %s\n"%(thedid,childdid)
+                        self.errfile.write(error)
+                        continue
+                    
                     #print (childdid)
                     if ctag == tag:
                         count += 1
                         
-                        if count > 1:
+                        if count > 0:
                             message = "%s, ERROR duplicate file %d, %s %s\n"%(thedid,count, childdid,ctag)
                             print (message)
                             self.errfile.write(message)
@@ -272,7 +280,7 @@ if __name__ == '__main__':
             TESTME = True
 
     #for workflow in [1638,1650]:
-    hd = [1650,1638,1630,1631,1632,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
+    hd = [1630,1631,1632,1650,1638,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
     vd = [1583,1590,1591,1593] + list(range(1610,1630))
 
           
@@ -284,7 +292,7 @@ if __name__ == '__main__':
         print ("top level query metacat query \" ",testquery, "\"")
         if test == "duplicates":
 
-            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
+            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)"%(data_tier,workflow)
 
         if TESTME:
             testquery += " limit 100"
@@ -312,5 +320,5 @@ if __name__ == '__main__':
             if len(thelist) <= 0:
                 print ("readed end of list at",theskip)   
             theskip += thelimit
-        fixer.cleanup()
+        fixer.cleanup() 
 
