@@ -254,7 +254,7 @@ if __name__ == '__main__':
     workflow = 1630
     FIX = False
     TESTME = False
-    test = "duplicates"
+    test = "parentage"
     if len(sys.argv) < 2:
         print ("normally should add a data_tier, and workflow #, default to %s, %s"%(data_tier, workflow))
         print ("to actually run, the 3rd argument needs to be run '")
@@ -267,7 +267,7 @@ if __name__ == '__main__':
         if sys.argv[3] == "test":
             TESTME = True
 
-    for workflow in range(1610,1630):
+    for workflow in [1583,1590,1591,1593]:
         
         testquery = ""
         if test == "parentage":
