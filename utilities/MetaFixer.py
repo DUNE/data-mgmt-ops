@@ -1,4 +1,8 @@
-"""metacat MetaFixer"""
+"""metacat MetaFixer
+
+evaluate and fix metacat for files
+
+"""
 ##
 # @mainpage MetaFixer
 #
@@ -190,7 +194,7 @@ class MetaFixer:
         ' loop over parents, look for children and look for duplicates'
         thedid = "%s:%s"%(filemd["namespace"],filemd["name"])
         md = filemd["metadata"]
-        tag = "%s_%s_%s_%s_%s"%(md["core.application.version"],md["core.data_tier"],md["core.data_stream"],md["dune.campaign"],md["core.file_format"])
+        tag = "%s_%s_%s_%s_%s_%s_%s"%(filemd["namespace"],md["core.application.version"],md["core.application.name"],md["core.data_tier"],md["core.data_stream"],md["dune.campaign"],md["core.file_format"])
         if self.verbose:
             print ("---------------------------\n")
             print ("thefile",thedid)
@@ -216,7 +220,7 @@ class MetaFixer:
                     childmd = mc_client.get_file(fid=child["fid"],with_metadata=True,with_provenance=True)
                     cm = childmd["metadata"]
                     #print ("child", jsondump(childmd))
-                    ctag = "%s_%s_%s_%s_%s"%(cm["core.application.version"],cm["core.data_tier"],cm["core.data_stream"],cm["dune.campaign"],cm["core.file_format"])
+                    ctag = "%s_%s_%s_%s_%s_%s_%s"%(childmd["namespace"],cm["core.application.version"],md["core.application.name"],cm["core.data_tier"],cm["core.data_stream"],cm["dune.campaign"],cm["core.file_format"])
 
                     childdid = "%s:%s"%(childmd["namespace"],childmd["name"])
                     #print (childdid)
@@ -224,7 +228,7 @@ class MetaFixer:
                         count += 1
                         
                         if count > 1:
-                            message = "%s, ERROR duplicate child %d, %s %s\n"%(thedid,count, childdid,ctag)
+                            message = "%s, ERROR duplicate file %d, %s %s\n"%(thedid,count, childdid,ctag)
                             print (message)
                             self.errfile.write(message)
 
@@ -254,7 +258,7 @@ if __name__ == '__main__':
     workflow = 1630
     FIX = False
     TESTME = False
-    test = "parentage"
+    test = "duplicates"
     if len(sys.argv) < 2:
         print ("normally should add a data_tier, and workflow #, default to %s, %s"%(data_tier, workflow))
         print ("to actually run, the 3rd argument needs to be run '")
@@ -267,8 +271,13 @@ if __name__ == '__main__':
         if sys.argv[3] == "test":
             TESTME = True
 
-    for workflow in [1583,1590,1591,1593]:
-        
+    #for workflow in [1638,1650]:
+    hd = [1650,1638,1630,1631,1632,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
+    vd = [1583,1590,1591,1593] + list(range(1610,1630))
+
+          
+    for workflow in hd:
+
         testquery = ""
         if test == "parentage":
             testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
