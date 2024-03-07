@@ -56,15 +56,14 @@ def tagmaker(metadata=None):
 def jsondump(adict):
     return json.dumps(adict,indent=4)          
 
-def ChildNuker(parentfid=None,children=[],verbose=False,fix=False,level=0):
+def ChildNuker(myfid=None,children=[],verbose=False,fix=False,level=0):
     level += 1
     # expects children to be a list of child id's      
     if verbose:
-        print ("level %d, %s had %d children"%(level, parentfid,len(children)))
+        print ("level %d, %s had %d children"%(level, myfid,len(children)))
     if len(children) == 0:
         return 0
     count = 0
-    thefid = parentfid
     for child in children:
         #print ("child",jsondump(child))
         childfid = child["fid"]
@@ -74,7 +73,7 @@ def ChildNuker(parentfid=None,children=[],verbose=False,fix=False,level=0):
             print ("level ",level,", child is",child["fid"],childdid)
         if "children" in childmd:
             grandchildren = childmd["children"]
-            check = ChildNuker(parentfid=childfid,children=grandchildren, verbose=verbose, fix=fix,level=level)
+            check = ChildNuker(myfid=childfid,children=grandchildren, verbose=verbose, fix=fix,level=level)
         
 
         success = NukeMe(myfid=childfid,verbose=verbose,fix=fix,level=level)
@@ -84,12 +83,12 @@ def ChildNuker(parentfid=None,children=[],verbose=False,fix=False,level=0):
 
 def NukeMe(myfid=None,verbose=False,fix=False,level=None):
     success = False
-    print ("level",level,", plan to nuke ",myfid) 
+    #print ("level",level,", plan to nuke ",myfid) 
     mymd = mc_client.get_file(fid=myfid,with_metadata=True,with_provenance=True)
-    mydid = didmaker(mymd["namespace"],mymd["name"])
-    mytier = mymd["metadata"]["core.data_tier"]
-    grandchildren = mymd["children"]
     mytag = tagmaker(mymd["metadata"])
+    print ("level",level,", plan to nuke ",myfid,mytag) 
+    mydid = didmaker(mymd["namespace"],mymd["name"])
+    grandchildren = mymd["children"]
     if len(grandchildren)>0:
 
         print ("level",level,"cannot nuke",myfid,"as it has children",grandchildren)
@@ -121,17 +120,24 @@ def RemoveMeFromParents(myfid=None,level=None):
         parentfid = parent["fid"]
         parentmd = mc_client.get_file(fid=parentfid,with_metadata=True, with_provenance=True)
         
-        ancestry = parentmd["children"]
+        siblings = parentmd["children"]
         print ("level",level,"parent search",myfid,parentfid,tagmaker(parentmd["metadata"]))
-        if myfid in ancestry:
-            print ("Found the parent",parentfid, " found myself", myfid)
-            print (ancestry)
-            print ("level",level,"want to remove",myfid,"from",parents)
+        print ("level",level,"old siblings",siblings)
+        if {"fid":myfid} in siblings:
+            #print ("Found the parent",parentfid, " did find myself", myfid,siblings)
+            #print ("level",level,"want to remove",{"fid":myfid},"from",siblings)
+            siblings.remove({"fid":myfid})
+            print ("level",level,"new siblings",siblings)
+        else:
+            print ("Found the parent",parentfid, " did not find myself", myfid,siblings)
+
 
     # here is where you fix the parentage
 
 
-filename = "fardet-vd:nu_dunevd10kt_1x8x6_3view_30deg_1244_30_20230802T144941Z_gen_g4_detsim_hitreco__20240220T223003Z_reco2.root"
+filename = "fardet-vd:nu_dunevd10kt_1x8x6_3view_30deg_1237_60_20230802T013411Z_gen_g4_detsim_hitreco.root"
+
+nukeme = False
 fix = "test"
 verbose = True
 if len(sys.argv) < 3:
@@ -146,12 +152,13 @@ level = 0
 if "children" in md:
     children = md["children"]
     print (myfid,filename,children)
-    ChildNuker(parentfid=myfid,children=children,verbose=verbose,fix=fix,level=level)   
+    ChildNuker(myfid=myfid,children=children,verbose=verbose,fix=fix,level=level)   
 
 
 # do myself
 
-NukeMe(myfid=myfid,verbose=False,fix=False,level=0)
+if nukeme:
+    NukeMe(myfid=myfid,verbose=False,fix=False,level=0)
 
 
 
