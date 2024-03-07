@@ -44,6 +44,15 @@ mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
 def didmaker(namespace=None,name=None):
     return "%s:%s"%(namespace,name)
 
+def tagmaker(metadata=None):
+    fields = "core.application.version","core.application.name","core.data_tier","core.data_stream","dune.campaign","core.file_format"
+    tag = ""
+    for field in fields:
+        tag += "%s_"%metadata[field]
+    tag = tag[0:-1]
+    #print (tag)
+    return tag   
+
 def jsondump(adict):
     return json.dumps(adict,indent=4)          
 
@@ -68,34 +77,61 @@ def ChildNuker(parentfid=None,children=[],verbose=False,fix=False,level=0):
             check = ChildNuker(parentfid=childfid,children=grandchildren, verbose=verbose, fix=fix,level=level)
         
 
-        NukeChild(parentfid=thefid,childfid=childfid,verbose=verbose,fix=fix,level=level)
-        count += 0
+        success = NukeMe(myfid=childfid,verbose=verbose,fix=fix,level=level)
+        if success:
+            count += 0
     return count
 
-def NukeChild(parentfid = None, childfid=None,verbose=False,fix=False,level=None):
-    print ("level",level,", plan to nuke ",childfid,"and fix parentage in",parentfid)
-    childmd = mc_client.get_file(fid=childfid,with_metadata=True,with_provenance=True)
-    childdid = didmaker(childmd["namespace"],md["name"])
-    childtier = childmd["metadata"]["core.data_tier"]
-    grandchildren = childmd["children"]
+def NukeMe(myfid=None,verbose=False,fix=False,level=None):
+    success = False
+    print ("level",level,", plan to nuke ",myfid) 
+    mymd = mc_client.get_file(fid=myfid,with_metadata=True,with_provenance=True)
+    mydid = didmaker(mymd["namespace"],mymd["name"])
+    mytier = mymd["metadata"]["core.data_tier"]
+    grandchildren = mymd["children"]
+    mytag = tagmaker(mymd["metadata"])
     if len(grandchildren)>0:
-        print ("level",level,"cannot nuke",childfid,"as it has children",grandchildren)
-        sys.exit(1)
-    # do whatever it takes to remove this child
-    print ("Nuking ", childdid,childtier)
-    RemoveFromParent(parentfid,childfid)
 
-def RemoveFromParent(parentfid=None,childfid=None):
-    parentmd = mc_client.get_file(fid=parentfid,with_metadata=False, with_provenance=True)
-    ancestry= parentmd["children"]
-    if childfid in ancestry:
-        print ("Found the parent",parentfid, " found myself", childfid)
-        print (ancestry)
+        print ("level",level,"cannot nuke",myfid,"as it has children",grandchildren)
+        if fix:
+            success = False
+            return success
+        else:
+            print(" since in test mode, continue")
+            success = True
+    # do whatever it takes to remove this child
+    print ("level ", level, " Nuking ", myfid, mytag)
+
+    success = True
+    # then remove the parentage
+    if success: 
+        RemoveMeFromParents(myfid=myfid,level=level)
+    return success
+
+def RemoveMeFromParents(myfid=None,level=None):
+    
+    print ("level",level,"remove",myfid)
+    mymd = mc_client.get_file(fid=myfid,with_metadata=False, with_provenance=True)
+    parents = mymd["parents"]
+    if len(parents) < 1:
+        print ("level",level,myfid," had no parents")
+        return
+    for parent in parents:
+        
+        parentfid = parent["fid"]
+        parentmd = mc_client.get_file(fid=parentfid,with_metadata=True, with_provenance=True)
+        
+        ancestry = parentmd["children"]
+        print ("level",level,"parent search",myfid,parentfid,tagmaker(parentmd["metadata"]))
+        if myfid in ancestry:
+            print ("Found the parent",parentfid, " found myself", myfid)
+            print (ancestry)
+            print ("level",level,"want to remove",myfid,"from",parents)
 
     # here is where you fix the parentage
 
 
-filename = "fardet-hd:nu_dune10kt_1x2x6_1412_336_20230826T153311Z_gen_g4_detsim_hitreco__20240222T221256Z_reco2.root"
+filename = "fardet-vd:nu_dunevd10kt_1x8x6_3view_30deg_1244_30_20230802T144941Z_gen_g4_detsim_hitreco__20240220T223003Z_reco2.root"
 fix = "test"
 verbose = True
 if len(sys.argv) < 3:
@@ -106,15 +142,19 @@ else:
 
 md = mc_client.get_file(did=filename,with_metadata=False,with_provenance=True)
 myfid = md["fid"]
-
+level = 0 
 if "children" in md:
     children = md["children"]
     print (myfid,filename,children)
-    ChildNuker(parentfid=myfid,children=children,verbose=verbose,fix=fix,level=0)   
+    ChildNuker(parentfid=myfid,children=children,verbose=verbose,fix=fix,level=level)   
+
+
+# do myself
+
+NukeMe(myfid=myfid,verbose=False,fix=False,level=0)
 
 
 
-myparents = md["parents"]
 
 
         
