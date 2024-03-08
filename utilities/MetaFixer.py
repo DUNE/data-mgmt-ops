@@ -284,7 +284,7 @@ if __name__ == '__main__':
     vd = [1583,1590,1591,1593] + list(range(1610,1630))
 
           
-    for workflow in vd:
+    for workflow in [1630]:
 
         testquery = ""
         if test == "parentage":

@@ -156,9 +156,9 @@ def RemoveMeFromParents(myfid=None,level=None):
 
 if __name__ == '__main__':
 
-    filename = "fardet-vd:nu_dunevd10kt_1x8x6_3view_30deg_1237_60_20230802T013411Z_gen_g4_detsim_hitreco.root"
+    filename = "fardet-vd:nu_dunevd10kt_1x8x6_3view_30deg_1244_30_20230802T144941Z_gen_g4_detsim_hitreco__20240220T223003Z_reco2.root"
 
-    nukeme = False
+    nukeme = True  # this means nuke me as well as descendants
     fix = "test"
     verbose = True
     if len(sys.argv) < 3:
@@ -181,11 +181,3 @@ if __name__ == '__main__':
 
     if nukeme:
         status = NukeMe(myfid=myfid,verbose=False,fix=False,level=0)
-
-
-
-
-
-            
-            
-
