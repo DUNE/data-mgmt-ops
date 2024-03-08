@@ -108,18 +108,21 @@ def NukeMe(myfid=None,verbose=False,fix=False,level=0):
     success *= ActualNuke(myfid=myfid,verbose=verbose,fix=fix,level=level)
     # then remove the parentage
     if success: 
-        RemoveMeFromParents(myfid=myfid,level=level)
+        success *= RemoveMeFromParents(myfid=myfid,verbose=verbose,fix=fix,level=level)
     print (indent[level],"NukeMe: have finished nuking",myfid,success)
     return success
 
 def ActualNuke(myfid=None,verbose=False,fix=False,level=-1):
-    print (indent[level],"this is where you would code the removal of ",myfid)
+    if fix:
+        print (indent[level],"this is where you would code the removal of ",myfid)
+    else:
+        print (indent[level],"this is where you would remove",myfid, "if fix were true")
     success = True
     print (indent[level],"I have nuked",myfid,success)
     return success
 
 
-def RemoveMeFromParents(myfid=None,level=None):
+def RemoveMeFromParents(myfid=None,verbose=False,fix=False,level=None):
     success = True
     print (indent[level],"level",level,"tell my parents",myfid)
     mymd = mc_client.get_file(fid=myfid,with_metadata=False, with_provenance=True)
@@ -142,15 +145,15 @@ def RemoveMeFromParents(myfid=None,level=None):
             #print ("level",level,"want to remove",{"fid":myfid},"from",siblings)
             siblings.remove({"fid":myfid})
             print (indent[level],"level",level,"new siblings",siblings)
-            print (indent[level],"this is where you would fix the parentage")
+            if fix:
+                print (indent[level],"code parentage removal here")
+            else:
+                print (indent[level],"this is where you would fix the parentage if fix were set")
             success *= True
         else:
             print (indent[level],"Found the parent",parentfid, " did not find myself", myfid,siblings)
-            success *= False
-    
+            success *= False  
 
-
-    # here is where you fix the parentage
     print (indent[level],"RemoveMeFromParents",myfid,success)
     return success
 
@@ -159,14 +162,15 @@ if __name__ == '__main__':
     filename = "fardet-vd:nu_dunevd10kt_1x8x6_3view_30deg_1244_30_20230802T144941Z_gen_g4_detsim_hitreco__20240220T223003Z_reco2.root"
 
     nukeme = True  # this means nuke me as well as descendants
-    fix = "test"
+    fix = False
     verbose = True
     if len(sys.argv) < 3:
         print ("arguments are fid, test/run")
     else:    
         filename = sys.argv[1]
-        fix = sys.argv[2]   
+        fix = sys.argv[2] == "run"   
 
+    print ("removing",filename,"and children in mode fix=",fix)
     md = mc_client.get_file(did=filename,with_metadata=True,with_provenance=True)
     myfid = md["fid"]
     mytag = tagmaker(md["metadata"])
