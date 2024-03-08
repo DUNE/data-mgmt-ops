@@ -4,6 +4,26 @@ Please work on a branch and then do a pull request
 
 Please list utilities and their use in this file.
 
+## future duplicate nuking framework
+
+Script MetaNuker is in development 
+
+python MetaNuker.py <file to nuke with all its children> <test/fix>
+
+Right now this just runs the search. Expert will need to implement the methods:
+
+    success = ActualNuke(myfid=None,verbose=False,fix=False,level=-1):
+    
+Nukeme is supposed to retire the file and tell rucio it is gone.Here fid is the metacat fileid (hex field) of the file, verbose sets writing level, fix means actually do the nuke, level keeps track of what level you are in the tree from the top level file. 
+
+    success = RemoveMeFromParents(myfid=myfid,verbose=verbose,fix=fix,level=level)
+
+
+
+
+
+## Metafixer.py does checks and fixes parentage
+
 python MetaFixer.py  <data_tier> dummy <run>
 
 it can do either parentage fixes (largely done) or duplicate searches
@@ -38,9 +58,6 @@ the program chunks the query up into groups of 100.
 
 One could either put the duplicate nuking code in this script or run over the lists it produces, if one runs over the lists, you need to start at the most childy data_tier and work up from there to avoid leaving orphans
 
-### future duplicate nuking
-
-Script MetaNuker is in development to a file and all of its children cleanly.  It gets VERY complicated with multiple layers. 
 
 
 
