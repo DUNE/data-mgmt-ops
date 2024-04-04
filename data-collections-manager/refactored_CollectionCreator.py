@@ -9,7 +9,6 @@ import os
 import argparse
 import json
 
-import samweb_client
 from metacat.webapi import MetaCatClient
 
 
@@ -66,7 +65,8 @@ def makequery(meta, remove_from_query):
         if meta[item] is None:
             continue
         if "." not in item:
-            continue
+            if "namespace" not in item:
+               continue
         val = meta[item]
         if type(val) == str and "-" in val and "'" not in val:
             val = "\'%s\'" % val
@@ -108,8 +108,11 @@ def makedataset(query, name, meta):
         else:
             cleanmeta[x] = meta[x]
 
-    #namespace = os.getenv("USER")
-    namespace = cleanmeta['core.run_type']
+    if os.getenv("USER") == "dunepro":
+        namespace  = cleanmeta['core.run_type']
+    else:
+        namespace = os.getenv("USER")
+
     did = "%s:%s" % (namespace, name)
     test = metacat.get_dataset(did)
 
@@ -122,51 +125,6 @@ def makedataset(query, name, meta):
         print("dataset already exist")
 
     print(f"MetaCat dataset: {did}")
-
-
-def make_sam_query(query):
-    """
-    Converts a general query string into a SAM-specific query format.
-    Args:
-        query (str): The initial query string that needs to be converted into the SAM format.
-    Returns:
-        str: A modified query string formatted for SAM, or None if the input query is not valid for conversion.
-    Notes:
-        - The function expects the input query string to contain the word 'where'.
-        - It modifies the query string by removing certain prefixes and replacing specific keywords.
-        - The function adds 'availability:anylocation' to the start of the query to comply with SAM syntax.
-    """
-    s = query.split("where")
-    if len(s) < 2:
-        return None
-    q = s[1]
-    q = q.replace("core.", "")
-    q = q.replace("dune_mc.", "DUNE_MC.")
-    q = q.replace("dune.", "DUNE.")
-    q = q.replace("application.", "")
-    q = q.replace("'", "")
-    q = q.replace("ordered", "")
-    q = q.replace("created_timestamp", "create_date")
-    q = q.replace("limit ", " with limit ")
-    q = " availability:anylocation and " + q
-
-    return q
-
-
-def makesamdataset(query, thename):
-    """
-    Creates a SAM dataset definition with a specified query and name.
-    The dataset definition is then created in SAM using the provided query.
-    Args:
-        query (str): The query string defining the criteria for the dataset.
-        thename (str): The name to be appended to the username for creating the dataset definition.
-    """
-    # samweb_client.exceptions.SAMWebForbidden:
-    # Dataset definition names must contain the username (separated from any other text by dashes or underscores)
-    defname = os.getenv("USER") + "__" + thename
-    samweb.createDefinition(defname, dims=query, description=query)
-    print(f"SAM dataset:	{defname}")
-
 
 def convert_size(size):
     """Converts a file size to a human-readable format with appropriate units."""
@@ -230,7 +188,6 @@ if __name__ == "__main__":
     # This block will run if the script is executed directly.
     # It initializes the parser and processes command line arguments.
     metacat = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_prod/app')
-    samweb = samweb_client.SAMWebClient(experiment='dune')
     metadata, args = setup()
     thequery = makequery(metadata, args.remove_from_query)
     dataset_name = make_name(metadata)
@@ -238,17 +195,7 @@ if __name__ == "__main__":
     if not metacat_files:
         print("===> MetaCat query return 0 files")
     print("MetaCat query \"", thequery, "\"\n")
+    print(dataset_name)
     print_summary(metacat_files)
-
-    samquery = make_sam_query(thequery)
-    sam_result = samweb.listFilesSummary(samquery)
-    if not sam_result:
-        print("===> SAM query return 0 files")
-    print("------------------------")
-    print("SAM query \"", samquery, "\"\n")
-    print(f"Files:       {sam_result['file_count']}")
-    print("------------------------")
-
     if not args.test:
         makedataset(thequery, dataset_name, metadata)
-        makesamdataset(samquery, dataset_name)
