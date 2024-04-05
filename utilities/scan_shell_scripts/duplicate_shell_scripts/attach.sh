@@ -1,0 +1,21 @@
+#!/bin/bash
+for file in `cat tonuke.1530allmcfiles` ; do rucio attach usertests:1530allmcfiles $file ; done
+for file in `cat tonuke.1532allmcfiles` ; do rucio attach usertests:1532allmcfiles $file ; done
+for file in `cat tonuke.1533allmcfiles` ; do rucio attach fardet-hd:1533allmcfiles $file ; done
+for file in `cat tonuke.1535allmcfiles` ; do rucio attach fardet-hd:1535allmcfiles $file ; done
+for file in `cat tonuke.1556allmcfiles` ; do rucio attach usertests:1556allmcfiles $file ; done
+for file in `cat tonuke.1557allmcfiles` ; do rucio attach usertests:1557allmcfiles $file ; done
+for file in `cat tonuke.1558allmcfiles` ; do rucio attach usertests:1558allmcfiles $file ; done
+for file in `cat tonuke.1561allmcfiles` ; do rucio attach usertests:1561allmcfiles $file ; done
+for file in `cat tonuke.1562allmcfiles` ; do rucio attach fardet-hd:1562allmcfiles $file ; done
+for file in `cat tonuke.1563allmcfiles` ; do rucio attach fardet-hd:1563allmcfiles $file ; done
+for file in `cat tonuke.1567allmcfiles` ; do rucio attach fardet-hd:1567allmcfiles $file ; done
+for file in `cat tonuke.1568allmcfiles` ; do rucio attach fardet-hd:1568allmcfiles $file ; done
+for file in `cat tonuke.1569allmcfiles` ; do rucio attach fardet-hd:1569allmcfiles $file ; done
+for file in `cat tonuke.1570allmcfiles` ; do rucio attach fardet-hd:1570allmcfiles $file ; done
+for file in `cat tonuke.1571allmcfiles` ; do rucio attach fardet-hd:1571allmcfiles $file ; done
+for file in `cat tonuke.1572allmcfiles` ; do rucio attach fardet-hd:1572allmcfiles $file ; done
+for file in `cat tonuke.1574allmcfiles` ; do rucio attach fardet-hd:1574allmcfiles $file ; done
+for file in `cat tonuke.1575allmcfiles` ; do rucio attach fardet-hd:1575allmcfiles $file ; done
+for file in `cat tonuke.1576allmcfiles` ; do rucio attach fardet-hd:1576allmcfiles $file ; done
+for file in `cat tonuke.1577allmcfiles` ; do rucio attach fardet-hd:1577allmcfiles $file ; done

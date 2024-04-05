@@ -1,0 +1,2 @@
+rucio-admin -a root identity add --account=aoranday --type X509 --id '/DC=org/DC=cilogon/C=US/O=Fermi National Accelerator Laboratory/OU=People/CN=Alex Oranday/CN=UID:aoranday' --email=alejandro.oranday@cern.ch 
+rucio-admin -a root identity add --account athea --type X509 --id '/DC=org/DC=cilogon/C=US/O=Fermi National Accelerator Laboratory/OU=People/CN=Alessandro Thea/CN=UID:athea' --email alessandro.thea@cern.ch 

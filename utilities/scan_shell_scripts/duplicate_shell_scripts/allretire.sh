@@ -1,0 +1,22 @@
+#!/bin/bash
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_66953322
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_66961149
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_74942485
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_75059485
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_66954631
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_7143369
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_66957261
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_75271847
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_76105544
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_7779664
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_52324982
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_51534357
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_7789978
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_7156323
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_66340472
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_6798948
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_75154971
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_51122176
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_7790356
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_6816620
+./retire_full_rucio_dataset.sh protodune-sp:protodune-sp_74958669
