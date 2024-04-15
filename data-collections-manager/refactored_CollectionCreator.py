@@ -10,6 +10,12 @@ import argparse
 import json
 
 from metacat.webapi import MetaCatClient
+from rucio.client.client import Client
+from rucio.client.didclient import DIDClient
+from rucio.common.exception import Duplicate, DataIdentifierNotFound
+
+client = Client(account=os.getenv("USER"))
+did_client = DIDClient()
 
 
 def make_name(tags):
@@ -66,7 +72,7 @@ def makequery(meta, remove_from_query):
             continue
         if "." not in item:
             if "namespace" not in item:
-               continue
+                continue
         val = meta[item]
         if type(val) == str and "-" in val and "'" not in val:
             val = "\'%s\'" % val
@@ -109,7 +115,7 @@ def makedataset(query, name, meta):
             cleanmeta[x] = meta[x]
 
     if os.getenv("USER") == "dunepro":
-        namespace  = cleanmeta['core.run_type']
+        namespace = cleanmeta['core.run_type']
     else:
         namespace = os.getenv("USER")
 
@@ -126,6 +132,72 @@ def makedataset(query, name, meta):
 
     print(f"MetaCat dataset: {did}")
 
+def rucio_container(dataset, scope):
+    """
+    Creates a Rucio container and attaches datasets to it based on the files retrieved
+    from the Metacat database and Rucio.
+
+    The function retrieves all files within a given dataset and scope from Metacat,
+    lists all parent datasets for these files, and checks the alignment of file counts
+    between the retrieved files and those in the datasets. If counts match, it proceeds
+    to create a container and attach the datasets to it.
+
+    Parameters:
+    - dataset (str): The name of the dataset from which to retrieve files.
+    - scope (str): The scope within Rucio where the dataset is located.
+
+    Outputs:
+    - Prints the number of files directly retrieved and the number of files within the datasets.
+    - Indicates whether the container was successfully created and datasets attached, or
+      outputs an error message if counts do not match or if there's an error in the attachment process.
+
+    Raises:
+    - Duplicate: If a container with the same name already exists.
+    - DataIdentifierNotFound: If there's an error attaching DIDs to the container.
+    - sys.exit(1): Exits the script if the number of files does not match between direct
+      retrieval and dataset aggregation, indicating a potential inconsistency.
+
+    """
+
+    did = scope+":"+dataset
+    files = metacat.get_dataset_files(did, with_metadata=False)
+    dids_to_attach = []
+    datasets_to_attach = []
+    _datasets = []
+    container_name = dataset
+    for f in files:
+        it_did = f['namespace']+f['name']
+        dids_to_attach.append({'scope': f['namespace'], 'name': f['name']})
+        dataset = did_client.list_parent_dids(scope=f['namespace'], name=f['name'])
+        for d in dataset:
+            if d['type'] == 'DATASET':
+                d_name = d['name']
+                if d_name not in _datasets:
+                    _datasets.append(d_name) # dummy 
+                    datasets_to_attach.append({'scope': d['scope'], 'name': d['name']})
+
+    total_num_of_files = 0
+    for d in datasets_to_attach:
+        files = did_client.list_files(scope=d['scope'], name=d['name'])
+        file_count = sum(1 for _ in files)
+        total_num_of_files += file_count
+    print("There are these many files ", len(dids_to_attach)) 
+    print("There are these many files in the datasets", total_num_of_files) 
+    
+    if len(dids_to_attach) == total_num_of_files:
+        did_client.add_container(scope=scope, name=container_name)
+        print(f"Container {scope}:{container_name} created.")
+        try:
+            did_client.attach_dids(scope=scope, name=container_name, dids=datasets_to_attach)
+            print("DIDs attached to the container.")
+        except DataIdentifierNotFound as e:
+            print(f"Error attaching DIDs: {str(e)}")
+        
+    else:
+        print("WARNING.......")
+        print("NUMBER OF FILES DO NOT MATCH NUMBER OF FILES IN DATASET, NOTHING TO ADD")
+        sys.exit(1)
+ 
 def convert_size(size):
     """Converts a file size to a human-readable format with appropriate units."""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
@@ -161,6 +233,8 @@ def setup():
     parser.add_argument('--deftag', type=str, default="test", help='tag to distinguish different runs of this script, default is test')
     parser.add_argument('--remove_from_query', type=lambda s: s.split(','), default=[], help='remove parameter(s) from query, parsed as list')
     parser.add_argument('--test', type=bool, default=False, const=True, nargs="?", help='do in test mode')
+    parser.add_argument('--rucio_container', type=bool, default=False, const=True, nargs="?", help='do rucio container')
+    parser.add_argument('--scope', type=str, default=None, help='rucio scope')
     xtratags = ["min_time", "max_time", "deftag"]
     args = parser.parse_args()
 
@@ -199,3 +273,5 @@ if __name__ == "__main__":
     print_summary(metacat_files)
     if not args.test:
         makedataset(thequery, dataset_name, metadata)
+        if args.rucio_container:
+            rucio_container(dataset_name, args.scope)
