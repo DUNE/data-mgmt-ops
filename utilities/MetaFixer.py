@@ -21,8 +21,8 @@ evaluate and fix metacat for files
 # pyline: disable=W1514
 
 
-
-from argparse import ArgumentParser as ap
+# need to implement this
+#from argparse import ArgumentParser as ap
 
 import sys
 import os
@@ -45,7 +45,7 @@ mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
 class MetaFixer:
     ''' Class to check and fix metadata'''
 
-    def __init__(self,verbose=False,errname="error.txt",test=None,fix=None):
+    def __init__(self,verbose=False,errname="error.txt",tests=None,fix=None):
         ''' 
         __init__ initialization, does very little
 
@@ -59,7 +59,7 @@ class MetaFixer:
         self.skip=0
         self.errfile=open(errname,'w')
         self.errfile.write(errname+"\n")
-        self.test=test
+        self.tests=tests
 
     
     
@@ -87,8 +87,9 @@ class MetaFixer:
 
         
         if not os.path.exists("metadata"):
+             #this explores and counts things'
             os.mkdir("metadata")
-        " this explores and counts things"
+       
         datatypes = ["core.data_tier","core.run_type","dune.campaign","dune_mc.gen_fcl_filename","core.application","dune.requestid"]
         typecount = {}
         for datatype in datatypes:
@@ -108,87 +109,175 @@ class MetaFixer:
                 print ("failed at file",count,thedid)
                 break
             
-            self.checker(md,test)
+            self.checker(md)
 
-            value = file["namespace"]
-            if value in typecount["namespace"]:
-                typecount["namespace"][value] +=1
-            else:
-                typecount["namespace"][value]=1
-                f = open("metadata/namepace.json",'w')
-                data = json.dumps(md,indent=4)
+        #     value = file["namespace"]
+        #     if value in typecount["namespace"]:
+        #         typecount["namespace"][value] +=1
+        #     else:
+        #         typecount["namespace"][value]=1
+        #         f = open("metadata/namepace.json",'w')
+        #         data = json.dumps(md,indent=4)
                 
-                f.write(data)
-                f.close()
+        #         f.write(data)
+        #         f.close()
                 
                     
-            #
-            metadata = md["metadata"]
-            for datatype in datatypes:
-                if datatype in metadata.keys():
-                    value = metadata[datatype]
-                    if value in typecount[datatype]:
-                        typecount[datatype][value] = typecount[datatype][value]+1
-                    else:
-                        typecount[datatype][value] = 1
+        #     #
+        #     metadata = md["metadata"]
+        #     for datatype in datatypes:
+        #         if datatype in metadata.keys():
+        #             value = metadata[datatype]
+        #             if value in typecount[datatype]:
+        #                 typecount[datatype][value] = typecount[datatype][value]+1
+        #             else:
+        #                 typecount[datatype][value] = 1
         
-                        f = open("metadata/"+datatype+"__"+value+".json",'w')
-                        data = json.dumps(md,indent=4)
-                        f.write(data)
-                        f.close()
+        #                 f = open("metadata/"+datatype+"__"+value+".json",'w')
+        #                 data = json.dumps(md,indent=4)
+        #                 f.write(data)
+        #                 f.close()
             
-        if self.verbose:
-            print(json.dumps(typecount,indent=4))
+        # if self.verbose:
+        #     print(json.dumps(typecount,indent=4))
 
-    def checker(self, filemd=None,check="parentage"):
+    def checker(self, filemd=None):
         ' check various aspects of the file '
         did = "%s:%s"%(filemd["namespace"],filemd["name"])
-        if check == "duplicates":
-            self.dupfinder(filemd=filemd)
-        if check == "parentage":
-            if "parents" in filemd and len(filemd["parents"])> 0:
-                # has some parentage, look at it. 
-                parents = filemd["parents"]
-                if self.verbose:
-                    print ("parents",parents)
-                    for p in parents:
-                        parentmd = mc_client.get_file(fid=p["fid"])
-                        if self.verbose:
-                            print(parentmd["namespace"],parentmd["name"],jsondump(p))
-                        self.errfile.write("%s, parentage ok\n"%did)
-            else:
-                metadata = filemd["metadata"]
-                if "core.parents" in metadata:
-                    parentlist = []
-                    if self.verbose:
-                        print ("core.parents", metadata["core.parents"])
-                    for p in metadata["core.parents"]:
-                        if ":" in p["file_name"]:
-                            #if self.verbose:
-                               
-                            self.errfile.write("%s, missing parents\n"%did)
-                            thisparent = {"did":p["file_name"]}
-                            
-                        else:
-                            if self.verbose:
-                                print ("ERROR missing namespace for parent in  this file",did)
-                            self.errfile.write("%s, missing namespace in parents\n"%did)
-                            thisparent = {"did":"%s:%s"%(filemd["namespace"],p["file_name"])}  # hack in namespace of child file
-                        parentlist.append(thisparent)
-                    
-                    print ("parents to add",parentlist)
-                    if self.fix:
-                        print ("Tried to fix this file", did)
-                        try:
-                            mc_client.update_file(did,  parents=parentlist)
-                            print ("fix succeeded")
-                            self.errfile.write("%s, fixed it\n"%did)
-                        except:
-                            print ("fix failed")
-                            self.errfile.write("%s, failed to fix \n"%did)
+        for check in self.tests:
+            if check == "duplicates":
+                self.dupfinder(filemd=filemd)
+            if check == "parentage":
+                self.parentfixer(filemd)
+            if check == "types":
+                status = self.typechecker(filemd)
+                print ("result of type check",filemd["name"],status)
 
-                else:
-                    self.errfile.write("%s, no parents or core.parents\n"%did)
+    def parentfixer(self, filemd=None,check="parentage"):
+        ' check parentage of the file '
+        did = "%s:%s"%(filemd["namespace"],filemd["name"])
+        status = "good"
+        if "parents" in filemd and len(filemd["parents"])> 0:
+            # has some parentage, look at it. 
+            parents = filemd["parents"]
+            if self.verbose:
+                print ("parents",parents)
+                for p in parents:
+                    parentmd = mc_client.get_file(fid=p["fid"])
+                    if self.verbose:
+                        print(parentmd["namespace"],parentmd["name"],jsondump(p))
+                    self.errfile.write("%s, parentage ok\n"%did)
+            return status
+        else: # no parents found
+            metadata = filemd["metadata"]
+            if "core.parents" in metadata:
+                parentlist = []
+                if self.verbose:
+                    print ("core.parents", metadata["core.parents"])
+                for p in metadata["core.parents"]:
+                    if ":" in p["file_name"]:
+                        #if self.verbose:
+                            
+                        self.errfile.write("%s, missing parents\n"%did)
+                        thisparent = {"did":p["file_name"]}
+                        
+                    else:
+                        if self.verbose:
+                            print ("ERROR missing namespace for parent in  this file",did)
+                        self.errfile.write("%s, missing namespace in parents\n"%did)
+                        thisparent = {"did":"%s:%s"%(filemd["namespace"],p["file_name"])}  # hack in namespace of child file
+                    parentlist.append(thisparent)
+                
+                print ("parents to add",parentlist)
+                if self.fix:
+                    print ("Tried to fix this file", did)
+                    try:
+                        mc_client.update_file(did,  parents=parentlist)
+                        print ("fix succeeded")
+                        self.errfile.write("%s, fixed it\n"%did)
+                    except:
+                        print ("fix failed")
+                        self.errfile.write("%s, failed to fix \n"%did)
+                        status = "fail"
+                        return status
+
+            else:
+                self.errfile.write("%s, no parents or core.parents\n"%did)
+        return status
+
+    def typechecker(self,filemd=None):
+        STRING = type("")
+        FLOAT = type(1.0)
+        INT = type(1)
+        LIST = type([])
+        DICT = type({})
+        basetypes = {
+            "name": STRING,
+            "namespace": STRING,
+            "checksums": DICT,
+            "size":INT,
+            "metadata":{
+                "core.application.family": STRING,
+                "core.application.name": STRING,
+                "core.application.version": STRING,
+                "core.data_stream":STRING,
+                "core.data_tier": STRING,
+                "core.end_time": FLOAT,
+                "core.event_count": INT,
+                "core.events": LIST,
+                "core.file_content_status": STRING,
+                "core.file_format": STRING,
+                "core.file_type": STRING,
+                "core.first_event_number": INT,
+                "core.last_event_number": INT,
+                "core.run_type": STRING,
+                "core.runs": LIST,
+                "core.runs_subruns": LIST,
+                "core.start_time": FLOAT,
+                "dune.daq_test": STRING,
+                "retention.status": STRING,
+                "retention.class": STRING
+            }
+        }
+        did = filemd["namespace"]+":"+filemd["name"]
+        optional = ["core.events","dune.daq_test"]
+        valid = True
+        for x in basetypes.keys():
+            if self.verbose: print (x)
+            if x in optional: ConnectionRefusedError
+            if x not in filemd.keys():
+                error = x+" is missing from "+ did
+                print (error)
+                self.errfile.write(error+"\n")
+                valid *= False
+                 
+            if basetypes[x] != type(filemd[x]) and x != "metadata":
+                error = "%s has wrong type in %s"%(x,did)
+                print (error)
+                self.errfile.write(error+"\n")
+                valid *= False
+
+        # now do the metadata
+        md = filemd["metadata"]
+        for x in basetypes["metadata"].keys():
+            if self.verbose: print (x)
+            if x in optional: continue
+            if x not in md.keys():
+                error = x+ " is missing from "+ did
+                print (error)
+                self.errfile.write(error)
+                valid *= False
+                continue
+            if basetypes["metadata"][x] != type(md[x]):
+                error =  "%s has wrong type in %s"%(x,did)
+                print (error)
+                self.errfile.write(error+"\n")
+                valid *= False
+        if not valid:
+            print (did, " fails basic metadata tests")
+            
+        return valid
+            
 
     def dupfinder(self,filemd=None):
         ' loop over parents, look for children and look for duplicates'
@@ -246,12 +335,15 @@ class MetaFixer:
 
 
     def cleanup(self):
+        ' make certain the output errorfile is closed'
         self.errfile.close()
                             
 def jsondump(adict):
+    ' dump a dictionary to a nicely formatted string'
     return json.dumps(adict,indent=4)                   
 
 def parentchecker(query):
+    ' build the complicated parent query -- it is very slow '
     newquery = " %s - children(parents(%s))"%(query,query)
     return newquery
 
@@ -266,7 +358,7 @@ if __name__ == '__main__':
     workflow = 1630
     FIX = False
     TESTME = False
-    test = "duplicates"
+    tests = ["types","parentage"]
     if len(sys.argv) < 2:
         print ("normally should add a data_tier, and workflow #, default to %s, %s"%(data_tier, workflow))
         print ("to actually run, the 3rd argument needs to be run '")
@@ -284,13 +376,13 @@ if __name__ == '__main__':
     vd = [1583,1590,1591,1593] + list(range(1610,1630))
 
           
-    for workflow in [1630]:
+    for workflow in [1781]:
 
         testquery = ""
-        if test == "parentage":
+        if  "parentage" in tests:
             testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
         print ("top level query metacat query \" ",testquery, "\"")
-        if test == "duplicates":
+        if "duplicates" in tests:
 
             testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)"%(data_tier,workflow)
 
@@ -308,10 +400,10 @@ if __name__ == '__main__':
         #     sys.exit(0)
         now = "%10.0f"%datetime.datetime.now().timestamp()
 
-        fixer=MetaFixer(verbose=False,errname="%s_%s_%d_%s.txt"%(test,data_tier,workflow,now),test=test, fix=FIX)
+        fixer=MetaFixer(verbose=False,errname="%s_%d_%s.txt"%(data_tier,workflow,now),tests=tests, fix=FIX)
         thelimit=100
         theskip=0
-        for i in range(0, 100000):
+        for i in range(0, thelimit):
             thelist = fixer.getInput(query=testquery,limit=thelimit,skip=theskip)
             if len(thelist) == 0:
                 print ("got to the end of the list at ",theskip)
