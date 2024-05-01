@@ -239,6 +239,7 @@ class MetaFixer:
                 "retention.class": STRING
             }
         }
+        fid = filemd["fid"]
         did = filemd["namespace"]+":"+filemd["name"]
         optional = ["core.events","dune.daq_test"]
         valid = True
@@ -246,13 +247,13 @@ class MetaFixer:
             if self.verbose: print (x)
             if x in optional: ConnectionRefusedError
             if x not in filemd.keys():
-                error = x+" is missing from "+ did
+                error = x+" is missing from "+ fid
                 print (error)
                 self.errfile.write(error+"\n")
                 valid *= False
                  
             if basetypes[x] != type(filemd[x]) and x != "metadata":
-                error = "%s has wrong type in %s"%(x,did)
+                error = "%s has wrong type in %s"%(x,fid)
                 print (error)
                 self.errfile.write(error+"\n")
                 valid *= False
@@ -263,13 +264,13 @@ class MetaFixer:
             if self.verbose: print (x)
             if x in optional: continue
             if x not in md.keys():
-                error = x+ " is missing from "+ did
+                error = x+ " is missing from "+ fid
                 print (error)
                 self.errfile.write(error)
                 valid *= False
                 continue
             if basetypes["metadata"][x] != type(md[x]):
-                error =  "%s has wrong type in %s"%(x,did)
+                error =  "%s has wrong type in %s"%(x,fid)
                 print (error)
                 self.errfile.write(error+"\n")
                 valid *= False

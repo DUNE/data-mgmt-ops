@@ -44,8 +44,9 @@ if __name__ == '__main__':
 
     
     now = "%10.0f"%datetime.datetime.now().timestamp()
-
-    fixer=MetaFixer.MetaFixer(verbose=False,errname="%s_%s.txt"%(thedid,now),tests=tests, fix=FIX)
+    errname = ("%s_%s.txt"%(thedid,now)).replace(":","__")
+    print (errname)
+    fixer=MetaFixer.MetaFixer(verbose=False,errname=errname,tests=tests, fix=FIX)
 
     filemd = mc_client.get_file(did=thedid,with_metadata=True,with_provenance=True)
 
