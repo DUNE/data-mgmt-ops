@@ -35,6 +35,8 @@ import datetime
 
 
 from metacat.webapi import MetaCatClient
+
+from TypeChecker import TypeChecker
 # samweb = samweb_client.SAMWebClient(experiment='dune')
 
 DEBUG = False
@@ -206,78 +208,80 @@ class MetaFixer:
         return status
 
     def typechecker(self,filemd=None):
-        STRING = type("")
-        FLOAT = type(1.0)
-        INT = type(1)
-        LIST = type([])
-        DICT = type({})
-        basetypes = {
-            "name": STRING,
-            "namespace": STRING,
-            "checksums": DICT,
-            "size":INT,
-            "metadata":{
-                "core.application.family": STRING,
-                "core.application.name": STRING,
-                "core.application.version": STRING,
-                "core.data_stream":STRING,
-                "core.data_tier": STRING,
-                "core.end_time": FLOAT,
-                "core.event_count": INT,
-                "core.events": LIST,
-                "core.file_content_status": STRING,
-                "core.file_format": STRING,
-                "core.file_type": STRING,
-                "core.first_event_number": INT,
-                "core.last_event_number": INT,
-                "core.run_type": STRING,
-                "core.runs": LIST,
-                "core.runs_subruns": LIST,
-                "core.start_time": FLOAT,
-                "dune.daq_test": STRING,
-                "retention.status": STRING,
-                "retention.class": STRING
-            }
-        }
-        fid = filemd["fid"]
-        did = filemd["namespace"]+":"+filemd["name"]
-        optional = ["core.events","dune.daq_test"]
-        valid = True
-        for x in basetypes.keys():
-            if self.verbose: print (x)
-            if x in optional: ConnectionRefusedError
-            if x not in filemd.keys():
-                error = x+" is missing from "+ fid
-                print (error)
-                self.errfile.write(error+"\n")
-                valid *= False
+        ' check the types in md'
+        valid = TypeChecker(filemd=filemd,errfile=self.errfile,verbose=self.verbose)
+        # STRING = type("")
+        # FLOAT = type(1.0)
+        # INT = type(1)
+        # LIST = type([])
+        # DICT = type({})
+        # basetypes = {
+        #     "name": STRING,
+        #     "namespace": STRING,
+        #     "checksums": DICT,
+        #     "size":INT,
+        #     "metadata":{
+        #         "core.application.family": STRING,
+        #         "core.application.name": STRING,
+        #         "core.application.version": STRING,
+        #         "core.data_stream":STRING,
+        #         "core.data_tier": STRING,
+        #         "core.end_time": FLOAT,
+        #         "core.event_count": INT,
+        #         "core.events": LIST,
+        #         "core.file_content_status": STRING,
+        #         "core.file_format": STRING,
+        #         "core.file_type": STRING,
+        #         "core.first_event_number": INT,
+        #         "core.last_event_number": INT,
+        #         "core.run_type": STRING,
+        #         "core.runs": LIST,
+        #         "core.runs_subruns": LIST,
+        #         "core.start_time": FLOAT,
+        #         "dune.daq_test": STRING,
+        #         "retention.status": STRING,
+        #         "retention.class": STRING
+        #     }
+        # }
+        # fid = filemd["fid"]
+        # did = filemd["namespace"]+":"+filemd["name"]
+        # optional = ["core.events","dune.daq_test"]
+        # valid = True
+        # for x in basetypes.keys():
+        #     if self.verbose: print (x)
+        #     if x in optional: ConnectionRefusedError
+        #     if x not in filemd.keys():
+        #         error = x+" is missing from "+ fid
+        #         print (error)
+        #         self.errfile.write(error+"\n")
+        #         valid *= False
                  
-            if basetypes[x] != type(filemd[x]) and x != "metadata":
-                error = "%s has wrong type in %s"%(x,fid)
-                print (error)
-                self.errfile.write(error+"\n")
-                valid *= False
+        #     if basetypes[x] != type(filemd[x]) and x != "metadata":
+        #         error = "%s has wrong type in %s"%(x,fid)
+        #         print (error)
+        #         self.errfile.write(error+"\n")
+        #         valid *= False
 
-        # now do the metadata
-        md = filemd["metadata"]
-        for x in basetypes["metadata"].keys():
-            if self.verbose: print (x)
-            if x in optional: continue
-            if x not in md.keys():
-                error = x+ " is missing from "+ fid
-                print (error)
-                self.errfile.write(error)
-                valid *= False
-                continue
-            if basetypes["metadata"][x] != type(md[x]):
-                error =  "%s has wrong type in %s"%(x,fid)
-                print (error)
-                self.errfile.write(error+"\n")
-                valid *= False
-        if not valid:
-            print (did, " fails basic metadata tests")
+        # # now do the metadata
+        # md = filemd["metadata"]
+        # for x in basetypes["metadata"].keys():
+        #     if self.verbose: print (x)
+        #     if x in optional: continue
+        #     if x not in md.keys():
+        #         error = x+ " is missing from "+ fid
+        #         print (error)
+        #         self.errfile.write(error)
+        #         valid *= False
+        #         continue
+        #     if basetypes["metadata"][x] != type(md[x]):
+        #         error =  "%s has wrong type in %s"%(x,fid)
+        #         print (error)
+        #         self.errfile.write(error+"\n")
+        #         valid *= False
+        # if not valid:
+        #     print (did, " fails basic metadata tests")
             
-        return valid
+        # return valid
             
 
     def dupfinder(self,filemd=None):

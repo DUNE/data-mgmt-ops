@@ -24,6 +24,7 @@ import os
 import json
 import datetime
 
+from TypeChecker import TypeChecker
 
 #import samweb_client
 
@@ -31,7 +32,7 @@ import datetime
 
 from metacat.webapi import MetaCatClient
 
-import MetaFixer
+#import MetaFixer
 
 if __name__ == '__main__':
     FIX = False
@@ -46,12 +47,13 @@ if __name__ == '__main__':
     now = "%10.0f"%datetime.datetime.now().timestamp()
     errname = ("%s_%s.txt"%(thedid,now)).replace(":","__")
     print (errname)
-    fixer=MetaFixer.MetaFixer(verbose=False,errname=errname,tests=tests, fix=FIX)
-
+    #fixer=MetaFixer.MetaFixer(verbose=False,errname=errname,tests=tests, fix=FIX)
+    errfile = open(errname,'w')
     filemd = mc_client.get_file(did=thedid,with_metadata=True,with_provenance=True)
 
-    fixer.checker(filemd)        
+    status = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
+    #fixer.checker(filemd)        
         
-    fixer.cleanup() 
+    #fixer.cleanup() 
 
 
