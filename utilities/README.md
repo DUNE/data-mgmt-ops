@@ -14,13 +14,22 @@ Right now this just runs the search. Expert will need to implement the methods:
 
     success = ActualNuke(myfid=None,verbose=False,fix=False,level=-1):
     
-Nukeme is supposed to retire the file and tell rucio it is gone.Here fid is the metacat fileid (hex field) of the file, verbose sets writing level, fix means actually do the nuke, level keeps track of what level you are in the tree from the top level file. 
+method Nukeme, which calls ActualNuke is supposed to retire the file and tell rucio it is gone.  Here fid is the metacat fileid (hex field) of the file, verbose sets writing level, fix means actually do the nuke, level keeps track of what level you are in the tree from the top level file. 
 
     success = RemoveMeFromParents(myfid=myfid,verbose=verbose,fix=fix,level=level)
 
+there are flags hardwired for now:
 
+If you input a file id, you can set nukeme to false to only nuke children and nukeme to true to nuke the file you put on the command line.  nukeme false is useful for testing, nukeme true is what you would use if you had a list of duplicates. 
 
+## TypeChecker.py checks for type and missing basic fields. 
 
+ 
+python TypeChecker.py <file.json> checks a metadata json file directly
+
+python FileChecker.py <namespace:name> checks a file already in metacat
+
+TypeChecker checks for basic type and key conformity for a file.  2024-05-02 Will be adding a fix version that returns patched json 
 
 ## Metafixer.py does checks and fixes parentage
 

@@ -1,5 +1,5 @@
 """Check metadata against a template"""
-import os,sys
+import os,sys,json
  
 
 def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
@@ -37,23 +37,28 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             "retention.class": STRING
         }
     }
-    fid = filemd["fid"]
+    
     did = filemd["namespace"]+":"+filemd["name"]
+    # do this as file may not have an fid yet
+    if "fid" in filemd:
+        fid = filemd["fid"]
+    else:
+        fid = did
     optional = ["core.events","dune.daq_test"]
     valid = True
     for x, xtype in basetypes.items():
         if verbose: print (x)
         if x in optional: continue
         if x not in filemd.keys():
-            error = x+" is missing from "+ fid
+            error = x+" is missing from "+ fid + "\n"
             print (error)
-            errfile.write(error+"\n")
+            errfile.write(error)
             valid *= False
                 
         if xtype != type(filemd[x]) and x != "metadata":
-            error = "%s has wrong type in %s"%(x,fid)
+            error = "%s has wrong type in %s \n"%(x,fid)
             print (error)
-            errfile.write(error+"\n")
+            errfile.write(error)
             valid *= False
 
     # now do the metadata
@@ -62,13 +67,13 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
         if verbose: print (x)
         if x in optional: continue
         if x not in md.keys():
-            error = x+ " is missing from "+ fid
+            error = x+ " is missing from "+ fid + "\n"
             print (error)
             errfile.write(error)
             valid *= False
             continue
         if xtype != type(md[x]):
-            error =  "%s has wrong type in %s"%(x,fid)
+            error =  "%s has wrong type in %s\n "%(x,fid)
             print (error)
             errfile.write(error+"\n")
             valid *= False
@@ -76,3 +81,16 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
         print (did, " fails basic metadata tests")
         
     return valid
+
+
+if __name__ == '__main__':
+
+    if len(sys.argv) < 2:
+        print ("please provide a json file to check")
+        sys.exit(1)
+    jsonname = sys.argv[1]
+    jsonfile = open(jsonname,'r')
+    filemd = json.load(jsonfile)
+    errfile = open(jsonname+".err",'w')
+    status = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
+    errfile.close()
