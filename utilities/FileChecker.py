@@ -1,3 +1,4 @@
+''' tester for TypeChecker for one file'''
 ##
 # @mainpage MetaFixer
 #
@@ -26,17 +27,10 @@ import datetime
 
 from TypeChecker import TypeChecker
 
-#import samweb_client
-
-
-
 from metacat.webapi import MetaCatClient
 
-#import MetaFixer
-
 if __name__ == '__main__':
-    FIX = False
-    tests = ["types","parentage"]
+    
     mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
     if len(sys.argv) < 2:
         print ("need a namespace:name as input")
@@ -47,13 +41,8 @@ if __name__ == '__main__':
     now = "%10.0f"%datetime.datetime.now().timestamp()
     errname = ("%s_%s.txt"%(thedid,now)).replace(":","__")
     print (errname)
-    #fixer=MetaFixer.MetaFixer(verbose=False,errname=errname,tests=tests, fix=FIX)
     errfile = open(errname,'w')
     filemd = mc_client.get_file(did=thedid,with_metadata=True,with_provenance=True)
-
     status = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
-    #fixer.checker(filemd)        
-        
-    #fixer.cleanup() 
-
+    errfile.close()
 
