@@ -31,7 +31,7 @@ def make_name(tags):
         - Tags not present in the 'order' list or with None values are not included in the name.
         - This function is specifically designed for a set of metadata tags
     """
-    order = ["core.run_type", "dune.campaign", "core.data_tier", "core.application.version",
+    order = ["core.run_type", "DUNE.campaign", "core.data_tier", "core.application.version",
              "dune.config_file", "dune_mc.gen_fcl_filename", "core.data_stream", "deftag"]
     name = ""
     for i in order:
@@ -115,7 +115,7 @@ def makedataset(query, name, meta):
             cleanmeta[x] = meta[x]
 
     if os.getenv("USER") == "dunepro":
-        namespace = cleanmeta['core.run_type']
+        namespace = meta['namespace']
     else:
         namespace = os.getenv("USER")
 
