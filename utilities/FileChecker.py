@@ -1,10 +1,11 @@
+''' tester for FileChecker for one file - gets md from metacat'''
 ##
-# @mainpage MetaFixer
+# @mainpage FileChecker
 #
 # @section description_main
 #
 #  
-# @file MetaFixer.py
+# @file FileChecker.py
 
 # pylint: disable=C0303
 # pylint: disable=C0321 
@@ -24,18 +25,12 @@ import os
 import json
 import datetime
 
-
-#import samweb_client
-
-
+from TypeChecker import TypeChecker
 
 from metacat.webapi import MetaCatClient
 
-import MetaFixer
-
 if __name__ == '__main__':
-    FIX = False
-    tests = ["types","parentage"]
+    
     mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
     if len(sys.argv) < 2:
         print ("need a namespace:name as input")
@@ -46,12 +41,8 @@ if __name__ == '__main__':
     now = "%10.0f"%datetime.datetime.now().timestamp()
     errname = ("%s_%s.txt"%(thedid,now)).replace(":","__")
     print (errname)
-    fixer=MetaFixer.MetaFixer(verbose=False,errname=errname,tests=tests, fix=FIX)
-
+    errfile = open(errname,'w')
     filemd = mc_client.get_file(did=thedid,with_metadata=True,with_provenance=True)
-
-    fixer.checker(filemd)        
-        
-    fixer.cleanup() 
-
+    status = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
+    errfile.close()
 

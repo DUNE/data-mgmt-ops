@@ -35,7 +35,8 @@ import datetime
 
 
 from metacat.webapi import MetaCatClient
-# samweb = samweb_client.SAMWebClient(experiment='dune')
+
+from TypeChecker import TypeChecker
 
 DEBUG = False
 
@@ -111,36 +112,6 @@ class MetaFixer:
             
             self.checker(md)
 
-        #     value = file["namespace"]
-        #     if value in typecount["namespace"]:
-        #         typecount["namespace"][value] +=1
-        #     else:
-        #         typecount["namespace"][value]=1
-        #         f = open("metadata/namepace.json",'w')
-        #         data = json.dumps(md,indent=4)
-                
-        #         f.write(data)
-        #         f.close()
-                
-                    
-        #     #
-        #     metadata = md["metadata"]
-        #     for datatype in datatypes:
-        #         if datatype in metadata.keys():
-        #             value = metadata[datatype]
-        #             if value in typecount[datatype]:
-        #                 typecount[datatype][value] = typecount[datatype][value]+1
-        #             else:
-        #                 typecount[datatype][value] = 1
-        
-        #                 f = open("metadata/"+datatype+"__"+value+".json",'w')
-        #                 data = json.dumps(md,indent=4)
-        #                 f.write(data)
-        #                 f.close()
-            
-        # if self.verbose:
-        #     print(json.dumps(typecount,indent=4))
-
     def checker(self, filemd=None):
         ' check various aspects of the file '
         did = "%s:%s"%(filemd["namespace"],filemd["name"])
@@ -150,7 +121,7 @@ class MetaFixer:
             if check == "parentage":
                 self.parentfixer(filemd)
             if check == "types":
-                status = self.typechecker(filemd)
+                status = TypeChecker(filemd)
                 print ("result of type check",filemd["name"],status)
 
     def parentfixer(self, filemd=None,check="parentage"):
@@ -205,80 +176,7 @@ class MetaFixer:
                 self.errfile.write("%s, no parents or core.parents\n"%did)
         return status
 
-    def typechecker(self,filemd=None):
-        STRING = type("")
-        FLOAT = type(1.0)
-        INT = type(1)
-        LIST = type([])
-        DICT = type({})
-        basetypes = {
-            "name": STRING,
-            "namespace": STRING,
-            "checksums": DICT,
-            "size":INT,
-            "metadata":{
-                "core.application.family": STRING,
-                "core.application.name": STRING,
-                "core.application.version": STRING,
-                "core.data_stream":STRING,
-                "core.data_tier": STRING,
-                "core.end_time": FLOAT,
-                "core.event_count": INT,
-                "core.events": LIST,
-                "core.file_content_status": STRING,
-                "core.file_format": STRING,
-                "core.file_type": STRING,
-                "core.first_event_number": INT,
-                "core.last_event_number": INT,
-                "core.run_type": STRING,
-                "core.runs": LIST,
-                "core.runs_subruns": LIST,
-                "core.start_time": FLOAT,
-                "dune.daq_test": STRING,
-                "retention.status": STRING,
-                "retention.class": STRING
-            }
-        }
-        fid = filemd["fid"]
-        did = filemd["namespace"]+":"+filemd["name"]
-        optional = ["core.events","dune.daq_test"]
-        valid = True
-        for x in basetypes.keys():
-            if self.verbose: print (x)
-            if x in optional: ConnectionRefusedError
-            if x not in filemd.keys():
-                error = x+" is missing from "+ fid
-                print (error)
-                self.errfile.write(error+"\n")
-                valid *= False
-                 
-            if basetypes[x] != type(filemd[x]) and x != "metadata":
-                error = "%s has wrong type in %s"%(x,fid)
-                print (error)
-                self.errfile.write(error+"\n")
-                valid *= False
-
-        # now do the metadata
-        md = filemd["metadata"]
-        for x in basetypes["metadata"].keys():
-            if self.verbose: print (x)
-            if x in optional: continue
-            if x not in md.keys():
-                error = x+ " is missing from "+ fid
-                print (error)
-                self.errfile.write(error)
-                valid *= False
-                continue
-            if basetypes["metadata"][x] != type(md[x]):
-                error =  "%s has wrong type in %s"%(x,fid)
-                print (error)
-                self.errfile.write(error+"\n")
-                valid *= False
-        if not valid:
-            print (did, " fails basic metadata tests")
-            
-        return valid
-            
+    
 
     def dupfinder(self,filemd=None):
         ' loop over parents, look for children and look for duplicates'
