@@ -74,6 +74,9 @@ def makequery(meta, remove_from_query):
             if "namespace" not in item:
                 continue
         val = meta[item]
+        if '(' in val and ')' in val:
+            query += f' {item} in {val} and '
+            continue
         if type(val) == str and "-" in val and "'" not in val:
             val = "\'%s\'" % val
         query += " "+item+"="+str(val)
@@ -256,7 +259,7 @@ def setup():
 if __name__ == "__main__":
     # This block will run if the script is executed directly.
     # It initializes the parser and processes command line arguments.
-    metacat = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_prod/app')
+    metacat = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_prod/app', timeout=600)
     metadata, args = setup()
     thequery = makequery(metadata, args.remove_from_query)
     dataset_name = make_name(metadata)
@@ -269,4 +272,5 @@ if __name__ == "__main__":
     if not args.test:
         makedataset(thequery, dataset_name, metadata)
         if args.rucio_container:
+            print('proceed with rucio container')
             rucio_container(dataset_name, args.scope, args.rucio_datasets)
