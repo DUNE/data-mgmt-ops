@@ -42,7 +42,11 @@ if __name__ == '__main__':
     errname = ("%s_%s.txt"%(thedid,now)).replace(":","__")
     print (errname)
     errfile = open(errname,'w')
-    filemd = mc_client.get_file(did=thedid,with_metadata=True,with_provenance=True)
+    try:
+        filemd = mc_client.get_file(did=thedid,with_metadata=True,with_provenance=True)
+    except:
+        print (" attempt to get metadata failed for ", thedid)
     status = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
+    
     errfile.close()
 

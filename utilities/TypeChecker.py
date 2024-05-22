@@ -37,6 +37,11 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             "retention.class": STRING
         }
     }
+    fixDefaults = {
+        "core.file_content_status":"good",
+        "retention.status":"active",
+        "retention.class":"unknown"
+    }
     
     did = filemd["namespace"]+":"+filemd["name"]
     # do this as file may not have an fid yet
@@ -44,11 +49,14 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
         fid = filemd["fid"]
     else:
         fid = did
-    optional = ["core.events","dune.daq_test"]
+    optional = { "all":["core.events","dune.daq_test"],"root-tuple":["core.first_event_number","core.last_event_number","core.data_stream"]}
     valid = True
+
+    fixes = {}
+
     for x, xtype in basetypes.items():
-        if verbose: print (x)
-        if x in optional: continue
+        if verbose: print (x,xtype)
+        if x in optional["all"]: continue
         if x not in filemd.keys():
             error = x+" is missing from "+ fid + "\n"
             print (error)
@@ -64,23 +72,33 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
     # now do the metadata
     md = filemd["metadata"]
     for x, xtype in basetypes["metadata"].items():
-        if verbose: print (x)
-        if x in optional: continue
+        if verbose: print (x,xtype)
+        if x in optional["all"]: continue # skip optional items
+        
         if x not in md.keys():
+            if "core.data_tier" in md and x in optional[md["core.data_tier"]]:  # skip optional items by data_tier
+                print ("skipping optional field for data_tier",md["core.data_tier"],x)
+                continue
             error = x+ " is missing from "+ fid + "\n"
             print (error)
             errfile.write(error)
             valid *= False
+            if x in fixDefaults:
+                fixes[x]=fixDefaults[x]
             continue
         if xtype != type(md[x]):
+            if xtype == FLOAT and type(md[x]) == INT: continue
             error =  "%s has wrong type in %s\n "%(x,fid)
             print (error)
             errfile.write(error+"\n")
             valid *= False
     if not valid:
         print (did, " fails basic metadata tests")
+        if len(fixes) !=0:
+            print ("you could fix this by applying this fix")
+            print (json.dumps(fixes,indent=4))
         
-    return valid
+    return valid, fixes
 
 
 if __name__ == '__main__':
@@ -92,5 +110,5 @@ if __name__ == '__main__':
     jsonfile = open(jsonname,'r')
     filemd = json.load(jsonfile)
     errfile = open(jsonname+".err",'w')
-    status = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
+    status,fixes = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
     errfile.close()
