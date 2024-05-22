@@ -4,11 +4,15 @@ import os,sys,json
 
 def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
     " check for type and missing required fields in metadata"
+
+    # define types
     STRING = type("")
     FLOAT = type(1.0)
     INT = type(1)
     LIST = type([])
     DICT = type({})
+
+    # list defaults for metadata fields
     basetypes = {
         "name": STRING,
         "namespace": STRING,
@@ -37,33 +41,45 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             "retention.class": STRING
         }
     }
+
+    # set default values for fields that are often missing but needed
     fixDefaults = {
         "core.file_content_status":"good",
         "retention.status":"active",
         "retention.class":"unknown"
     }
     
+    # place to put optional fields: all is optional for all, otherwise you need to tell it data_tier
+
+    optional = { "all":["core.events","dune.daq_test"],"root-tuple":["core.first_event_number","core.last_event_number","core.data_stream"]}
+   
     did = filemd["namespace"]+":"+filemd["name"]
-    # do this as file may not have an fid yet
+
+    # do this as file may not have an fid yet, but fid makes shorter error messages. 
     if "fid" in filemd:
         fid = filemd["fid"]
     else:
         fid = did
-    optional = { "all":["core.events","dune.daq_test"],"root-tuple":["core.first_event_number","core.last_event_number","core.data_stream"]}
-    valid = True
 
+    # start out with valid and no fixes needed    
+    valid = True
     fixes = {}
+
+    # loop over default md keys
 
     for x, xtype in basetypes.items():
         if verbose: print (x,xtype)
         if x in optional["all"]: continue
+        # check required
         if x not in filemd.keys():
             error = x+" is missing from "+ fid + "\n"
             print (error)
             errfile.write(error)
             valid *= False
                 
+        # check type
         if xtype != type(filemd[x]) and x != "metadata":
+            if xtype == FLOAT and type(md[x]) == INT: continue
             error = "%s has wrong type in %s \n"%(x,fid)
             print (error)
             errfile.write(error)
@@ -75,9 +91,11 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
         if verbose: print (x,xtype)
         if x in optional["all"]: continue # skip optional items
         
+        # check required keys
         if x not in md.keys():
-            if "core.data_tier" in md and x in optional[md["core.data_tier"]]:  # skip optional items by data_tier
-                print ("skipping optional field for data_tier",md["core.data_tier"],x)
+            if "core.data_tier" in md and md["core.data_tier"] in optional and x in optional[md["core.data_tier"]]:  # skip optional items by data_tier
+                 
+                print ("skipping optional missing field for data_tier",md["core.data_tier"],x)
                 continue
             error = x+ " is missing from "+ fid + "\n"
             print (error)
@@ -86,6 +104,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             if x in fixDefaults:
                 fixes[x]=fixDefaults[x]
             continue
+        # check for type
         if xtype != type(md[x]):
             if xtype == FLOAT and type(md[x]) == INT: continue
             error =  "%s has wrong type in %s\n "%(x,fid)

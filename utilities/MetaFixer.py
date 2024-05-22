@@ -121,7 +121,7 @@ class MetaFixer:
             if check == "parentage":
                 self.parentfixer(filemd)
             if check == "types":
-                status = TypeChecker(filemd)
+                status = TypeChecker(filemd,self.errfile)
                 print ("result of type check",filemd["name"],status)
 
     def parentfixer(self, filemd=None,check="parentage"):
@@ -312,4 +312,3 @@ if __name__ == '__main__':
                 print ("readed end of list at",theskip)   
             theskip += thelimit
         fixer.cleanup() 
-
