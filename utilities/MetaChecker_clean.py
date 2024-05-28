@@ -31,6 +31,8 @@ import json
 import time
 from datetime import datetime
 import tenacity
+import requests
+import http, urllib3
 from math import sqrt
 
 import logging
@@ -118,6 +120,7 @@ def check_start_end_times(mc_client, fid, namespace='', name='', did='', metadat
         print(result)
         print(" ")
 
+#Does not do the updating -- will not hit the metacat server
 def only_check_start_end_times(mc_client, fid, metadata, verbose=False):
 
     #print(f'fid={fid}\n {metadata}')
@@ -147,6 +150,7 @@ def only_check_start_end_times(mc_client, fid, metadata, verbose=False):
     #else:
     #  return metadata_dict
 
+#Does not do the updating -- will not hit the metacat server
 def only_check_subruns(mc_client, fid, metadata, verbose=False):
   #If good md already there, move on
   if 'core.runs_subruns' in metadata:
@@ -166,8 +170,23 @@ def only_check_subruns(mc_client, fid, metadata, verbose=False):
   return True
 
 @my_retryer.wraps
-def do_update_metadata(mc_client, fid, metadata):
-  result = mc_client.update_file(fid=fid, metadata=metadata)
+def do_update_metadata(mc_client, fid, metadata, nattempts=5):
+
+  attempts = 0
+  failed = True
+  sleep_time = 5
+  while attempts < nattempts:
+    try:
+      mc_client.update_file(fid=fid, metadata=metadata)
+      failed = False
+      break
+    except (requests.exceptions.ChunkedEncodingError,http.client.IncompleteRead, urllib3.exceptions.ProtocolError)  as err:
+      print(f'Received an incomplete read, {err=}, trying again after {sleep_time}s')
+      attempts += 1
+      if attempts >= nattempts:
+        raise err
+      time.sleep(sleep_time)
+
 
 if __name__ == '__main__':
   hd = [1750, 1752, 1754,  1757, 1763, 1764, 1765, 1766, 1767, 1768, 1782]
