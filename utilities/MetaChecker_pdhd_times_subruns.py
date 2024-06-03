@@ -20,7 +20,7 @@ if __name__ == '__main__':
   parser.add_argument('--dry_run', action='store_true')
   parser.add_argument('--verbose', '-v', action='store_true')
   parser.add_argument('--check_every', type=int, default=1000)
-  parser.add_argument('--pause_every', type=int, default=300)
+  #parser.add_argument('--pause_every', type=int, default=300)
   args = parser.parse_args()
 
   def vprint(*line):
@@ -35,10 +35,10 @@ if __name__ == '__main__':
       t1 = time.time()
       print(f'{i}, {t1 - t0:.2f}')#, end='\r')
       t0 = t1
-    if (i > 0 and not i % args.pause_every):
-      print('Pausing')
-      time.sleep(10)
-      print('Done')
+    #if (i > 0 and not i % args.pause_every):
+    #  print('Pausing')
+    #  time.sleep(10)
+    #  print('Done')
     vprint(f['fid'])
     
     vprint('Checking start end times')
