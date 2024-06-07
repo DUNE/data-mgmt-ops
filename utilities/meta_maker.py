@@ -13,7 +13,8 @@ if __name__ == '__main__':
                       help='Get event numbers from artroot file')
   place_metadata.base_args(parser)
   parser.add_argument('--parent', '-p', default=None, type=str,
-                      help='Parent DID to inherit from (namespace:name)')
+                      help='Parent DID to inherit from (namespace:name)\nOR parent json metadata (requires --parent_as_json)')
+  parser.add_argument('--parent_as_json', action='store_true', help='') #TODO
   parser.add_argument('--json', '-j', required=True, type=str,
                       help='Output json name')
   args = parser.parse_args()
@@ -40,7 +41,10 @@ if __name__ == '__main__':
   if args.parent is not None:
 
     ##Get md from parent
-    results = inherit_metadata.inherit(args.parent)
+    if args.parent_as_json:
+      results = inherit_metadata.inherit_json(args.parent)
+    else:
+      results = inherit_metadata.inherit(args.parent)
 
     #place the inherited info in the output
     output['metadata'] |= results['metadata']

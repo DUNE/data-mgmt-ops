@@ -16,9 +16,9 @@ def make_md_from_args(args):
   return md
 
 def base_args(parser):
-  parser.add_argument('--start_time', default=None,)
-  parser.add_argument('--end_time', default=None,)
-  parser.add_argument('--file_format', type=str)
+  parser.add_argument('--start_time', default=None, type=float)
+  parser.add_argument('--end_time', default=None, type=float)
+  parser.add_argument('--file_format', type=str) ##TODO -- make required
   parser.add_argument('--app_family', type=str)
   parser.add_argument('--app_name', type=str)
   parser.add_argument('--app_version', type=str)

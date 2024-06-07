@@ -34,6 +34,36 @@ def get_parent_md(parent_name):
   inherited_md = {rk:parent_md[rk] for rk in required_keys}
   return inherited_md
 
+def get_parent_md_from_json(parent_md):
+  check_md(required_keys, parent_md, parent_md)
+  inherited_md = {rk:parent_md[rk] for rk in required_keys}
+  return inherited_md
+
+def get_name_from_json(json_vals):
+  if 'did' in json_vals:
+    return {'did': json_vals['did']}
+  elif 'name' in json_vals and 'namespace' in json_vals:
+    return {
+      'name':json_vals['name'],
+      'namespace':json_vals['namespace'],
+    }
+  elif 'fid' in json_vals:
+    return {'fid': json_vals['fid']}
+  else:
+    raise Exception(
+      'Error! Tried importing parent name from json but could not find field'
+    )
+
+def inherit_json(parent_json):
+  with open(parent_json, 'r') as f:
+    parent_json_values = json.load(f)
+
+  output = {
+    'parents': [get_name_from_json(parent_json_values)],
+    'metadata': get_parent_md_from_json(parent_json_values['metadata']),
+  }
+  return output
+
 def inherit(parent_name):
   output = {
     'parents':[
