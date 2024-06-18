@@ -15,7 +15,7 @@ consistent = ["core.file_type","core.file_format","core.data_tier","core.group",
 we can add to that list.
         
 
-
+'''
 usage: mergeMetaCat.py [-h] [--fileName FILENAME] [--nameSpace NAMESPACE]
                        [--jsonList JSONLIST] [--fileList FILELIST] [-s S]
                        [-t T] [-u U] [--dataTier DATATIER]
@@ -38,6 +38,7 @@ options:
   --application APPLICATION
                         merge application name
   --version VERSION     software version for merge
+  '''
 
 
 ## future duplicate nuking framework
