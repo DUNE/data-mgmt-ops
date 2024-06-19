@@ -2,6 +2,8 @@
 
 # this provides a meta data merger class which given a defined list of external information about a file and a list of input files, will produce metadata for the output.
 
+# originally used by MINERvA
+
 # H Schellman, Sept. 13, 2021
 
 import os,sys,time,datetime
@@ -9,6 +11,8 @@ from metacat.webapi import MetaCatClient
 import json
 import argparse
 from statistics import mean
+from TypeChecker import TypeChecker
+import CheckSum
 
 mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
 
@@ -16,35 +20,39 @@ mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
 #-------utilities ------#
 
 def dumpList(the_list):
+    'dump something item by item'
     for item in the_list:
         print (item, the_list[item])
 
-
 def timeform(now):
+    'time formatting'
     timeFormat = "%Y-%m-%d_%H:%M:%S"
     nowtime = now.strftime(timeFormat)
     nowTstamp= time.strptime(nowtime,timeFormat)
     return int(time.mktime(nowTstamp))
 
- 
-
-
 class mergeMeta():
   #""" Base class for making metadata for a file based on parents"""
   
-    def __init__(self, opts):
+    def __init__(self, opts, debug):
+        'basic setup for mergeMeta'
       
         self.opts = opts #this is a dictionary containing the option=>value pairs given at the command line
+        self.debug = debug
         self.mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
         # these are things you need to tell the program
-        self.externals = ["name","namespace","core.start_time","core.end_time","size",'core.data_tier',"core.application",'core.application.version']
+        self.externals = ["name","namespace","core.start_time","core.end_time","size",'core.data_tier',"core.application.name",'core.application.version']
+
         # these are things you cannot mix in a merge
-        self.consistent = ["core.file_type","core.file_format","core.data_tier","core.group",'core.application','dune.campaign']
+        self.consistent = ["core.file_type","core.file_format","core.data_tier",'core.application.name','dune.campaign']
+
         # these are things you can ignore or merge
         self.ignore = ["checksum","created_timestamp","Offline.options","core.first_event_number_number","parents","Offline.machine","core.last_event_number","core.runs","core.runs_subruns"]
+
         self.source = "metacat" # alternative = local
+
         self.special = ['info.wallsec', 'info.memory', 'info.cpusec', 'DUNE.fcl_name']
-        self.debug = True
+
 ############################################
 ## Function that forms merged metadata
 ## for a list of files
@@ -52,6 +60,7 @@ class mergeMeta():
     def checkmerge(self, the_list):
         ' input is a list of metacat files'
         checks = {}
+        # initialize checks for consistency - items in consistent should only have one variant in the list
         for tag in self.consistent:
             checks[tag] = []
   
@@ -88,18 +97,19 @@ class mergeMeta():
             
           #Checks that all files have the same value for this field
             for tag in self.consistent:
-                if (len(checks[tag]) != 1):
-                    print ("tag ", tag, " has problem ",checks[tag])
+                if (len(checks[tag]) > 1):
+                    print ("checkMetaCat: tag ", tag, " has problem ",checks[tag])
                     return False
         
         return True
 
   
     def concatenate(self, the_list, externals, user=''):
+        
       # here are things that are unique to the output and must be supplied externally
         for tag in self.externals:
             if not tag in externals:
-                print ("must supply", tag, "before we can merge")
+                print ("checkMetaCat: must supply", tag, "before we can merge")
                 sys.exit(2)
             
         firstevent = 999999999999
@@ -125,7 +135,7 @@ class mergeMeta():
         a = 0
         special_md = {}
         for f in the_list:
-            if self.debug: print ("look at ",f)
+            if self.debug: print ("checkMetaCat: look at ",f)
             if not a%100: print('%i/%i'%(a, len(the_list)), end='\r')
             #print('%i/%i'%(a, len(the_list)))
             a += 1
@@ -142,12 +152,18 @@ class mergeMeta():
                     print(" looking at:", f)
                   
                 with open(f, 'r') as metafile:
-                    thismeta = json.load(metafile)
+                    mainmeta = json.load(metafile)
             else:
-                print ("look for did",f)
+                if self.debug:  ("look for did",f)
+                if ":" not in f:
+                    if self.debug:  ("file",f,"is missing namespace")
+                    sys.exit(1)
                 parse = f.split(":")
 
                 mainmeta = mc_client.get_file(name=parse[1],namespace=parse[0])# ,with_metadata=True,with_provenance=True)
+            if mainmeta == None:
+                print ("checkMetaCat: file",f, "had no metadata")
+                sys.exit(1)
             thismeta = mainmeta["metadata"]
             #print (thismeta)
             if self.debug:
@@ -156,12 +172,12 @@ class mergeMeta():
             #Loop over tags in the metadata
             for tag in thismeta:
                 if self.debug:
-                    print (" check tag ", tag)
+                    print ("checkMetaCat:  check tag ", tag)
                   ##Check if it's a new field
                 if (tag not in self.consistent and
                     tag not in self.externals and tag not in mix):
                     if self.debug:
-                        print (" found a new parameter to worry about", tag)
+                        print ("checkMetaCat:  found a new parameter to worry about", tag)
                     if tag in self.special:
                       # print('special', tag)
                         self.getSpecialMD(tag, thismeta[tag], special_md)
@@ -169,13 +185,13 @@ class mergeMeta():
                         mix[tag]=[thismeta[tag]]
             if self.debug:
                 dumpList(thismeta)
-            #print ("meta is", thismeta)
-            #print ("mix is", mix)
+            #print ("checkMetaCat: meta is", thismeta)
+            #print ("checkMetaCat: mix is", mix)
 
             #Loop over the tags that must be consistent
             #and add the fields to the checklist
             for tag in self.consistent:
-                print (tag,checks[tag])
+                if self.debug: print (tag,checks[tag])
                 if tag not in thismeta: continue
                 if thismeta[tag] not in checks[tag]:
                     checks[tag].append(thismeta[tag])
@@ -186,17 +202,18 @@ class mergeMeta():
                     if thismeta[tag] not in mix[tag]:
                         mix[tag].append(thismeta[tag])
                         if self.debug:
-                            print ("tag",tag," has", len(mix[tag]), "mixes")
+                            if self.debug:  ("tag",tag," has", len(mix[tag]), "mixes")
 
             #Get the first and last events and the count
-            try:
+            if "core.first_event_number" in thismeta:
                 if thismeta["core.first_event_number"] <= firstevent:
                     firstevent = thismeta["core.first_event_number"]
+            if "core.last_event_number" in thismeta:      
                 if thismeta["core.last_event_number"] >= lastevent:
                     lastevent = thismeta["core.last_event_number"]
+            if "core.event_count" in thismeta: 
                 eventcount = eventcount + thismeta["core.event_count"]
-            except:
-                print ("something in event count, firstevent, lastevent is missing",thismeta)
+        
             # is this already in the runlist
             runlist = runlist + thismeta["core.runs"]
             subrunlist = subrunlist + thismeta["core.runs_subruns"]
@@ -214,8 +231,11 @@ class mergeMeta():
         #first check that things are not getting mixed up,
         #these are things that should carry through.
         for tag in self.consistent:
-            if(len(checks[tag]) != 1):
-                print ("tag ", tag, " has problem ",checks[tag]," clean up file list and retry")
+            if (len(checks[tag]) == 0):
+                print ("checkMetaCat: tag",tag,"is missing, hope this is ok")
+                continue
+            if(len(checks[tag]) > 1):
+                print ("checkMetaCat tag ", tag, " has problem ",checks[tag]," clean up file list and retry")
                 sys.exit(1)
             else:
                 if "." in tag:
@@ -230,7 +250,7 @@ class mergeMeta():
             if len(mix[tag]) == 1:
                 newJsonMetaData[tag] = mix[tag][0]
             elif len(mix[tag]) > 1:
-                print ("don't write out mixed tags", tag)
+                print ("checkMetaCat: don't write out mixed tags", tag)
                 #print (mix[tag])
 
         self.finishSpecialMD(special_md)
@@ -238,7 +258,7 @@ class mergeMeta():
         # overwrite with the externals if they are there
         for tag in externals:
             if "." in tag:
-                print ("overwrite top levein info with external",tag,externals[tag])
+                if self.debug:  ("overwrite top levein info with external",tag,externals[tag])
                 newJsonMetaData[tag] = externals[tag]
         for tag in special_md:
             if "." in special_md:
@@ -278,10 +298,10 @@ class mergeMeta():
 
         for tag in externals:
             if "." not in tag:
-                print ("overwrite top levein info with external",tag,externals[tag])
+                if self.debug:  ("overwrite top levein info with external",tag,externals[tag])
                 newJsonData[tag] = externals[tag]
         if(self.debug):
-            print ("-------------------\n")
+            print ("checkMetaCat: -------------------\n")
             dumpList(newJsonData)
         
         # self.mc_client.validateFileMetadata(newJsonData)
@@ -289,10 +309,14 @@ class mergeMeta():
         #  self.mc_client.validateFileMetadata(newJsonData)
         #except Exception:
         #  print (" metadata validation failed - write it out anyways")
-        
+        try:
+            status,fixes = TypeChecker(newJsonData,verbose=False)
+            if not status: print ("checkMetaCat: Checked metadata",status,fixes)
+        except:
+            print ("checkMetaCat: TypeChecker failed")
         return newJsonData
     
-    def setDebug(self, debug=True):
+    def setDebug(self, debug=False):
         self.debug = debug 
     def setSourceLocal(self):
         self.source = "local"
@@ -317,7 +341,7 @@ class mergeMeta():
         ##skip these fields from parents
         skip = ['did', 'created_timestamp', 'creator', 'size', 'checksum',
                 'core.content_status', 'core.file_type', 'core.file_format', 'core.group', 'core.data_tier',
-                'core.application', 'core.event_count', 'core.first_event_number', 'core.last_event_number',
+                'core.application.name', 'core.event_count', 'core.first_event_number', 'core.last_event_number',
                 'core.start_time', 'core.end_time', 'art.file_format_era',
                 'art.file_format_version', 'art.first_event', 'art.last_event',
                 'art.process_name', 'DUNE.requestid', 'runs',
@@ -373,34 +397,32 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename, newnamespace, datatier, application, version, flist, merge_type, do_sort=0, user=''):
+def run_merge(newfilename, newnamespace, datatier, application, version, flist, merge_type, do_sort=0, user='', debug=False):
     
     opts = {}
-    maker = mergeMeta(opts)
+    maker = mergeMeta(opts,debug)
     if merge_type == 'local':
         maker.setSourceLocal()
     elif merge_type == 'metacat':
         maker.setSourceMetaCat()
     else:
-        print('error: mergeMeta -t provided is not local or samweb', merge_type)
+        print('error: mergeMeta -t provided is not local or metacat', merge_type)
         return 1
 
     inputfiles = flist
-    #print (inputfiles)
-
+  
     if (do_sort != 0):
         inputfiles.sort()
       
-    #app_info = {
-    #  "family": "protoduneana",
-    #  "name": "pdspana",
-    #  "version": os.getenv("PROTODUNEANA_VERSION")
-    #} 
-    externals = {"name": newfilename,
-                 "namespace": newnamespace,
-                #"application": app_info,
+    # these need to be set here as they define the output file.  
+    checksum = CheckSum.Adler32(newfilename)
+    if debug: print ("Checksum is ",newfilename,checksum)
+ 
+    externals = {
+                "name": os.path.basename(newfilename),
+                "namespace": newnamespace,
                 "core.data_tier": datatier,
-                "core.application": application,
+                "core.application.name": application,
                 "core.application.version": version,
                 "size": os.path.getsize(newfilename),
                 "core.data_stream": "physics",
@@ -412,18 +434,18 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 "retired_timestamp":None,
                 "updated_by":None,
                 "updated_timestamp":None,
-                "checksums":None
+                "checksums":{"adler32":checksum}
                 }
                 
     DEBUG = 0
     if DEBUG:
         print (externals)
     #test = maker.checkmerge(inputfiles)
-    #print ("merge status",test)
+    #print ("checkMetaCat: merge status",test)
     #if test:
-    print ("concatenate")
+    if debug: print ("checkMetaCat: concatenate")
     meta = maker.concatenate(inputfiles,externals, user=user)
-    print ("done")
+    if debug: print ("checkMetaCat: done")
     #print(meta)
 
     f = open(newfilename+".json",'w')
@@ -445,11 +467,12 @@ if __name__ == "__main__":
     parser.add_argument('--dataTier',help='data_tier for output',default='root-tuple',type=str)
     parser.add_argument('--application',help='merge application name',default='merge',type=str)
     parser.add_argument('--version',help='software version for merge',default="v0",type=str)
+    parser.add_argument('--debug',help='software version for merge',default=False,action='store_true')
     args = parser.parse_args()
-    print (args.fileList)
-
+    # print (args.fileList)
+    
     if args.jsonList is None and args.fileList == None:
-        print ("need to provide name of a file contaiing either a list of local files or a list of metacat dids")
+        print ("checkMetaCat: need to provide name of a file contaiing either a list of local files or a list of metacat dids")
         sys.exit(1)
     if args.t == "local":
         fname = args.jsonList
@@ -467,4 +490,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
         
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug)
