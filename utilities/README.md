@@ -4,6 +4,53 @@ Please work on a branch and then do a pull request
 
 Please list utilities and their use in this file.
 
+## mergeMetaData
+
+takes a file and  list of filenames (either paths or metacat dids) used to make that file and creates new metadata.
+
+complains and stops if you try to merge across a wide range of things you should not combine in one file
+
+consistent = ["core.file_type","core.file_format","core.data_tier","core.group",'core.application','dune.campaign']
+
+we can add to that list.
+        
+
+
+usage: mergeMetaCat.py [-h] [--fileName FILENAME] [--nameSpace NAMESPACE]
+                       [--jsonList JSONLIST] [--fileList FILELIST] [-s S]
+                       [-t T] [-u U] [--dataTier DATATIER]
+                       [--application APPLICATION] [--version VERSION]
+
+Merge Meta
+
+options:
+
+  -h, --help            show this help message and exit
+  
+  --fileName FILENAME   Name of merged file
+  
+  --nameSpace NAMESPACE                 Namespace for merged file
+  
+  --jsonList JSONLIST   Name of file containing list of json files if -t=local
+  
+  --fileList FILELIST   Name of file containing list of metacat did if
+                        -t=metacat
+                        
+  -s S                  Do Sort?
+  
+  -t T                  local or metacat
+  
+  -u U                  Patch user to specified. Leave empty to not patch
+  
+  --dataTier DATATIER   data_tier for output
+  
+  --application APPLICATION
+                        merge application name
+                        
+  --version VERSION     software version for merge
+
+
+
 ## future duplicate nuking framework
 
 Script MetaNuker is in development 
