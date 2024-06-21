@@ -48,20 +48,34 @@ def mergeData(newpath,input_files):
 if __name__ == "__main__":
 
     test=False
-    debug=True
+    debug=False
     fast=False # dangerous as merges data but not meta properly
 
+    outsize = 4000000000
+
     parser = argparse.ArgumentParser(description='Merge Data')
-    parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
+    parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged_WORKFLOW.root")
     parser.add_argument("--workflow",type=int, help="workflow id to merge",required=True)
+    parser.add_argument("--limit",type=int, help="limit on query",default=100)
+    parser.add_argument("--skip",type=int, help="skip on query",default=0)
+
+    #parser.add_argument("--chunk",type=int,help="# of files to put in a single chunk",chunk=100)
     args = parser.parse_args()
 
     # get a list of files from metacat
 
-    query = "files where dune.workflow['workflow_id']=%d and core.data_tier=root-tuple"%args.workflow
+    query = "files where dune.workflow['workflow_id']=%d and core.data_tier=root-tuple skip %d limit %d"%(args.workflow,args.skip, args.limit)
+
     print ("mergeRoot: metacat query = ", query)
     alist = list(mc_client.query(query=query))
+
     theinfo = mc_client.query(query=query,summary="count")
+    # in future, want to use this to break into chunks
+    chunks = int(theinfo["total_size"]/outsize)+1
+    spans = int(len(alist)/chunks) + 1
+
+    
+    print (theinfo, "chunks = ", chunks,"spans=", spans)
     if debug: print (theinfo)
     if len(alist)< 1:
         print ("mergeRoot: no files match that query, quitting")
@@ -70,33 +84,44 @@ if __name__ == "__main__":
     for file in alist:
         thedid = "%s:%s"%(file["namespace"],file["name"])
         flist.append(thedid)
-
+        print ("new file",file)
+    
+    print (flist)
 # now get a list of locations from rucio
 #     
     if test: # this just allows tests without using rucio
         locations =  makeFake(os.path.join(os.getenv("TMP"),"fake.root"),flist,os.getenv("TMP"))
     else:   
         locations = []  
+        goodfiles = []
         # doing this because I cannot figure out syntax to feed a list of files to rucio
-        for file in alist:
-            did = "%s:%s"%(file["namespace"],file["name"]) 
-            rucio_args = ["rucio","list-file-replicas", "--pfns", did.strip()]      
+        for file in flist:
+            rucio_args = ["rucio","list-file-replicas", "--pfns","--protocols=root", file]      
             completed_process = run(rucio_args, capture_output=True,text=True)   
             thepath = completed_process.stdout.strip()
-            if fast and "eos" in thepath: continue
+            # this is here so you can skip files from known bad sites. 
+            if ("qmul" in thepath or "eos" in thepath): continue
+            goodfiles.append(file)
             locations.append(thepath)
 
     if debug: print (locations)
-    newfile = args.fileName
-    newfile = mergeData(newfile,locations)
+    outputfile = args.fileName.replace("WORKFLOW","%d"%args.workflow)
 
+    
+    chunk = 0
+    pointer = 0
+    
+    newfile = mergeData(outputfile,locations)
+    #print ("doing ",pointer,"through",pointer+spans-1)
+    #chunk += 1
+    #pointer += spans
     print ("mergeRoot: output will go to ",newfile)
 
     #print (thelist)
     if debug: print (flist)
     retcode = run_merge(newfilename=newfile, newnamespace=os.getenv("USER"), 
-                        datatier="root-tuple", application="merge_root", version="v0", flist=alist, 
+                        datatier="root-tuple", application="merge_root", version="v0", flist=goodfiles, 
                         merge_type="metacat", do_sort=0, user='', debug=debug)
     print ("MergeRoot: retcode", retcode)
 
-    
+        

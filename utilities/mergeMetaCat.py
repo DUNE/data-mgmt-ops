@@ -408,13 +408,15 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
     else:
         print('error: mergeMeta -t provided is not local or metacat', merge_type)
         return 1
-
+    maker.setDebug(debug)
     inputfiles = flist
   
     if (do_sort != 0):
         inputfiles.sort()
       
     # these need to be set here as they define the output file.  
+
+    print (" about to do checksum on newfilename",newfilename)
     checksum = CheckSum.Adler32(newfilename)
     if debug: print ("Checksum is ",newfilename,checksum)
  
@@ -490,5 +492,5 @@ if __name__ == "__main__":
     else:
         print (fname, " does not exist")
         sys.exit(1)
-        
+
     run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug)
