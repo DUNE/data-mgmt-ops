@@ -47,7 +47,7 @@ class mergeMeta():
         self.consistent = ["core.file_type","core.file_format","core.data_tier",'core.application.name','dune.campaign']
 
         # these are things you can ignore or merge
-        self.ignore = ["checksum","created_timestamp","Offline.options","core.first_event_number_number","parents","Offline.machine","core.last_event_number","core.runs","core.runs_subruns"]
+        self.ignore = ["checksum","created_timestamp","Offline.options","core.first_event_number","parents","Offline.machine","core.last_event_number","core.runs","core.runs_subruns"]
 
         self.source = "metacat" # alternative = local
 

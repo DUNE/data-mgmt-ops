@@ -54,7 +54,7 @@ if __name__ == "__main__":
     outsize = 4000000000
 
     parser = argparse.ArgumentParser(description='Merge Data')
-    parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged_WORKFLOW.root")
+    parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
     parser.add_argument("--workflow",type=int, help="workflow id to merge",required=True)
     parser.add_argument("--limit",type=int, help="limit on query",default=100)
     parser.add_argument("--skip",type=int, help="skip on query",default=0)
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     # get a list of files from metacat
 
-    query = "files where dune.workflow['workflow_id']=%d and core.data_tier=root-tuple skip %d limit %d"%(args.workflow,args.skip, args.limit)
+    query = "files where dune.workflow['workflow_id']=%d and core.data_tier=root-tuple ordered skip %d limit %d"%(args.workflow,args.skip, args.limit)
 
     print ("mergeRoot: metacat query = ", query)
     alist = list(mc_client.query(query=query))
@@ -105,7 +105,8 @@ if __name__ == "__main__":
             locations.append(thepath)
 
     if debug: print (locations)
-    outputfile = args.fileName.replace("WORKFLOW","%d"%args.workflow)
+    tag = "%d_%d_%d"%(args.workflow,args.skip,args.limit)
+    outputfile = args.fileName.replace(".root",tag+".root")
 
     
     chunk = 0
