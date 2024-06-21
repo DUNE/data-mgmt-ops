@@ -100,7 +100,9 @@ if __name__ == "__main__":
             completed_process = run(rucio_args, capture_output=True,text=True)   
             thepath = completed_process.stdout.strip()
             # this is here so you can skip files from known bad sites. 
-            if ("qmul" in thepath or "eos" in thepath): continue
+            if ("qmul" in thepath): 
+                print ("SKIPPING QMUL")
+                continue
             goodfiles.append(file)
             locations.append(thepath)
 
