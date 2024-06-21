@@ -121,8 +121,9 @@ class MetaFixer:
             if check == "parentage":
                 self.parentfixer(filemd)
             if check == "types":
-                status = TypeChecker(filemd,self.errfile)
+                status, fixer = TypeChecker(filemd,self.errfile)
                 print ("result of type check",filemd["name"],status)
+        
 
     def parentfixer(self, filemd=None,check="parentage"):
         ' check parentage of the file '

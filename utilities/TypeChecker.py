@@ -76,10 +76,12 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             print (error)
             errfile.write(error)
             valid *= False
+            print (filemd.keys())
+            
                 
         # check type
         if xtype != type(filemd[x]) and x != "metadata":
-            if xtype == FLOAT and type(md[x]) == INT: continue
+            if xtype == FLOAT and type(filemd[x]) == INT: continue
             error = "%s has wrong type in %s \n"%(x,fid)
             print (error)
             errfile.write(error)
@@ -93,11 +95,11 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
         
         # check required keys
         if x not in md.keys():
-            if "core.data_tier" in md and md["core.data_tier"] in optional and x in optional[md["core.data_tier"]]:  # skip optional items by data_tier
+            # if "core.data_tier" in md and md["core.data_tier"] in optional and x in optional[md["core.data_tier"]]:  # skip optional items by data_tier
                  
-                print ("skipping optional missing field for data_tier",md["core.data_tier"],x)
-                continue
-            error = x+ " is missing from "+ fid + "\n"
+            #     print ("skipping optional missing field for data_tier",md["core.data_tier"],x)
+            #     continue
+            error = x+ " is missing from " + fid + "\n"
             print (error)
             errfile.write(error)
             valid *= False
