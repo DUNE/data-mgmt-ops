@@ -4,7 +4,7 @@ import os,sys,json
 
 def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
     " check for type and missing required fields in metadata"
-
+    DEBUG=False
     # define types
     STRING = type("")
     FLOAT = type(1.0)
@@ -37,6 +37,9 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             "core.runs_subruns": LIST,
             "core.start_time": FLOAT,
             "dune.daq_test": STRING,
+            "dune.config_file": STRING,
+            "dune_mc.gen_fcl_filename": STRING,
+            "dune_mc.geometry_version":STRING,
             "retention.status": STRING,
             "retention.class": STRING
         }
@@ -51,7 +54,14 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
     
     # place to put optional fields: all is optional for all, otherwise you need to tell it data_tier
 
-    optional = { "all":["core.events","dune.daq_test"],"root-tuple":["core.first_event_number","core.last_event_number","core.data_stream"]}
+    optional = { "all":["core.events","dune.daq_test"],
+                "root-tuple":["core.event_count","core.first_event_number","core.last_event_number"],
+                "raw":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
+                "trigprim":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
+                "root-tuple-virtual":["core.event_count","core.first_event_number","core.last_event_number"]}
+    
+    
+    
    
     did = filemd["namespace"]+":"+filemd["name"]
 
@@ -92,13 +102,17 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
     for x, xtype in basetypes["metadata"].items():
         if verbose: print (x,xtype)
         if x in optional["all"]: continue # skip optional items
+        if "core.run_type" in md and md["core.run_type"] != "mc" and "mc" in x: 
+            if DEBUG: print ("skipping mc only",x)
+            continue
+
         
         # check required keys
         if x not in md.keys():
-            # if "core.data_tier" in md and md["core.data_tier"] in optional and x in optional[md["core.data_tier"]]:  # skip optional items by data_tier
+            if "core.data_tier" in md and md["core.data_tier"] in optional and x in optional[md["core.data_tier"]]:  # skip optional items by data_tier
                  
-            #     print ("skipping optional missing field for data_tier",md["core.data_tier"],x)
-            #     continue
+                if DEBUG: print ("skipping optional missing field for data_tier",md["core.data_tier"],x)
+                continue
             error = x+ " is missing from " + fid + "\n"
             print (error)
             errfile.write(error)
