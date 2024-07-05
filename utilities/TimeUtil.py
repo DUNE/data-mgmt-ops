@@ -12,7 +12,7 @@ def unix_to_timestamp(unix_time):
     Convert Unix timestamp to UTC timestamp for filenams
     """
     utc_time = datetime.fromtimestamp(unix_time, tz=timezone.utc)
-    return utc_time.strftime('%Y%m%dT%H%M%S %Z')
+    return utc_time.strftime('%Y%m%dT%H%M%S')
 
 def unix_to_isotimestamp(unix_time):
     """
