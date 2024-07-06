@@ -38,7 +38,7 @@ def makeHash(alist):
 def mergeData(newpath,input_files):
     'use hadd to merge the data, no limit on length of list'
     #if os.path.exists(newpath):
-    newpath = newpath.replace(".root","_"+makeTimeStamp()+"_"+makeHash(input_files)+".root")
+    #newpath = newpath.replace(".root","_"+makeTimeStamp()+"_"+makeHash(input_files)+".root")
     args = ["hadd", "-f", newpath] + input_files
     #print (args)
     retcode = call(args)
@@ -56,19 +56,26 @@ def cleanup(local):
 if __name__ == "__main__":
 
     test=False
-    debug=False
+    debug=True
     fast=False # dangerous as merges data but not meta properly
 
     outsize = 4000000000
 
     parser = argparse.ArgumentParser(description='Merge Data')
-    parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
-    parser.add_argument("--workflow",type=int, help="workflow id to merge",required=True)
+    #parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
+    parser.add_argument("--workflow",type=int, help="workflow id to merge",default=None)
     parser.add_argument("--chunk",type=int, help="number of files/merge",default=20)
+    parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=1000)
+    parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
+    parser.add_argument("--run",type=int, help="run number", default=None)
     #parser.add_argument("--skip",type=int, help="skip on query",default=0)
 
     #parser.add_argument("--chunk",type=int,help="# of files to put in a single chunk",chunk=100)
     args = parser.parse_args()
+
+    if args.workflow is None and args.run is None:
+        print ("need to specify either workflow or run")
+        sys.exit(1)
 
     # get a list of files from metacat
 
@@ -78,14 +85,19 @@ if __name__ == "__main__":
     print ("starting up")
     for data_stream in ["cosmics","calibration","physics"]:
         todo = True
-        chunk = args.chunk
-        skip = 0 
+        chunk = min(args.chunk,args.nfiles)
+        skip = args.skip
+        count = 0
+        print (data_stream,chunk,skip)
         while todo:
-            query = "files where dune.workflow['workflow_id']=%d and core.data_tier=root-tuple and core.data_stream=%s ordered skip %d limit %d"%(args.workflow,data_stream,skip, chunk)
-            tag = "%d_%s_%d_%d"%(args.workflow,data_stream,skip,chunk)
-            skip += chunk
-            if debug and skip > 4*chunk: 
-                todo = False
+            if args.workflow is not None:
+                query = "files where core.run_type=hd-protodune and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=root-tuple and core.data_stream=%s ordered skip %d limit %d"%(args.workflow,data_stream,skip, chunk)
+                jobtag = "workflow%d"%args.workflow
+                
+            else:
+                query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=root-tuple and core.data_stream=%s ordered skip %d limit %d"%(args.run,data_stream,skip, chunk)
+                jobtag = "run%d"%args.run
+
             print ("mergeRoot: metacat query = ", query)
             alist = list(mc_client.query(query=query))
             if len(alist)<= 0:
@@ -142,11 +154,10 @@ if __name__ == "__main__":
                                 if debug: print ("this is a bad site",site)
                                 goodsite = False
                                 break
-                        if not goodsite:
-                            print ("skipping a bad site",rse,badsites)
+                        if goodsite:     
+                            if debug: print ("this site is ok",rse,badsites)
+                            location = rse
                             continue
-                        if debug: print ("this site is ok",rse,badsites)
-                        location = rse
                     if location is None:
                         print ("giving up on this file",rse)
                         missed.append(did)
@@ -163,6 +174,7 @@ if __name__ == "__main__":
                     local.append(os.path.join("./cache",os.path.basename(location)))
                     goodfiles.append(did)
                     locations.append(location)
+                    
                 #     rucio_args = ["rucio","list-file-replicas", "--pfns","--protocols=root", file]      
                 #     print ("rucio args",rucio_args)
                 #     completed_process = run(rucio_args, capture_output=True,text=True)   
@@ -182,11 +194,42 @@ if __name__ == "__main__":
 
             # copy files to local area for merge
 
+            if len(goodfiles) >= 1:
+                
+                print (goodfiles[0])
+                firstmeta = mc_client.get_file(did=goodfiles[0],with_metadata=True)
+                firstname = firstmeta["name"]
+                pieces = firstname.split("_")
+                pieces = pieces[0:2]+pieces[7:]
+                keep = []
+                
+                for i in range(0,len(pieces)):
+                    x = pieces[i]
+                    #print (x[0:3],x[0:3])
+                    if x[0:3] == "run": 
+                        
+                        continue
+                    if x[0:4] == "2024": continue
+                    if "datawriter" in x: 
+                    
+                        continue
+                    if "dataflow" in x: continue
+                    keep.append(x)
+                
+
+                    
+                
+                newname ='_'.join(keep)
+                newname = newname.replace(".root","_merged_%s_%s_skip%d_lim%d_%s.root"%(data_stream,jobtag,skip,chunk,makeTimeStamp()))
+                print ("newname",newname)
+            else:
+                print ("no good files left")
+            skip += chunk
+            count += chunk
+            if count >= args.nfiles: 
+                todo = False
             
-            
-            
-            outputfile = args.fileName.replace(".root",tag+".root")
-    
+            outputfile = newname
             newfile = mergeData(outputfile,local)
 
 

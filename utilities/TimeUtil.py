@@ -18,8 +18,8 @@ def unix_to_isotimestamp(unix_time):
     """
     Convert Unix timestamp to UTC timestamp in ISO format
     """
-    mytime=datetime.now(timezone.utc)
-    stringtime = (datetime.fromtimestamp(int(mytime.timestamp()),tz=timezone.utc)).isoformat(timespec='seconds')
+    
+    stringtime = (datetime.fromtimestamp(unix_time,tz=timezone.utc)).isoformat(timespec='seconds')
     return stringtime
 
 def utc_to_unix(utc_time):
