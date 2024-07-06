@@ -4,7 +4,7 @@ Please work on a branch and then do a pull request
 
 Please list utilities and their use in this file.
 
-## mergeMetaData
+## mergeMetaCat
 
 takes a file and  list of filenames (either paths or metacat dids) used to make that file and creates new metadata.
 
@@ -49,7 +49,40 @@ options:
                         
   --version VERSION     software version for merge
 
+## mergeRoot.py
 
+merge root files.  need to specify a workflow or a run number. Assumes this is data from hd-protodune running
+
+- chunk is the # of files to merge at once
+- skip is the starting file #
+- nfiles is the total # of files to merge
+- workflow or run need to be specified
+
+right now it xrdcp's to local cache area and ignores some sites so not full production ready.
+
+### example to run 2 jobs
+
+~~~
+mergeRoot.py --run=27309 --chunk=50 --skip=0 --nfiles=1000
+mergeRoot.py --run=27309 --chunk=50 --skip=1000 --nfiles=1000
+~~~
+
+
+~~~
+python mergeRoot.py  --help
+usage: mergeRoot.py [-h] [--workflow WORKFLOW] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP]
+                    [--run RUN]
+
+Merge Data
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --workflow WORKFLOW  workflow id to merge
+  --chunk CHUNK        number of files/merge
+  --nfiles NFILES      number of files to merge total
+  --skip SKIP          number of files to skip before doing nfiles
+  --run RUN            run number
+~~~
 
 ## future duplicate nuking framework
 
