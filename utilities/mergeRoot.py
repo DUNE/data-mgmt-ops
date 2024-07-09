@@ -49,14 +49,15 @@ def mergeData(newpath,input_files):
 
 def cleanup(local):
     for file in local:
-        print ("removing",file)
-        os.remove(file)
+        if "cache" in file:
+            print ("removing",file)
+            os.remove(file)
     
 
 if __name__ == "__main__":
 
     test=False
-    debug=True
+    debug=False
     fast=False # dangerous as merges data but not meta properly
 
     outsize = 4000000000
@@ -68,6 +69,7 @@ if __name__ == "__main__":
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=1000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
+    parser.add_argument("--destination",type=str,help="destination directory", default=None)
     #parser.add_argument("--skip",type=int, help="skip on query",default=0)
 
     #parser.add_argument("--chunk",type=int,help="# of files to put in a single chunk",chunk=100)
@@ -88,15 +90,17 @@ if __name__ == "__main__":
         chunk = min(args.chunk,args.nfiles)
         skip = args.skip
         count = 0
-        print (data_stream,chunk,skip)
+        if debug: print (data_stream,chunk,skip)
         while todo:
             if args.workflow is not None:
                 query = "files where core.run_type=hd-protodune and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=root-tuple and core.data_stream=%s ordered skip %d limit %d"%(args.workflow,data_stream,skip, chunk)
-                jobtag = "workflow%d"%args.workflow
+                sworkflow = str(args.workflow).zfill(6)
+                jobtag = "workflow%s"%srun
                 
             else:
                 query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=root-tuple and core.data_stream=%s ordered skip %d limit %d"%(args.run,data_stream,skip, chunk)
-                jobtag = "run%d"%args.run
+                srun = str(args.run).zfill(6)
+                jobtag = "run%s"%srun
 
             print ("mergeRoot: metacat query = ", query)
             alist = list(mc_client.query(query=query))
@@ -140,6 +144,7 @@ if __name__ == "__main__":
                 missed = []
 
                 badsites = ["qmul","surfsara"]
+                goodsites = ["fnal"]
                 for file in result:
                     did = file["scope"]+":"+file["name"]
                     pfns = file["pfns"]
@@ -148,30 +153,39 @@ if __name__ == "__main__":
                     
                     for rse in pfns:
                         if debug: print ("\n RSE",rse)
-                        goodsite = True
-                        for site in badsites:
+                        goodsite = False
+                        # for site in badsites:
+                        #     if site in rse:
+                        #         if debug: print ("this is a bad site",site)
+                        #         goodsite = False
+                        #         break
+                        for site in goodsites:
                             if site in rse:
-                                if debug: print ("this is a bad site",site)
-                                goodsite = False
+                                if debug: print ("this is a good site",site)
+                                goodsite = True
                                 break
                         if goodsite:     
                             if debug: print ("this site is ok",rse,badsites)
                             location = rse
-                            continue
+                            break
+            
                     if location is None:
                         print ("giving up on this file",rse)
                         missed.append(did)
                         continue
-                    cp_args = ["xrdcp",location,"./cache/."]
-                    try:
-                        completed_process = run(cp_args, capture_output=True,text=True)   
-                        if debug: print (completed_process)
-                
-                        
-                    except Exception as e:
-                        print ("error doing local copy",e)
-                        continue
-                    local.append(os.path.join("./cache",os.path.basename(location)))
+                    if "fnal" not in location:
+                        cp_args = ["xrdcp",location,"./cache/."]
+                        try:
+                            completed_process = run(cp_args, capture_output=True,text=True)   
+                            if debug: print (completed_process)
+                    
+                            
+                        except Exception as e:
+                            print ("error doing local copy",e)
+                            continue
+                        local.append(os.path.join("./cache",os.path.basename(location)))
+                    else: # at fnal
+                        local.append(location)
                     goodfiles.append(did)
                     locations.append(location)
                     
@@ -190,7 +204,7 @@ if __name__ == "__main__":
 
             if debug: print ("local",local)
 
-            if debug: print (locations)
+            #if debug: print (locations)
 
             # copy files to local area for merge
 
@@ -220,7 +234,9 @@ if __name__ == "__main__":
                     
                 
                 newname ='_'.join(keep)
-                newname = newname.replace(".root","_merged_%s_%s_skip%d_lim%d_%s.root"%(data_stream,jobtag,skip,chunk,makeTimeStamp()))
+                sskip = str(skip).zfill(6)
+                schunk = str(chunk).zfill(4)
+                newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
                 print ("newname",newname)
             else:
                 print ("no good files left")
@@ -242,9 +258,27 @@ if __name__ == "__main__":
                                 datatier="root-tuple", flist=goodfiles, 
                                 merge_type="metacat", do_sort=0, user='', debug=debug)
             print ("MergeRoot: retcode", retcode)
-
+            jsonfile = newfile+".json"
             if os.path.exists(newfile):
                 print ("clean up inputs")
                 cleanup(local)
+            if args.destination is not None and os.path.exists(jsonfile):
+                if not os.path.exists(args.destination):
+                    os.mkdir(args.destination)
+                cp_args = ["xrdcp",newfile,jsonfile,args.destination]
+                try:
+                    completed_process = run(cp_args, capture_output=True,text=True)   
+                    if debug: print (completed_process)
+                    newpath = os.path.join(args.destination,os.path.basename(newfile))
+                    if os.path.exists(newpath) and os.path.exists(newpath+".json"):
+                        print ("remove local copy",os.path.basename(newpath))
+                        os.remove(newfile)
+                        os.remove(jsonfile)
+
+            
+                except Exception as e:
+                    print ("error doing copy to destination",e,args.destination)
+                    continue 
+
 
         
