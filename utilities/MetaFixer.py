@@ -28,6 +28,7 @@ import sys
 import os
 import json
 import datetime
+import argparse
 
 
 #import samweb_client
@@ -254,62 +255,78 @@ def parentchecker(query):
                     
 if __name__ == '__main__':
 
-    data_tier = "full-reconstructed"
-    workflow = 1630
-    FIX = False
-    TESTME = False
-    tests = ["types","parentage"]
-    if len(sys.argv) < 2:
-        print ("normally should add a data_tier, and workflow #, default to %s, %s"%(data_tier, workflow))
-        print ("to actually run, the 3rd argument needs to be run '")
-    else:
-        data_tier = sys.argv[1]          
-        workflow = int(sys.argv[2])   
-    if len(sys.argv) > 3:
-        if sys.argv[3] == "run":
-            FIX = True  
-        if sys.argv[3] == "test":
-            TESTME = True
+    parser = argparse.ArgumentParser(description='check and fix metadata')
+    #parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
+    parser.add_argument("--workflows",default=False,action='store_true', help="use worflow id for min/max")
+    parser.add_argument("--runs",default=False,action='store_true', help="use run id for min/max")
+    parser.add_argument("--min",type=int, help="minimum id to check",default = None)
+    parser.add_argument("--max",type=int, help="maximum id to check",default = None)
+    parser.add_argument("--tests",type=str, help="list of tests to run, comma delimited string",default="duplicates")
+    parser.add_argument("--data_tiers",type=str, help="list of data_tiers to test",default = "full-reconstructed")
+    parser.add_argument("--experiment",type=str, help="experiment",default = "hd-protodune")
+    parser.add_argument("--mc",help="set if mc",default=False,action='store_true')
+    parser.add_argument("--fix",help="do or suggest a fix",default=False,action='store_true')
+    parser.add_argument("--debug",help="do a short run with printout", default=False,action='store_true')
+    #data_tier = "full-reconstructed"
+    #workflow = 1630
+    args = parser.parse_args()
+    FIX = args.fix
+    TESTME = args.debug
+    tests = args.tests.split(",")
+    data_tiers = args.data_tiers.split(",")
+    print (tests)
+    
 
     #for workflow in [1638,1650]:
     hd = [1630,1631,1632,1650,1638,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
     vd = [1583,1590,1591,1593] + list(range(1610,1630))
 
           
-    for workflow in [1781]:
+    for id in range(args.min,args.max+1):
+        for data_tier in data_tiers:
+            testquery = ""
+            if args.runs:
+                if  "parentage" in tests:
+                    testquery =  "files from dune:all where core.data_tier='%s' and core.runs[any] in (%d) "%(data_tier,id)
+                print ("top level query metacat query",testquery)
+                if "duplicates" in tests:
 
-        testquery = ""
-        if  "parentage" in tests:
-            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) "%(data_tier,workflow)
-        print ("top level query metacat query \" ",testquery, "\"")
-        if "duplicates" in tests:
+                    testquery =  "files from dune:all where core.data_tier='%s' and core.runs[any] in (%d) "%(data_tier,id)
+            else:
+                if args.workflows:
+                    if  "parentage" in tests:
+                            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)"%(data_tier,id)
+                            print ("top level query metacat query",testquery)
+                    if "duplicates" in tests:
 
-            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)"%(data_tier,workflow)
+                        testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)  "%(data_tier,id)
+                else:
+                    print ("need to specify --workflows or --runs")
+                    sys.exit(1)
+            if TESTME:
+                testquery += " limit 100"
+            print (testquery)
 
-        if TESTME:
-            testquery += " limit 100"
-        print (testquery)
+            #parentquery = (parentchecker(testquery))
+            #print ("parent checker",parentquery)
+            summary = mc_client.query(query=testquery,summary="count")
+            #checksummary = mc_client.query(query=parentquery,summary="count")
+            print ("summary of testquery", summary)#, checksummary)
+            # if 0 == checksummary["count"]:
+            #     print ("you seem to have parents for all files - quitting")
+            #     sys.exit(0)
+            now = "%10.0f"%datetime.datetime.now().timestamp()
 
-        #parentquery = (parentchecker(testquery))
-        #print ("parent checker",parentquery)
-        summary = mc_client.query(query=testquery,summary="count")
-        #checksummary = mc_client.query(query=parentquery,summary="count")
-        print ("summary of testquery", summary)#, checksummary)
-        # if 0 == checksummary["count"]:
-        #     print ("you seem to have parents for all files - quitting")
-        #     sys.exit(0)
-        now = "%10.0f"%datetime.datetime.now().timestamp()
-
-        fixer=MetaFixer(verbose=False,errname="%s_%d_%s.txt"%(data_tier,workflow,now),tests=tests, fix=FIX)
-        thelimit=100
-        theskip=0
-        for i in range(0, thelimit):
-            thelist = fixer.getInput(query=testquery,limit=thelimit,skip=theskip)
-            if len(thelist) == 0:
-                print ("got to the end of the list at ",theskip)
-                break
-            fixer.explore()
-            if len(thelist) <= 0:
-                print ("readed end of list at",theskip)   
-            theskip += thelimit
-        fixer.cleanup() 
+            fixer=MetaFixer(verbose=False,errname="%s_%d_%s.txt"%(data_tier,id,now),tests=tests, fix=FIX)
+            thelimit=100
+            theskip=0
+            for i in range(0, thelimit):
+                thelist = fixer.getInput(query=testquery,limit=thelimit,skip=theskip)
+                if len(thelist) == 0:
+                    print ("got to the end of the list at ",theskip)
+                    break
+                fixer.explore()
+                if len(thelist) <= 0:
+                    print ("readed end of list at",theskip)   
+                theskip += thelimit
+            fixer.cleanup() 

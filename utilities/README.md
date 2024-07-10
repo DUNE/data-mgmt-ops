@@ -102,9 +102,38 @@ Nukeme is supposed to retire the file and tell rucio it is gone.Here fid is the 
 
 
 
-## Metafixer.py does checks and fixes parentage
+## Metafixer.py does checks and fixes parentage 
 
-python MetaFixer.py  <data_tier> dummy <run>
+Has been updated to take command line arguments and do runs or workflows
+
+~~~
+python MetaFixer.py --help
+usage: MetaFixer.py [-h] [--workflows] [--runs] [--min MIN] [--max MAX]
+                    [--tests TESTS] [--data_tiers DATA_TIERS]
+                    [--experiment EXPERIMENT] [--mc] [--fix] [--debug]
+
+check and fix metadata
+
+options:
+  -h, --help            show this help message and exit
+  --workflows           use worflow id for min/max
+  --runs                use run id for min/max
+  --min MIN             minimum id to check
+  --max MAX             maximum id to check
+  --tests TESTS         list of tests to run, comma delimited string
+  --data_tiers DATA_TIERS
+                        list of data_tiers to test
+  --experiment EXPERIMENT
+                        experiment
+  --mc                  set if mc
+  --fix                 do or suggest a fix
+  --debug               do a short run with printout
+~~~
+
+`python MetaFixer.py --debug  --workflows --min=2383 --max=2383 `
+
+defaults to `hd-protodune` and `full-reconstructed`
+  
 
 it can do either parentage fixes (largely done) or duplicate searches
 
