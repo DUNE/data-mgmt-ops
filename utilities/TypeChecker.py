@@ -121,7 +121,7 @@ def TypeChecker(args, filemd, errfile="Types.err"):
             continue
         # check for type
         if xtype != type(md[x]):
-            if xtype == float and type(md[x]) == INT: continue
+            if xtype == float and type(md[x]) == int: continue
             error =  "%s has wrong type in %s\n "%(x,fid)
             print (error)
             errfile.write(error+"\n")
