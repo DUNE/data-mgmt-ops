@@ -1,4 +1,4 @@
-import place_metadata, get_events_for_md, inherit_metadata
+import place_metadata, get_events_for_md, inherit_metadata, add_origins
 from argparse import ArgumentParser as ap
 import os
 import json
@@ -12,6 +12,7 @@ if __name__ == '__main__':
   parser.add_argument('--get_events', action='store_true',
                       help='Get event numbers from artroot file')
   place_metadata.base_args(parser)
+  add_origins.add_args(parser)
   parser.add_argument('--parent', '-p', default=None, type=str,
                       help='Parent DID to inherit from (namespace:name)\nOR parent json metadata (requires --parent_as_json)')
   parser.add_argument('--parent_as_json', action='store_true', help='') #TODO
@@ -51,6 +52,9 @@ if __name__ == '__main__':
 
     #place the parent info
     output['parents'] = results['parents']
+
+  if args.past_apps is not None:
+    output['metadata'] |= add_origins.add_origins(args, args.app_version)
 
   ## Write the output
   output_json = json.dumps(output, indent=2)

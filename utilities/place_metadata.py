@@ -8,6 +8,8 @@ def make_md_from_args(args):
     'core.application.family':args.app_family,
     'core.application.version':args.app_version,
     'core.data_tier':args.data_tier,
+    'dune.config_file':args.fcl,
+    'dune.campaign':args.campaign,
   }
 
   if args.start_time is not None:
@@ -23,6 +25,8 @@ def base_args(parser):
   parser.add_argument('--app_name', type=str)
   parser.add_argument('--app_version', type=str)
   parser.add_argument('--data_tier', type=str)
+  parser.add_argument('--fcl', type=str)
+  parser.add_argument('--campaign', type=str)
 
 if __name__ == '__main__':
   parser = ap()
