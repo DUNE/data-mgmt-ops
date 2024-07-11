@@ -1,49 +1,48 @@
 """Check metadata against a template"""
-import os,sys,json
+import os,json
+from argparse import ArgumentParser as ap
  
 
-def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
+def TypeChecker(args, filemd, errfile="Types.err"):
     " check for type and missing required fields in metadata"
-    DEBUG=False
-    # define types
-    STRING = type("")
-    FLOAT = type(1.0)
-    INT = type(1)
-    LIST = type([])
-    DICT = type({})
+    verbose = args.verbose
+    DEBUG = args.debug 
 
     # list defaults for metadata fields
     basetypes = {
-        "name": STRING,
-        "namespace": STRING,
-        "checksums": DICT,
-        "size":INT,
+        "name": str,
+        "namespace": str,
+        "checksums": dict,
+        "size":int,
         "metadata":{
-            "core.application.family": STRING,
-            "core.application.name": STRING,
-            "core.application.version": STRING,
-            "core.data_stream":STRING,
-            "core.data_tier": STRING,
-            "core.end_time": FLOAT,
-            "core.event_count": INT,
-            "core.events": LIST,
-            "core.file_content_status": STRING,
-            "core.file_format": STRING,
-            "core.file_type": STRING,
-            "core.first_event_number": INT,
-            "core.last_event_number": INT,
-            "core.run_type": STRING,
-            "core.runs": LIST,
-            "core.runs_subruns": LIST,
-            "core.start_time": FLOAT,
-            "dune.daq_test": STRING,
-            "dune.config_file": STRING,
-            "dune_mc.gen_fcl_filename": STRING,
-            "dune_mc.geometry_version":STRING,
-            "retention.status": STRING,
-            "retention.class": STRING
+            "core.application.family": str,
+            "core.application.name": str,
+            "core.application.version": str,
+            "core.data_stream":str,
+            "core.data_tier": str,
+            "core.end_time": float,
+            "core.event_count": int,
+            "core.events": list,
+            "core.file_content_status": str,
+            "core.file_format": str,
+            "core.file_type": str,
+            "core.first_event_number": int,
+            "core.last_event_number": int,
+            "core.run_type": str,
+            "core.runs": list,
+            "core.runs_subruns": list,
+            "core.start_time": float,
+            "dune.daq_test": str,
+            "dune.config_file": str,
+            "dune_mc.gen_fcl_filename": str,
+            "dune_mc.geometry_version":str,
+            "retention.status": str,
+            "retention.class": str
         }
     }
+
+    if args.no_checksum: basetypes.pop('checksums')
+    if args.no_size: basetypes.pop('size')
 
     # set default values for fields that are often missing but needed
     fixDefaults = {
@@ -91,7 +90,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
                 
         # check type
         if xtype != type(filemd[x]) and x != "metadata":
-            if xtype == FLOAT and type(filemd[x]) == INT: continue
+            if xtype == float and type(filemd[x]) == int: continue
             error = "%s has wrong type in %s \n"%(x,fid)
             print (error)
             errfile.write(error)
@@ -122,7 +121,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             continue
         # check for type
         if xtype != type(md[x]):
-            if xtype == FLOAT and type(md[x]) == INT: continue
+            if xtype == float and type(md[x]) == int: continue
             error =  "%s has wrong type in %s\n "%(x,fid)
             print (error)
             errfile.write(error+"\n")
@@ -138,12 +137,22 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 2:
-        print ("please provide a json file to check")
-        sys.exit(1)
-    jsonname = sys.argv[1]
+    parser = ap()
+    parser.add_argument('--json', '-j', type=str, required=True,
+                        help='Input json file to be check')
+    parser.add_argument('--no-checksum', action='store_true',
+                        help='Skip the checksum check')
+    parser.add_argument('--no-size', action='store_true',
+                        help='Skip the size check')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='Run verbosely')
+    parser.add_argument('--debug', '-d', action='store_true',
+                        help='Run in debug mode')
+    args = parser.parse_args()
+
+    jsonname = args.json
     jsonfile = open(jsonname,'r')
     filemd = json.load(jsonfile)
     errfile = open(jsonname+".err",'w')
-    status,fixes = TypeChecker(filemd=filemd,errfile=errfile,verbose=False)
+    status,fixes = TypeChecker(args, filemd=filemd, errfile=errfile)
     errfile.close()
