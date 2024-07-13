@@ -1,5 +1,7 @@
 """Check metadata against a template"""
 import os,sys,json
+
+from CheckConfiguration import known_fields
  
 
 def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
@@ -54,14 +56,15 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
     
     # place to put optional fields: all is optional for all, otherwise you need to tell it data_tier
 
-    optional = { "all":["core.events","dune.daq_test"],
-                "root-tuple":["core.event_count","core.first_event_number","core.last_event_number"],
-                "raw":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
-                "trigprim":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
-                "root-tuple-virtual":["core.event_count","core.first_event_number","core.last_event_number"]}
-    
-    
-    
+    optional = { 
+        "all":["core.events","dune.daq_test"],
+        "root-tuple":["core.event_count","core.first_event_number","core.last_event_number"],
+        "raw":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
+        "binary-raw":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
+        "trigprim":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
+        "root-tuple-virtual":["core.event_count","core.first_event_number","core.last_event_number"]
+        }
+
    
     did = filemd["namespace"]+":"+filemd["name"]
 
@@ -105,7 +108,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
         if "core.run_type" in md and md["core.run_type"] != "mc" and "mc" in x: 
             if DEBUG: print ("skipping mc only",x)
             continue
-
+         
         
         # check required keys
         if x not in md.keys():
@@ -127,6 +130,13 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             print (error)
             errfile.write(error+"\n")
             valid *= False
+    for x,core in known_fields().items():
+        if x not in md: 
+            print ("required field",x,"not present")
+            valid *=False      
+        if md[x] not in core:
+            print ("unknown required metadata field",x,"=",md[x])
+            valid *= False
     if not valid:
         print (did, " fails basic metadata tests")
         if len(fixes) !=0:
@@ -142,6 +152,9 @@ if __name__ == '__main__':
         print ("please provide a json file to check")
         sys.exit(1)
     jsonname = sys.argv[1]
+    if not os.path.exists(jsonname):
+        print ("input file does not exist",jsonname)
+        sys.exit(1)
     jsonfile = open(jsonname,'r')
     filemd = json.load(jsonfile)
     errfile = open(jsonname+".err",'w')

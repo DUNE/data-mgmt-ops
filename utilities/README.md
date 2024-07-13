@@ -134,20 +134,15 @@ options:
 
 defaults to `hd-protodune` and `full-reconstructed`
   
-
 it can do either parentage fixes (largely done) or duplicate searches
-
-you need to edit MetaFixer.py to have a metacat query and choose a workflow list to run over.
-
-this is in the __main__ at line ~ 263
-
-You also choose test="parentage" to fix parentage or test="duplicates" to find duplicates.
 
 You specify the data_tier and a run/test flag on the command line.
 
 ### parentage fixing 
 
-set test="parentage" and the "run" flag on the command line, it will then fix parentage.  this has been done for all production so not needed anymore
+set tests="parentage" and the "runs" flag on the command line, it will then fix parentage.  this has been done for all production so not needed anymore
+
+ 
 
 ### duplicate finding
 
