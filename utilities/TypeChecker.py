@@ -4,7 +4,7 @@ import os,sys,json
 from CheckConfiguration import known_fields
  
 
-def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
+def TypeChecker(filemd=None, errfile=None, verbose=False):
     " check for type and missing required fields in metadata"
     DEBUG=False
     # define types
@@ -87,7 +87,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
         if x not in filemd.keys():
             error = x+" is missing from "+ fid + "\n"
             print (error)
-            errfile.write(error)
+            if errfile is not None: errfile.write(error)
             valid *= False
             print (filemd.keys())
             
@@ -97,7 +97,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             if xtype == FLOAT and type(filemd[x]) == INT: continue
             error = "%s has wrong type in %s \n"%(x,fid)
             print (error)
-            errfile.write(error)
+            if errfile is not None: errfile.write(error)
             valid *= False
 
     # now do the metadata
@@ -118,7 +118,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
                 continue
             error = x+ " is missing from " + fid + "\n"
             print (error)
-            errfile.write(error)
+            if errfile is not None: errfile.write(error)
             valid *= False
             if x in fixDefaults:
                 fixes[x]=fixDefaults[x]
@@ -128,7 +128,7 @@ def TypeChecker(filemd=None, errfile="Types.err", verbose=False):
             if xtype == FLOAT and type(md[x]) == INT: continue
             error =  "%s has wrong type in %s\n "%(x,fid)
             print (error)
-            errfile.write(error+"\n")
+            if errfile is not None: errfile.write(error+"\n")
             valid *= False
     for x,core in known_fields().items():
         if x not in md: 
