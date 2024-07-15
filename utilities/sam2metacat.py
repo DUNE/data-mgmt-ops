@@ -3,9 +3,16 @@ import json
 import TimeUtil
 import TypeChecker
 
-complicated = ["create_date","checksum","application","runs","update_date","update_user","start_time","end_time","children","parents","file_id"]
+from metacat.webapi import MetaCatClient
+import samweb_client
+
+newones = {"retired":False, "retired_by":None, "retired_timestamp":None}
+newonesdot = {"retention.status":"active","retention.class":"other"}
+
+complicated = ["create_date","checksum","application","runs","update_date","update_user","start_time","end_time","children","parents","file_id","DUNE_data.detector_config"]
 
 times = ["create_date","start_time","end_time"]
+
 easy = {
 "file_name": "name",
 # "create_date": "created_timestamp", # needs conversion
@@ -40,7 +47,8 @@ easy = {
 "DUNE_MC.gen_fcl_filename": "dune_mc.gen_fcl_filename",
 "process_id":"core.process_id",
 "update_user":"updated_by",
-"update_date":"updated_timestamp"
+"update_date":"updated_timestamp",
+"DUNE_data.detector_config.object":"dune_data.detector_config.object"
 
 #   "runs": [ #needs conversion 
 #    [
@@ -58,14 +66,26 @@ easy = {
 }
 
 DEBUG = False
+
 def convert(md,namespace=None):
     meta = {}
     meta["metadata"] = {}
     meta["namespace"] = namespace
-    missing = []
+    
+
+# patch in new fields 
+    for k,v in newones.items():
+        if k not in md:
+            if DEBUG: print ("add in missing",k,v)
+            meta[k] = v
+    for k,v in newonesdot.items():
+        if k not in md:
+            if DEBUG: print ("add in missing",k,v)
+            meta["metadata"][k] = v
+
     for k,v in md.items(): 
         if DEBUG: print ("\n try",k,v)      
-        
+         
         if k in complicated:
             if DEBUG: print("it's complicated")
             if k == "application":
@@ -114,7 +134,7 @@ def convert(md,namespace=None):
 
             if "update" in k:
                 newkey = easy[k]
-                print ("update",v)
+                if DEBUG: print ("update",v)
                 if "timestamp" in newkey:
                     
                     meta[newkey]=TimeUtil.sam_to_unix(v)
@@ -137,6 +157,10 @@ def convert(md,namespace=None):
                 if DEBUG:
                     print ("fid",k,meta["fid"] )
                 continue
+            
+            if k == "DUNE_data.detector_config":
+                meta["metadata"][k.lower()] = v
+                continue
 
             print ("got to end of complicated without finding a solution",k)
 
@@ -154,7 +178,7 @@ def convert(md,namespace=None):
             continue
 
         else:
-            print ("got to the bottom")
+            if DEBUG: print ("got to the bottom")
             if "." in k:
                 newkey = k.lower()
                 meta["metadata"][newkey] = v
@@ -163,20 +187,30 @@ def convert(md,namespace=None):
                 meta["metadata"][newkey] = v
             if DEBUG:print ("passthrough:",newkey,meta["metadata"][newkey])
             continue
-    return meta,missing
+    return meta
 
 def compare(md1,md2):
-    print ("\n -------------\n")
+    ''' compare 2 metadata files field by field '''
+    # fields we probably don't care about
+
+    ignore = ["DUNE_data.detector_config.object","core.end_time_utc_text","core.start_time_utc_text","art.first_event","art.last_event","core.application"]
+    diffs = 0
+    print ("\n ----- compare -------\n")
     for field,value in md1.items():
         f = field
         v = value
         if field == "metadata":
             for f,v in md1["metadata"].items():
+                if f in ignore: continue
                 if f in md2["metadata"]:
+                    if "timestamp" in f:
+                        v = int(v)
+                        md2["metadata"][f] = int(md2["metadata"][f])
                     if v != md2["metadata"][f]:
                         print ("different ",f,v,md2["metadata"][f])
                 else:
                     print ("novel metadata",f,v)
+                    diff += 1
             continue
                  
         if f in md2:
@@ -188,38 +222,66 @@ def compare(md1,md2):
         v = value
         if field == "metadata":
             for f,v in md2["metadata"].items():
-                if f in md1["metadata"]:
+                if f in ignore: continue
+                if f.lower() in md1["metadata"]:
                     if v != md1["metadata"][f]: print ("different",f,v,md1["metadata"][f])
                 else:
                     print ("missing",f,v)
+                    diff += 1
             continue
                  
         if f in md1:
             if v != md1[f]: print ("different ",f,v,md1[f])
         else:
             print ("missing",f,v)
+            diff += 1
+
+    return diff
+   
+
+def check(did=None):
+    errors = 0
+    mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
+    samweb = samweb_client.SAMWebClient(experiment='dune')
+    comparisonfile = did
+    md2 = mc_client.get_file(did=comparisonfile,with_metadata=True,with_provenance=True)
+    samfile =  md2["name"]
+    try:
+        md1 = samweb.getMetadata(samfile)
+    except:
+        print ("no corresponding file in sam")
+        return None
+    print ("check the comparison file")
+    status2,fixes2 = TypeChecker.TypeChecker(md2)
+    print ("comparison file status",status2,fixes2)
+    md2 = md2|fixes2
+    meta  = convert(md1,md2["namespace"])
+    print ("check the result")
+    status1,fixes1 = TypeChecker.TypeChecker(meta)
+    print ("converted file status",status1,fixes1)
+    meta = meta | fixes1
+    print ("do the comparison field by field")
+    diffs = compare(meta,md2)
+    if diffs == 0:
+        print ("no problem")
+        return diffs
+    sfile = open(samfile+"_sam.json",'w')
+    json.dump(md1,sfile,indent=4)
+    sfile.close()
+    ofile = open(samfile+"_convert.json",'w')
+    json.dump(meta,ofile,indent=4)
+    ofile.close()
+    mfile = open(samfile+"_metacat.json",'w')
+    json.dump(md2,mfile,indent=4)
+    mfile.close()
+    return diffs
+
+if __name__ == '__main__':
+
+    if len(sys.argv) < 2:
+        print ("need to give me a did for a file in metacat")
+    check(sys.argv[1])
 
 
-    print (missing)
-testfilename = sys.argv[1]
-comparison = sys.argv[2]
-testfile1 = open(testfilename,'r')
-md1 = json.load(testfile1)
-compfile1 = open(comparison,'r')
-md2 = json.load(compfile1)
-print ("check the comparison file")
-status2,fixes2 = TypeChecker.TypeChecker(md2)
-print ("comparison file status",status2,fixes2)
-md2 = md2|fixes2
-meta,missing = convert(md1,md2["namespace"])
-print ("check the result")
-status1,fixes1 = TypeChecker.TypeChecker(meta)
-print ("converted file status",status1,fixes1)
-meta = meta | fixes1
-print ("do the comparison field by field")
-compare(meta,md2)
-ofile = open(testfilename.replace(".json","_metacat.json"),'w')
-json.dump(meta,ofile,indent=4)
-ofile.close()
 
 

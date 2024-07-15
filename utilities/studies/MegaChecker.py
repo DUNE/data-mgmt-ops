@@ -29,6 +29,8 @@ from TypeChecker import TypeChecker
 
 from metacat.webapi import MetaCatClient
 
+import sam2metacat
+
 if __name__ == '__main__':
     
     mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
@@ -38,26 +40,34 @@ if __name__ == '__main__':
     #    thedid = sys.argv[1]
 
     datasets = mc_client.list_datasets()
+    checks = 0
     for dataset in list(datasets):
         
-        
+        if checks > 50: break
         ddid = "%s:%s"%(dataset["namespace"],dataset["name"])
-        if "usertests" not in ddid: continue
+        #if "usertests" not in ddid: continue
         #if dataset["created_timestamp"] < 1716381522.181642: continue
         
-        query = "files from %s:%s where core.data_tier=root-tuple-virtual limit 1"%(dataset["namespace"],dataset["name"])
+        query = "files from %s:%s where core.data_tier=full-reconstructed limit 1"%(dataset["namespace"],dataset["name"])
         
-        print (query)
+        
         try:
             files = list(mc_client.query(query))
         except:
             print("query failed")
             continue
         if len(list(files)) < 1: 
-            print ("empty dataset")
+            #print ("empty dataset")
             continue
+        checks += 1
         thefile = files[0]["namespace"]+":"+files[0]["name"]
+        print (query)
         #metadata = mc_client.get_file(thefile,with_metadata=True,with_provenance=True)
+        try:
+            diffs = sam2metacat.check(thefile)
+        except:
+            print ('metacat check failed')
+        continue
         print (thefile)
         now = "%10.0f"%datetime.datetime.now().timestamp()
         errname = ("%s_%s.txt"%(ddid,now)).replace(":","__")
