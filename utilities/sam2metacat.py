@@ -194,8 +194,14 @@ def compare(md1,md2):
     # fields we probably don't care about
 
     ignore = ["DUNE_data.detector_config.object","core.end_time_utc_text","core.start_time_utc_text","art.first_event","art.last_event","core.application"]
+
+    recent = ["core.file_content_status",
+    "retention.status",
+    "retention.class"] # things that may not be in old metadata
     diffs = 0
     print ("\n ----- compare -------\n")
+
+
     for field,value in md1.items():
         f = field
         v = value
@@ -209,6 +215,7 @@ def compare(md1,md2):
                     if v != md2["metadata"][f]:
                         print ("different ",f,v,md2["metadata"][f])
                 else:
+                    if f in recent: continue
                     print ("novel metadata",f,v)
                     diff += 1
             continue
@@ -251,10 +258,10 @@ def check(did=None):
     except:
         print ("no corresponding file in sam")
         return None
-    print ("check the comparison file")
-    status2,fixes2 = TypeChecker.TypeChecker(md2)
-    print ("comparison file status",status2,fixes2)
-    md2 = md2|fixes2
+    #print ("check the comparison file")
+    #status2,fixes2 = TypeChecker.TypeChecker(md2)
+    #print ("comparison file status",status2,fixes2)
+    #md2 = md2|fixes2
     meta  = convert(md1,md2["namespace"])
     print ("check the result")
     status1,fixes1 = TypeChecker.TypeChecker(meta)

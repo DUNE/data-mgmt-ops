@@ -27,6 +27,8 @@ import datetime
 
 from TypeChecker import TypeChecker
 
+import TimeUtil
+
 from metacat.webapi import MetaCatClient
 
 import sam2metacat
@@ -39,16 +41,17 @@ if __name__ == '__main__':
     #else:
     #    thedid = sys.argv[1]
 
-    datasets = mc_client.list_datasets()
+    datasets = list(mc_client.list_datasets())
+    
     checks = 0
     for dataset in list(datasets):
-        
+        if dataset["created_timestamp"] < TimeUtil.utcdate_to_unix("2024-01-01"): continue
         if checks > 50: break
         ddid = "%s:%s"%(dataset["namespace"],dataset["name"])
         #if "usertests" not in ddid: continue
         #if dataset["created_timestamp"] < 1716381522.181642: continue
         
-        query = "files from %s:%s where core.data_tier=full-reconstructed limit 1"%(dataset["namespace"],dataset["name"])
+        query = "files from %s:%s where core.file_type=mc and core.data_tier=full-reconstructed and created_timestamp>2024-01-01 limit 1"%(dataset["namespace"],dataset["name"])
         
         
         try:

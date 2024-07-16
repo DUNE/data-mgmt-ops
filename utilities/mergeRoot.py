@@ -5,6 +5,7 @@ from mergeMetaCat import run_merge
 from datetime import datetime, timezone
 import argparse
 import shutil
+import json
 from rucio.client.replicaclient import ReplicaClient
 from rucio.client.didclient import DIDClient
 from rucio.common.exception import DataIdentifierNotFound, DataIdentifierAlreadyExists, FileAlreadyExists, DuplicateRule, RucioException
@@ -41,11 +42,15 @@ def mergeData(newpath,input_files):
     #newpath = newpath.replace(".root","_"+makeTimeStamp()+"_"+makeHash(input_files)+".root")
     args = ["hadd", "-f", newpath] + input_files
     #print (args)
-    retcode = call(args)
+    retcode = 1
+    try:
+        retcode = call(args)
+    except:
+        print ("error in merge")
+        retcode +=2
     if retcode != 0:
-        print("MergeRoot: Error from hadd!")
-        exit(retcode)
-    return newpath
+        print("MergeRoot: Error from hadd!")   
+    return newpath,retcode
 
 def cleanup(local):
     for file in local:
@@ -53,6 +58,21 @@ def cleanup(local):
             print ("removing",file)
             os.remove(file)
     
+def makeName(md,jobtag,tier,skip,chunk):
+    metadata = md["metadata"]
+    detector = metadata["core.run_type"]
+    ftype = metadata["core.file_type"]
+    stream = metadata["core.data_stream"]
+    tier = metadata["core.data_tier"]
+    source = metadata["dune.config_file"].replace(".fcl","")
+    sskip = str(skip).zfill(6)
+    schunk = str(chunk).zfill(6)
+    timestamp = makeTimeStamp()
+
+    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s.root"%(detector,ftype,jobtag,stream,source,tier,sskip,schunk,timestamp)
+    return fname
+
+    # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
 
 if __name__ == "__main__":
 
@@ -70,6 +90,8 @@ if __name__ == "__main__":
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
+    parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+    parser.add_argument("--test",help="write to test area",default=False,action='store_true')
     #parser.add_argument("--skip",type=int, help="skip on query",default=0)
 
     #parser.add_argument("--chunk",type=int,help="# of files to put in a single chunk",chunk=100)
@@ -93,13 +115,13 @@ if __name__ == "__main__":
         if debug: print (data_stream,chunk,skip)
         while todo:
             if args.workflow is not None:
-                query = "files where core.run_type=hd-protodune and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=root-tuple and core.data_stream=%s ordered skip %d limit %d"%(args.workflow,data_stream,skip, chunk)
-                sworkflow = str(args.workflow).zfill(6)
+                query = "files where core.run_type=hd-protodune and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.workflow,args.data_tier,data_stream,skip, chunk)
+                sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%srun
                 
             else:
-                query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=root-tuple and core.data_stream=%s ordered skip %d limit %d"%(args.run,data_stream,skip, chunk)
-                srun = str(args.run).zfill(6)
+                query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
+                srun = str(args.run).zfill(10)
                 jobtag = "run%s"%srun
 
             print ("mergeRoot: metacat query = ", query)
@@ -130,7 +152,7 @@ if __name__ == "__main__":
             if test: # this just allows tests without using rucio
                 locations =  makeFake(os.path.join(os.getenv("TMP"),"fake.root"),flist,os.getenv("TMP"))
             else:   
-                
+                retcode = 0
                 locations = []  
                 goodfiles = []
                 # doing this because I cannot figure out syntax to feed a list of files to rucio
@@ -212,6 +234,7 @@ if __name__ == "__main__":
                 
                 print (goodfiles[0])
                 firstmeta = mc_client.get_file(did=goodfiles[0],with_metadata=True)
+                firstmeta["core.data_tier"] = args.data_tier
                 firstname = firstmeta["name"]
                 pieces = firstname.split("_")
                 pieces = pieces[0:2]+pieces[7:]
@@ -223,7 +246,7 @@ if __name__ == "__main__":
                     if x[0:3] == "run": 
                         
                         continue
-                    if x[0:4] == "2024": continue
+                    #if x[0:4] == "2024": continue
                     if "datawriter" in x: 
                     
                         continue
@@ -238,15 +261,28 @@ if __name__ == "__main__":
                 schunk = str(chunk).zfill(4)
                 newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
                 print ("newname",newname)
+                newname = makeName(firstmeta,jobtag,args.data_tier,skip,chunk)
+                
             else:
-                print ("no good files left")
+                print ("no good files left in list")
+               
             skip += chunk
             count += chunk
+
+            # give up on this chunk
+            if len(goodfiles) < 1: continue
+
             if count >= args.nfiles: 
                 todo = False
             
             outputfile = newname
-            newfile = mergeData(outputfile,local)
+            newfile,retcode = mergeData(outputfile,local)
+
+            if retcode != 0:
+                errlog = open(outputfile+".failure",'w')
+                json.dump(goodfiles,errlog,indent=4)
+                errlog.close()
+
 
 
             
@@ -254,22 +290,39 @@ if __name__ == "__main__":
 
             #print (thelist)
             if debug: print (flist)
-            retcode = run_merge(newfilename=newfile, newnamespace=os.getenv("USER"), 
+            try:
+                retcode = run_merge(newfilename=newfile, newnamespace=os.getenv("USER"), 
                                 datatier="root-tuple", flist=goodfiles, 
                                 merge_type="metacat", do_sort=0, user='', debug=debug)
-            print ("MergeRoot: retcode", retcode)
-            jsonfile = newfile+".json"
+                print ("MergeRoot: retcode", retcode)
+                jsonfile = newfile+".json"
+            except:
+                print ("MergeRoot: ERROR making merged metadata")
+                retcode +=4
+
             if os.path.exists(newfile):
                 print ("clean up inputs")
                 cleanup(local)
-            if args.destination is not None and os.path.exists(jsonfile):
-                if not os.path.exists(args.destination):
-                    os.mkdir(args.destination)
-                cp_args = ["xrdcp",newfile,jsonfile,args.destination]
+
+            if args.destination is None:
+
+                topdestination = "/pnfs/dune/persistent/users/%s/merging/"%os.getenv("USER")
+                if args.test:
+                    topdestination = "/pnfs/dune/persistent/users/%s/test_merging/"%os.getenv("USER")
+                if not os.path.exists(topdestination):
+                    os.mkdir(topdestination)
+                destination = os.path.join(topdestination,jobtag)
+        
+            else:
+                destination = args.destination
+            if destination is not None and os.path.exists(jsonfile):
+                if not os.path.exists(destination):
+                    os.mkdir(destination)
+                cp_args = ["xrdcp",newfile,jsonfile,destination]
                 try:
                     completed_process = run(cp_args, capture_output=True,text=True)   
                     if debug: print (completed_process)
-                    newpath = os.path.join(args.destination,os.path.basename(newfile))
+                    newpath = os.path.join(destination,os.path.basename(newfile))
                     if os.path.exists(newpath) and os.path.exists(newpath+".json"):
                         print ("remove local copy",os.path.basename(newpath))
                         os.remove(newfile)
@@ -277,7 +330,7 @@ if __name__ == "__main__":
 
             
                 except Exception as e:
-                    print ("error doing copy to destination",e,args.destination)
+                    print ("ERROR: doing copy to destination",e,cp_args,destination)
                     continue 
 
 

@@ -30,6 +30,15 @@ def utc_to_unix(utc_time):
     dt = dt.replace(tzinfo=timezone.utc)
     return int(dt.timestamp())
 
+def sam_to_unix(utc_time):
+    """
+    Convert UTC human-readable format to Unix timestamp.
+    """
+    dt = datetime.strptime(utc_time, '%Y-%m-%dT%H:%M:%S%z')
+    dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.timestamp())
+
+
 def utcdate_to_unix(utc_time):
     """
     Convert UTC human-readable format to Unix timestamp.
@@ -56,5 +65,8 @@ if __name__ == '__main__':
     print ("unix->timestamp",newunixtime,newtimestamp)
     newtimestamp = unix_to_isotimestamp(newunixtime)
     print ("unix->isotimestamp",newunixtime,newtimestamp)
-
+    samtime = "2024-02-29T17:25:53+00:00"
+    newtimestamp = sam_to_unix(samtime)
+    print ("sam --> unix",samtime, newtimestamp)
+    print ("sam --> utc",samtime,unix_to_utc(newtimestamp))
 

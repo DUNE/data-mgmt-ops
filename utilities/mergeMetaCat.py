@@ -227,7 +227,7 @@ class mergeMeta():
             if self.debug:
                 print (thismeta["core.runs"], runlist)
             # Get the list of parents
-            parentage += mainmeta["parents"]
+            parentage.append({"fid":mainmeta["fid"]})
             
         
         #Start building the new metadata 

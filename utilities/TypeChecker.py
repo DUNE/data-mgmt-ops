@@ -142,7 +142,17 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
         if len(fixes) !=0:
             print ("you could fix this by applying this fix")
             print (json.dumps(fixes,indent=4))
-        
+    
+    # look for upper case in keys
+
+    for x,v in md.items():
+        if x != x.lower():
+            print ("OOPS upper case",x)
+            
+            
+            
+
+            
     return valid, fixes
 
 
