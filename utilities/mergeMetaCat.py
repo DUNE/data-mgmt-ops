@@ -41,10 +41,10 @@ class mergeMeta():
         self.debug = debug
         self.mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
         # these are things you need to tell the program
-        self.externals = ["name","namespace","core.start_time","core.end_time","size",'core.data_tier']
+        self.externals = ["name","core.start_time","core.end_time","size",'core.data_tier']
 
         # these are things you cannot mix in a merge
-        self.consistent = ["core.file_type","core.file_format","core.data_tier",'core.application.name','dune.campaign']
+        self.consistent = ["core.file_type","namespace","core.file_format","core.data_tier",'core.application.name','dune.campaign']
 
         # these are things you can ignore or merge
         self.ignore = ["checksum","created_timestamp","Offline.options","core.first_event_number","parents","Offline.machine","core.last_event_number","core.runs","core.runs_subruns"]
@@ -83,6 +83,16 @@ class mergeMeta():
                 themeta = mc_client.get_file(did=f,with_metadata=True)
             if self.debug:
                 dumpList(themeta)
+
+# consistency for top level items like namespace
+
+            for tag in self.consistent:
+                if tag not in themeta:
+                    checks[tag].append("missing")  # if it ain't there, it aint there.
+              ## Then, add the value from this metadata field to the check list 
+                if themeta[tag] not in checks[tag]:
+                    checks[tag].append(themeta[tag])
+
             thismeta = themeta["metadata"]
             # here to find the must not mix ones
             # Loop over the tags we've defined as consistent
@@ -94,6 +104,7 @@ class mergeMeta():
                 if thismeta[tag] not in checks[tag]:
                     checks[tag].append(thismeta[tag])
             
+
             
           #Checks that all files have the same value for this field
             for tag in self.consistent:
@@ -192,6 +203,10 @@ class mergeMeta():
             #and add the fields to the checklist
             for tag in self.consistent:
                 if self.debug: print (tag,checks[tag])
+                if tag in mainmeta:
+                    if mainmeta[tag] not in checks[tag]:
+                        checks[tag].append(mainmeta[tag])
+
                 if tag not in thismeta: continue
                 if thismeta[tag] not in checks[tag]:
                     checks[tag].append(thismeta[tag])
@@ -270,6 +285,8 @@ class mergeMeta():
         for tag in special_md:
             if "." in special_md:
                 newJsonMetaData[tag] = special_md[tag]
+
+        
       
         #if no event count was provided from externals, use the input files
         if("core.event_count" not in newJsonMetaData or newJsonMetaData["core.event_count"] == -1):
@@ -405,7 +422,7 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename, newnamespace, datatier, flist, merge_type, do_sort=0, user='', debug=False):
+def run_merge(newfilename, newnamespace, datatier, application, version, flist, merge_type, do_sort=0, user='', debug=False):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -430,7 +447,7 @@ def run_merge(newfilename, newnamespace, datatier, flist, merge_type, do_sort=0,
  
     externals = {
                 "name": os.path.basename(newfilename),
-                "namespace": newnamespace,
+                #"namespace": newnamespace,
                 "creator": os.getenv("USER"),
                 "size": os.path.getsize(newfilename),
                 "core.data_tier": datatier,
@@ -448,6 +465,11 @@ def run_merge(newfilename, newnamespace, datatier, flist, merge_type, do_sort=0,
                 "checksums":{"adler32":checksum}
                 }
                 
+    if application != None:
+        externals["core.application.name"] = application
+    if version != None:
+        externals["core.application.version"] = version
+
     DEBUG = 0
     if DEBUG:
         print (externals)
@@ -472,16 +494,16 @@ if __name__ == "__main__":
   
     parser = argparse.ArgumentParser(description='Merge Meta')
     parser.add_argument("--fileName", type=str, help="Name of merged file", default="new.root")
-    parser.add_argument("--nameSpace", type=str, help="Namespace for merged file", default=os.environ["USER"])
+    parser.add_argument("--nameSpace", type=str, help="new namespace for merged file [same as parents]", default=None)
     parser.add_argument('--jsonList', help='Name of file containing list of json files if -t=local', default=None, type=str)
     parser.add_argument('--fileList', help='Name of file containing list of metacat did if -t=metacat', default=None, type=str)
     parser.add_argument('-s', help='Do Sort?', default=1, type=int)
     parser.add_argument('-t', help='local or metacat', type=str, default='metacat')
     parser.add_argument('-u', help='Patch user to specified. Leave empty to not patch', type=str, default='')
-    parser.add_argument('--dataTier',help='data_tier for output',default='root-tuple',type=str)
-    #parser.add_argument('--application',help='merge application name',default='merge',type=str)
-    #parser.add_argument('--version',help='software version for merge',default="v0",type=str)
-    parser.add_argument('--debug',help='software version for merge',default=False,action='store_true')
+    parser.add_argument('--dataTier',help='data_tier for output [root-tuple]',default='root-tuple',type=str)
+    parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
+    parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
+    parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     args = parser.parse_args()
     # print (args.fileList)
     
@@ -504,4 +526,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug)

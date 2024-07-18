@@ -77,7 +77,7 @@ def makeName(md,jobtag,tier,skip,chunk):
 if __name__ == "__main__":
 
     test=False
-    debug=False
+   
     fast=False # dangerous as merges data but not meta properly
 
     outsize = 4000000000
@@ -91,11 +91,16 @@ if __name__ == "__main__":
     parser.add_argument("--run",type=int, help="run number", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
     parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+
     parser.add_argument("--test",help="write to test area",default=False,action='store_true')
     #parser.add_argument("--skip",type=int, help="skip on query",default=0)
-
-    #parser.add_argument("--chunk",type=int,help="# of files to put in a single chunk",chunk=100)
+    parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
+    parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
+    parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
+    
     args = parser.parse_args()
+
+    debug = args.debug
 
     if args.workflow is None and args.run is None:
         print ("need to specify either workflow or run")
@@ -117,7 +122,7 @@ if __name__ == "__main__":
             if args.workflow is not None:
                 query = "files where core.run_type=hd-protodune and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.workflow,args.data_tier,data_stream,skip, chunk)
                 sworkflow = str(args.workflow).zfill(10)
-                jobtag = "workflow%s"%srun
+                jobtag = "workflow%s"%sworkflow
                 
             else:
                 query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
@@ -161,6 +166,8 @@ if __name__ == "__main__":
                 except Exception as e:
                     result = None
                     print('--- Rucio list_replicas call fails: ' + str(e))
+                    print(' stop this chunk',skip,chunk)
+                    break
                 if debug: print ("rucio",list(result))
 
                 missed = []
@@ -291,8 +298,8 @@ if __name__ == "__main__":
             #print (thelist)
             if debug: print (flist)
             try:
-                retcode = run_merge(newfilename=newfile, newnamespace=os.getenv("USER"), 
-                                datatier="root-tuple", flist=goodfiles, 
+                retcode = run_merge(newfilename=newfile, newnamespace=None, 
+                                datatier="root-tuple", application=args.application,version =args.version, flist=goodfiles, 
                                 merge_type="metacat", do_sort=0, user='', debug=debug)
                 print ("MergeRoot: retcode", retcode)
                 jsonfile = newfile+".json"
