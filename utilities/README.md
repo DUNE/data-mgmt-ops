@@ -6,83 +6,92 @@ Please list utilities and their use in this file.
 
 ## mergeMetaCat
 
-takes a file and  list of filenames (either paths or metacat dids) used to make that file and creates new metadata.
+takes a merged file and a file containing a list of filenames (either paths to json files or metacat dids) that were merged to make that file and merges the metadata. 
 
 complains and stops if you try to merge across a wide range of things you should not combine in one file
 
 consistent = ["core.file_type","core.file_format","core.data_tier","core.group",'core.application','dune.campaign']
 
-we can add to that list.
+several options to change characteristics of the daughter file metadata but defaults to inheritance in most cases. 
+
+
         
-
-
-usage: mergeMetaCat.py [-h] [--fileName FILENAME] [--nameSpace NAMESPACE]
-                       [--jsonList JSONLIST] [--fileList FILELIST] [-s S]
-                       [-t T] [-u U] [--dataTier DATATIER]
-                       [--application APPLICATION] [--version VERSION]
+~~~
+python mergeMetaCat.py --help
+usage: mergeMetaCat.py [-h] [--fileName FILENAME] [--nameSpace NAMESPACE] [--jsonList JSONLIST]
+                       [--fileList FILELIST] [-s S] [-t T] [-u U] [--dataTier DATATIER]
+                       [--application APPLICATION] [--version VERSION] [--debug]
 
 Merge Meta
 
 options:
-
   -h, --help            show this help message and exit
-  
   --fileName FILENAME   Name of merged file
-  
-  --nameSpace NAMESPACE                 Namespace for merged file
-  
+  --nameSpace NAMESPACE
+                        new namespace for merged file [same as parents]
   --jsonList JSONLIST   Name of file containing list of json files if -t=local
-  
-  --fileList FILELIST   Name of file containing list of metacat did if
-                        -t=metacat
-                        
+  --fileList FILELIST   Name of file containing list of metacat did if -t=metacat
   -s S                  Do Sort?
-  
-  -t T                  local or metacat
-  
+  -t T                  local or metacat [metacat]
   -u U                  Patch user to specified. Leave empty to not patch
-  
-  --dataTier DATATIER   data_tier for output
-  
+  --dataTier DATATIER   data_tier for output [root-tuple]
   --application APPLICATION
-                        merge application name
-                        
-  --version VERSION     software version for merge
+                        merge application name [inherits]
+  --version VERSION     software version for merge [inherits]
+  --debug               make very verbose
+
+~~~
 
 ## mergeRoot.py
 
-merge root files.  need to specify a workflow or a run number. Assumes this is data from hd-protodune running
-
-- chunk is the # of files to merge at once
-- skip is the starting file #
-- nfiles is the total # of files to merge
-- workflow or run need to be specified
-
-right now it xrdcp's to local cache area and ignores some sites so not full production ready.
-
-### example to run 2 jobs
-
 ~~~
-mergeRoot.py --run=27309 --chunk=50 --skip=0 --nfiles=1000
-mergeRoot.py --run=27309 --chunk=50 --skip=1000 --nfiles=1000
-~~~
-
-
-~~~
-python mergeRoot.py  --help
-usage: mergeRoot.py [-h] [--workflow WORKFLOW] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP]
-                    [--run RUN]
+python mergeRoot.py --help
+usage: mergeRoot.py [-h] [--workflow WORKFLOW] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP] [--run RUN]
+                    [--destination DESTINATION] [--data_tier DATA_TIER] [--test]
+                    [--application APPLICATION] [--version VERSION] [--debug]
 
 Merge Data
 
 optional arguments:
-  -h, --help           show this help message and exit
-  --workflow WORKFLOW  workflow id to merge
-  --chunk CHUNK        number of files/merge
-  --nfiles NFILES      number of files to merge total
-  --skip SKIP          number of files to skip before doing nfiles
-  --run RUN            run number
+  -h, --help            show this help message and exit
+  --workflow WORKFLOW   workflow id to merge
+  --chunk CHUNK         number of files/merge
+  --nfiles NFILES       number of files to merge total
+  --skip SKIP           number of files to skip before doing nfiles
+  --run RUN             run number
+  --destination DESTINATION
+                        destination directory
+  --data_tier DATA_TIER
+                        input data tier [root-tuple-virtual]
+  --test                write to test area
+  --application APPLICATION
+                        merge application name [inherits]
+  --version VERSION     software version for merge [inherits]
+  --debug               make very verbose
+
+merge root files.  need to specify a workflow or a run number. 
+
 ~~~
+
+- chunk is the # of files to merge at once
+- skip is the starting file # in the ordered list
+- nfiles is the total # of files to merge
+- workflow or run need to be specified
+
+expects the input file to be at FNAL.
+
+destination defaults to /pnfs/dune/persistent/users/$USER/merging
+
+
+### example to run a long job
+
+~~~
+python mergeRoot.py --run=28023 --chunk=100 --nfiles=100000 --test 1>&28022.log
+~~~
+
+2024-07-17 Needs an addon script to mark merged files as done once it complete successfully.
+
+
 
 ## future duplicate nuking framework
 
@@ -97,7 +106,6 @@ Right now this just runs the search. Expert will need to implement the methods:
 Nukeme is supposed to retire the file and tell rucio it is gone.Here fid is the metacat fileid (hex field) of the file, verbose sets writing level, fix means actually do the nuke, level keeps track of what level you are in the tree from the top level file. 
 
     success = RemoveMeFromParents(myfid=myfid,verbose=verbose,fix=fix,level=level)
-
 
 
 
