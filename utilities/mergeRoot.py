@@ -69,6 +69,7 @@ def makeName(md,jobtag,tier,skip,chunk):
     schunk = str(chunk).zfill(6)
     timestamp = makeTimeStamp()
 
+    jobtag = jobtag[0:30]
     fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s.root"%(detector,ftype,jobtag,stream,source,tier,sskip,schunk,timestamp)
     return fname
 
@@ -82,9 +83,11 @@ if __name__ == "__main__":
 
     outsize = 4000000000
 
-    parser = argparse.ArgumentParser(description='Merge Data')
+    parser = argparse.ArgumentParser(description='Merge Data - need to choose run, workflow or dataset')
     #parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
     parser.add_argument("--workflow",type=int, help="workflow id to merge",default=None)
+    parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
+    parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
     parser.add_argument("--chunk",type=int, help="number of files/merge",default=20)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=1000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
@@ -102,7 +105,7 @@ if __name__ == "__main__":
 
     debug = args.debug
 
-    if args.workflow is None and args.run is None:
+    if args.workflow is None and args.run is None and args.dataset is None:
         print ("need to specify either workflow or run")
         sys.exit(1)
 
@@ -120,14 +123,26 @@ if __name__ == "__main__":
         if debug: print (data_stream,chunk,skip)
         while todo:
             if args.workflow is not None:
-                query = "files where core.run_type=hd-protodune and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.workflow,args.data_tier,data_stream,skip, chunk)
+                query = "files where core.run_type=%s and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.workflow,args.data_tier,data_stream,skip, chunk)
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             else:
-                query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
-                srun = str(args.run).zfill(10)
-                jobtag = "run%s"%srun
+                if args.run is not None:
+                    query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
+                    srun = str(args.run).zfill(10)
+                    jobtag = "run%s"%srun
+                
+                else:
+                    if args.dataset is not None:
+                        query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
+                    
+                        jobtag = "set-%s"%(args.dataset.replace(":",'_x_'))
+                    else:
+                        print ("ERROR: need to supply --run, --workflow or --dataset")
+                        sys.exit(1)
+
+
 
             print ("mergeRoot: metacat query = ", query)
             alist = list(mc_client.query(query=query))
