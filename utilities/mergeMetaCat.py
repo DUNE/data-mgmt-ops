@@ -498,7 +498,7 @@ if __name__ == "__main__":
     parser.add_argument('--jsonList', help='Name of file containing list of json files if -t=local', default=None, type=str)
     parser.add_argument('--fileList', help='Name of file containing list of metacat did if -t=metacat', default=None, type=str)
     parser.add_argument('-s', help='Do Sort?', default=1, type=int)
-    parser.add_argument('-t', help='local or metacat', type=str, default='metacat')
+    parser.add_argument('-t', help='local or metacat [metacat]', type=str, default='metacat')
     parser.add_argument('-u', help='Patch user to specified. Leave empty to not patch', type=str, default='')
     parser.add_argument('--dataTier',help='data_tier for output [root-tuple]',default='root-tuple',type=str)
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
