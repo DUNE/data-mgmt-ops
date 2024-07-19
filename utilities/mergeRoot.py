@@ -64,13 +64,21 @@ def makeName(md,jobtag,tier,skip,chunk):
     ftype = metadata["core.file_type"]
     stream = metadata["core.data_stream"]
     tier = metadata["core.data_tier"]
+  
     source = metadata["dune.config_file"].replace(".fcl","")
+
+    if "set" in jobtag[0:4]:
+        localtag = jobtag.replace(detector+"__","")
+        localtag = localtag.replace(tier+"__","")
+        localtag = localtag.replace(".fcl","")
+    else:
+        localtag = jobtag
+
     sskip = str(skip).zfill(6)
     schunk = str(chunk).zfill(6)
     timestamp = makeTimeStamp()
 
-    jobtag = jobtag[0:30]
-    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s.root"%(detector,ftype,jobtag,stream,source,tier,sskip,schunk,timestamp)
+    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s.root"%(detector,ftype,localtag,stream,source,tier,sskip,schunk,timestamp)
     return fname
 
     # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
@@ -137,7 +145,7 @@ if __name__ == "__main__":
                     if args.dataset is not None:
                         query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
                     
-                        jobtag = "set-%s"%(args.dataset.replace(":",'_x_'))
+                        jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
                     else:
                         print ("ERROR: need to supply --run, --workflow or --dataset")
                         sys.exit(1)
