@@ -93,9 +93,9 @@ if __name__ == '__main__':
                 #print (run,data_tier,result)
                 if result["count"] == 0: continue
                 gb = int(result["total_size"]/1000./1000.)/1000.
-                result["total_size_gb"]=gb
+                result["total_size_gb"]=float(gb)
                 result.pop("total_size")
-                result["size_per_file_gb"] = gb/result["count"]
+                result["size_per_file_gb"] = gb/float(result["count"])
                 if result["size_per_file_gb"] < 0.001:
                     print ("\n WARNING VERY SMALL FILES:",run,data_stream,data_tier,result["size_per_file_gb"]*1000,"MB\n" )
                 data[run][data_stream][data_tier]=result
