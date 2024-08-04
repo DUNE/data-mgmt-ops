@@ -66,6 +66,8 @@ def dupCounter(parent=None,namespace=None,detector=None, appname=None,appversion
         if verbose: print (childmd["name"])
         cm = childmd["metadata"]
         ctag = None
+        if cm["dune.output_status"]!="confirmed":
+            continue
         if cm["core.data_tier"] != data_tier:  # fast check
             if verbose: print ("different tier")
             continue
