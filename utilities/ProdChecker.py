@@ -41,6 +41,12 @@ if __name__ == '__main__':
         print ("arguments are --workflow or --run, --min, --max, optional --version")
         sys.exit(1)
 
+    fieldnames = ["run", "data_stream", "timestamp", "version", "check", 
+                  "raw:count", "raw:total_size_gb", "raw:size_per_file_gb", 
+                  "trigprim:count", "trigprim:total_size_gb", "trigprim:size_per_file_gb", 
+                  "full-reconstructed:count", "full-reconstructed:total_size_gb", "full-reconstructed:size_per_file_gb", "full-reconstructed:check",
+                  "root-tuple-virtual:count", "root-tuple-virtual:total_size_gb", "root-tuple-virtual:size_per_file_gb", "root-tuple-virtual:check"]
+
     parser = argparse.ArgumentParser(description='check by run or workflow')
 
     parser.add_argument("--workflow",help='key is workflow',default=False,action='store_true')
@@ -226,7 +232,7 @@ if __name__ == '__main__':
     f.close()
 
     summary = []
-    fieldnames = [audit_type,"data_stream","timestamp","version","check"]
+    #fieldnames = [audit_type,"data_stream","timestamp","version","check"]
     for key in data:
         #print (key)
         record = {}
