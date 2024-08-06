@@ -51,8 +51,8 @@ def parentchecker(query):
     newquery = " %s - children(parents(%s))"%(query,query)
     return newquery
 
-PARENTS = False
-CONFIRM = True
+PARENTS = True
+#CONFIRM = True
 Tests = {"PARENTS":False,"CONFIRM":False}
 if len(sys.argv) > 1 and sys.argv[1] == "parents":
     Tests["PARENTS"] = True
@@ -62,11 +62,11 @@ if len(sys.argv) > 1 and sys.argv[1] == "confirm":
 hd = [1650,1638,1630,1631,1632,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
 vd = [1583,1590,1591,1593] + list(range(1610,1630))
 
-for workflow in hd:
+for workflow in [2542]:
   
     for data_tier in ["full-reconstructed","root-tuple-virtual","pandora-info"]:
         #if data_tier != "full-reconstructed": continue
-        testquery="files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)   "%(data_tier,workflow)
+        testquery="files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) and dune.output_status=confirmed  "%(data_tier,workflow)
         print (testquery)
         
         testsummary = mc_client.query(query=testquery,summary="count")
@@ -80,6 +80,7 @@ for workflow in hd:
 
         if Tests["PARENTS"]:
             parentquery=parentchecker(testquery)
+            print ("parent checker ", parentquery)
             checksummary= mc_client.query(query=parentquery,summary="count")
             print ("summary of files missing parentage",checksummary)
         if Tests["CONFIRM"]:
