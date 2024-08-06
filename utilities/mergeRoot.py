@@ -131,19 +131,19 @@ if __name__ == "__main__":
         if debug: print (data_stream,chunk,skip)
         while todo:
             if args.workflow is not None:
-                query = "files where core.run_type=%s and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.workflow,args.data_tier,data_stream,skip, chunk)
+                query = "files where core.run_type=%s and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and dune.output_status=confirmed ordered skip %d limit %d"%(args.detector,args.workflow,args.data_tier,data_stream,skip, chunk)
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             else:
                 if args.run is not None:
-                    query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
+                    query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and dune.output_status=confirmed ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
                     srun = str(args.run).zfill(10)
                     jobtag = "run%s"%srun
                 
                 else:
                     if args.dataset is not None:
-                        query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
+                        query = "files from %s with dune.output_status=confirmed ordered skip %d limit %d"%(args.dataset,skip, chunk)
                     
                         jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
                     else:
