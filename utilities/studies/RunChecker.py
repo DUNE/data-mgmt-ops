@@ -35,11 +35,15 @@ from TimeUtil import unix_to_timestamp
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 3:
-        print ("arguments are runmin and runmax")
+    if len(sys.argv) < 3:
+        print ("arguments are runmin and runmax + optional version ")
         sys.exit(1)
     runmin = int(sys.argv[1])
     runmax = int(sys.argv[2])
+    if len(sys.argv) > 3:
+        version = sys.argv[3]
+    else:
+        version = None
     
     mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
     #if len(sys.argv) < 2:
@@ -54,6 +58,7 @@ if __name__ == '__main__':
         data[run]={}
 
         query = "files where core.runs[any]=%d and core.run_type=hd-protodune and core.file_type=detector"%(run)
+        
         try:
             result = mc_client.query(query,summary="count")
         except:
@@ -80,9 +85,12 @@ if __name__ == '__main__':
         for data_stream in [stream]:
             data[run][data_stream] = {}
 
-            for data_tier in ["raw","trigprim","full-reconstructed","root-tuple","root-tuple-virtual"]:
+            for data_tier in ["raw","trigprim","full-reconstructed","root-tuple-virtual"]:
         
                 query = "files where core.runs[any]=%d and core.run_type=hd-protodune and core.file_type=detector and core.data_tier=%s and core.data_stream=%s "%(run,data_tier,data_stream)
+
+                if version is not None and data_tier not in ["raw","trigprim"]:
+                    query += "and core.application.version=%s"%(version)
                 
                 #print (query)
                 try:
@@ -93,15 +101,15 @@ if __name__ == '__main__':
                 #print (run,data_tier,result)
                 if result["count"] == 0: continue
                 gb = int(result["total_size"]/1000./1000.)/1000.
-                result["total_size_gb"]=gb
+                result["total_size_gb"]=float(gb)
                 result.pop("total_size")
-                result["size_per_file_gb"] = gb/result["count"]
+                result["size_per_file_gb"] = int(gb/float(result["count"])*1000.*1000.)/1000./1000.
                 if result["size_per_file_gb"] < 0.001:
                     print ("\n WARNING VERY SMALL FILES:",run,data_stream,data_tier,result["size_per_file_gb"]*1000,"MB\n" )
                 data[run][data_stream][data_tier]=result
 
                 # look at some details
-                if data_tier in ["raw"]:
+                if data_tier in ["raw","trigprim"]:
                     query = "files where core.runs[any]=%d and core.run_type=hd-protodune and core.file_type=detector and core.data_tier=%s and core.data_stream=%s limit 1"%(run,data_tier,data_stream)
                     try:
                         result = list(mc_client.query(query))
@@ -117,27 +125,39 @@ if __name__ == '__main__':
                         continue
                     if "metadata" not in result:
                         continue
-                    if data_tier == "raw":
+                    if data_tier in ["raw","trigprim"]:
                         data[run][data_stream][data_tier]["timestamp"] = unix_to_timestamp(result["metadata"]["core.start_time"])
-
+                        print ("set timestamp",run,data_stream,data_tier)
+                else:
+                    if version is not None:
+                        data[run][data_stream][data_tier]["check"] = 0
+                        data[run][data_stream][data_tier]["version"] = version
+                    diff = (data[run][data_stream][data_tier]["count"] - data[run][data_stream]["raw"]["count"])
+                    if diff > 0 :
+                        print( "WARNING more",data_tier,"(",data[run][data_stream][data_tier]["count"],")than raw (",data[run][data_stream]["raw"]["count"],") in run ",run,data_stream)
+                        
+                    if diff < 0 :
+                        print( "WARNING less",data_tier,"(",data[run][data_stream][data_tier]["count"],")than raw (",data[run][data_stream]["raw"]["count"],") in run ",run,data_stream)
+                        
+                    data[run][data_stream][data_tier]["check"] = diff
 
 
         print(run, data[run])
     final = json.dumps(data,indent=4)   
-    fname = "audit-%d-%d.json"%(runmin,runmax)
+    fname = "audits/audit-%s-%d-%d.json"%(version,runmin,runmax)
     f = open(fname,'w')
     f.write(final)
     f.close()
 
     summary = []
-    fieldnames = ["run","data_stream","timestamp"]
+    fieldnames = ["run","data_stream","timestamp","version","check"]
     for run in data:
         record = {}
         record["run"]=run
         thestream = None
         for stream in data[run]:
             #print (run, stream, data[run][stream])
-            if "raw" in data[run][stream]:
+            if "raw" in data[run][stream].keys() or "trigprim" in data[run][stream].keys():
                 thestream = stream
                 record["data_stream"]=thestream
                 #print (run, thestream, data[run][thestream])
@@ -147,6 +167,9 @@ if __name__ == '__main__':
                     for field in data[run][thestream][tier]:
                         if field == "timestamp":
                             record["timestamp"] = data[run][thestream][tier][field]
+                            continue
+                        if field == "version":
+                            record["version"] = data[run][thestream][tier][field]
                             continue
                         name = "%s:%s"%(tier,field)
                         value = data[run][thestream][tier][field]

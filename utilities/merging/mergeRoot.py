@@ -96,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument("--workflow",type=int, help="workflow id to merge",default=None)
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
     parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
-    parser.add_argument("--chunk",type=int, help="number of files/merge",default=20)
+    parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=1000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
@@ -131,19 +131,19 @@ if __name__ == "__main__":
         if debug: print (data_stream,chunk,skip)
         while todo:
             if args.workflow is not None:
-                query = "files where core.run_type=%s and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and dune.output_status=confirmed ordered skip %d limit %d"%(args.detector,args.workflow,args.data_tier,data_stream,skip, chunk)
+                query = "files where core.run_type=%s and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.workflow,args.data_tier,data_stream,skip, chunk)
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             else:
                 if args.run is not None:
-                    query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and dune.output_status=confirmed ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
+                    query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
                     srun = str(args.run).zfill(10)
                     jobtag = "run%s"%srun
                 
                 else:
                     if args.dataset is not None:
-                        query = "files from %s with dune.output_status=confirmed ordered skip %d limit %d"%(args.dataset,skip, chunk)
+                        query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
                     
                         jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
                     else:
@@ -336,31 +336,45 @@ if __name__ == "__main__":
 
             if args.destination is None:
 
-                topdestination = "/pnfs/dune/persistent/users/%s/merging/"%os.getenv("USER")
+                topdestination = "/pnfs/dune/scratch/users/%s/merging/"%os.getenv("USER")
                 if args.test:
-                    topdestination = "/pnfs/dune/persistent/users/%s/test_merging/"%os.getenv("USER")
-                if not os.path.exists(topdestination):
-                    os.mkdir(topdestination)
+                    topdestination = "/pnfs/dune/scratch/users/%s/test_merging/"%os.getenv("USER")
                 destination = os.path.join(topdestination,jobtag)
+                mk_args = ["ifdh mkdir",destination]
+                try:
+                    process = run(mk_args,capture_output=True,text=True)   
+                except:
+                    print("Could not make remote directory")
+                    sys.exit(100)
         
             else:
                 destination = args.destination
+
             if destination is not None and os.path.exists(jsonfile):
-                if not os.path.exists(destination):
-                    os.mkdir(destination)
-                cp_args = ["xrdcp",newfile,jsonfile,destination]
+    
+                cp_args = ["ifdh cp",newfile,jsonfile,destination]
+                cmd = "ifdh cp %s %s %s"%(newfile,jsonfile,destination)
+                print (cp_args)
                 try:
                     completed_process = run(cp_args, capture_output=True,text=True)   
-                    if debug: print (completed_process)
-                    newpath = os.path.join(destination,os.path.basename(newfile))
-                    if os.path.exists(newpath) and os.path.exists(newpath+".json"):
-                        print ("remove local copy",os.path.basename(newpath))
-                        os.remove(newfile)
-                        os.remove(jsonfile)
+                    print (completed_process)  
+                    print ("remove local copies")
+                    os.remove(newfile)
+                    os.remove(jsonfile)
 
             
                 except Exception as e:
                     print ("ERROR: doing copy to destination",e,cp_args,destination)
+                    print ("try again ", cmd)
+
+                    try: 
+                        os.system(cmd)
+                        os.remove(newfile)
+                        os.remove(jsonfile)
+                    except Exception as e:
+                        print ("second attempt at copy failed, quitting",e)
+                        break
+
                     continue 
 
 
