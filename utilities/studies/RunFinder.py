@@ -17,7 +17,7 @@ mc_client = MetaCatClient(os.getenv("METACAT_SERVER_URL"))
     
 def RunFinder(workflow):
     runs = {}
-    query="files where dune.workflow['workflow_id']=%s and core.data_tier=full-reconstructed"%workflow
+    query="files where dune.workflow['workflow_id']=%s and core.data_tier=full-reconstructed and dune.output_status=confirmed"%workflow
     try:
         result = mc_client.query(query,with_metadata=True)
     except:

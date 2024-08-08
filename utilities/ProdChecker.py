@@ -99,7 +99,7 @@ if __name__ == '__main__':
         snippet = "core.runs[any]=%d"%key
         if args.workflow:
             snippet = "dune.workflow['workflow_id'] in (%d)" %key
-        query = "files where "+snippet+" and core.run_type=hd-protodune and core.file_type=detector" 
+        query = "files where "+snippet+" and core.run_type=hd-protodune and core.file_type=detector " 
         
         try:
             result = mc_client.query(query,summary="count")
@@ -133,6 +133,9 @@ if __name__ == '__main__':
 
                 if version != "ALL" and data_tier not in ["raw","trigprim"]:
                     query += "and core.application.version=%s"%(version)
+                
+                if data_tier not in ["raw","trigprim"]:
+                    query += " and dune.output_status=confirmed"
                 
                 #print (query)
                 try:
