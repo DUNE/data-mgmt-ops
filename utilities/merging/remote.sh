@@ -61,6 +61,7 @@ echo "run returned " $?
 
 cat local.log
 
+ifdh cp local.log ${DESTINATION}/${SKIP}_${CHUNK}_${DATA_TIER}.log
 echo '#cmd: 	ls -lrt'
 ls -lrt
 
