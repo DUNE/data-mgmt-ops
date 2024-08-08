@@ -192,7 +192,11 @@ class MetaFixer:
             # has some parentage, look at it. 
             parents = filemd["parents"]
             for p in parents:
-                parentmd = mc_client.get_file(fid=p["fid"],with_metadata=True,with_provenance=True)
+                try:
+                    parentmd = mc_client.get_file(fid=p["fid"],with_metadata=True,with_provenance=True)
+                except Exception as e:
+                    print ("ERROR could not get metadata for",fid,e)
+                    continue
                 if self.verbose:
                     print ("the parent, %s:%s"%(parentmd["namespace"],parentmd["name"]))
                 children = parentmd["children"]
@@ -206,18 +210,28 @@ class MetaFixer:
                     continue
                 count = 0
                 for child in children:
-                    
-                    childmd = mc_client.get_file(fid=child["fid"],with_metadata=True,with_provenance=True)
+                    try: 
+                        childmd = mc_client.get_file(fid=child["fid"],with_metadata=True,with_provenance=True)
+                    except Exception as e:
+                        print ("ERROR could not get metadata for",child["fid"],e)
+                        continue
                     cm = childmd["metadata"]
                     childdid = "%s:%s"%(childmd["namespace"],childmd["name"])
                     if childdid == thedid:
                         continue
                     #print ("child", jsondump(childmd))
+                    if cm["dune.output_status"] != "confirmed": continue
+                    if "dune.workflow" in cm:
+                        workdata = cm["dune.workflow"]
+                        
+                        workid = workdata["workflow_id"]
+                    else:
+                        workid = -1
                     ctag = "BAD"
                     try:
                         ctag = "%s_%s_%s_%s_%s_%s_%s"%(childmd["namespace"],cm["core.application.version"],md["core.application.name"],cm["core.data_tier"],cm["core.data_stream"],cm["dune.campaign"],cm["core.file_format"])
                     except:
-                        error = "%s, ERROR ctag couldn't be made %s\n"%(thedid,childdid)
+                        error = "%s, ERROR ctag couldn't be made %s\n"%(thedid,childdid,ctag)
                         self.errfile.write(error)
                         continue
                     
@@ -226,7 +240,7 @@ class MetaFixer:
                         count += 1
                         
                         if count > 0:
-                            message = "%s, ERROR duplicate file %d, %s %s\n"%(thedid,count, childdid,ctag)
+                            message = "%s, ERROR duplicate file %d, %s workflow=%d\n"%(thedid,count, childdid,workid)
                             print (message)
                             self.errfile.write(message)
 
@@ -267,6 +281,7 @@ if __name__ == '__main__':
     parser.add_argument("--mc",help="set if mc",default=False,action='store_true')
     parser.add_argument("--fix",help="do or suggest a fix",default=False,action='store_true')
     parser.add_argument("--debug",help="do a short run with printout", default=False,action='store_true')
+
     #data_tier = "full-reconstructed"
     #workflow = 1630
     args = parser.parse_args()
@@ -278,8 +293,8 @@ if __name__ == '__main__':
     
 
     #for workflow in [1638,1650]:
-    hd = [1630,1631,1632,1650,1638,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
-    vd = [1583,1590,1591,1593] + list(range(1610,1630))
+    #hd = [1630,1631,1632,1650,1638,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
+    #vd = [1583,1590,1591,1593] + list(range(1610,1630))
 
           
     for id in range(args.min,args.max+1):
@@ -291,7 +306,7 @@ if __name__ == '__main__':
                 print ("top level query metacat query",testquery)
                 if "duplicates" in tests:
 
-                    testquery =  "files from dune:all where core.data_tier='%s' and core.runs[any] in (%d) "%(data_tier,id)
+                    testquery =  "files from dune:all where core.data_tier='%s' and core.runs[any] in (%d) and dune.output_status=confirmed "%(data_tier,id)
             else:
                 if args.workflows:
                     if  "parentage" in tests:
@@ -299,7 +314,7 @@ if __name__ == '__main__':
                             print ("top level query metacat query",testquery)
                     if "duplicates" in tests:
 
-                        testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)  "%(data_tier,id)
+                        testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) and dune.output_status=confirmed "%(data_tier,id)
                 else:
                     print ("need to specify --workflows or --runs")
                     sys.exit(1)
