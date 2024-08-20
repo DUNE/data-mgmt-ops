@@ -60,8 +60,9 @@ time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHU
 echo "run returned " $?
 
 cat local.log
-
-ifdh cp local.log ${DESTINATION}/${SKIP}_${CHUNK}_${DATA_TIER}.log
+mv local.log run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log
+ls 
+ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION
 echo '#cmd: 	ls -lrt'
 ls -lrt
 

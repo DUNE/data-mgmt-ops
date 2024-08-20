@@ -97,7 +97,7 @@ if __name__ == "__main__":
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
     parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
     parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
-    parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=1000)
+    parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)

@@ -18,7 +18,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
     #parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
-    parser.add_argument("--chunk",type=int, help="number of files/merge",default=20)
+    parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=1000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
@@ -84,6 +84,12 @@ if __name__ == "__main__":
     else:
         location = args.usetar
 
+    if not os.path.exists("logs"):
+        os.mkdir("logs")
+
+    cmd = "cp remote.sh %d_remote.sh"%args.run
+    os.system(cmd)
+
     cmd = "jobsub_submit "
     cmd += "--group dune "
     cmd += "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
@@ -95,8 +101,8 @@ if __name__ == "__main__":
     cmd += "--use-cvmfs-dropbox " 
 
     cmd += environs
-    cmd += " file://remote.sh"
-
+    cmd += " file://%d_remote.sh"%args.run
+    cmd += " >& logs/submit_%d_%s.log"%(args.run,timeform())
     print (cmd)
     try:
         os.system(cmd)
