@@ -102,6 +102,7 @@ if __name__ == "__main__":
     parser.add_argument("--run",type=int, help="run number", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
     parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+    parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
 
     parser.add_argument("--test",help="write to test area",default=False,action='store_true')
     #parser.add_argument("--skip",type=int, help="skip on query",default=0)
@@ -131,13 +132,13 @@ if __name__ == "__main__":
         if debug: print (data_stream,chunk,skip)
         while todo:
             if args.workflow is not None:
-                query = "files where core.run_type=%s and core.file_type=detector and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.workflow,args.data_tier,data_stream,skip, chunk)
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.data_tier,data_stream,skip, chunk)
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             else:
                 if args.run is not None:
-                    query = "files where core.run_type=hd-protodune and core.file_type=detector and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.run,args.data_tier,data_stream,skip, chunk)
+                    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.file_type,args.file_type,args.run,args.data_tier,data_stream,skip, chunk)
                     srun = str(args.run).zfill(10)
                     jobtag = "run%s"%srun
                 
@@ -364,7 +365,7 @@ if __name__ == "__main__":
 
             
                 except Exception as e:
-                    print ("ERROR: doing copy to destination",e,cp_args,destination)
+                    print ("WARNING: doing copy to destination",e,cp_args,destination)
                     print ("try again ", cmd)
 
                     try: 
@@ -372,7 +373,7 @@ if __name__ == "__main__":
                         os.remove(newfile)
                         os.remove(jsonfile)
                     except Exception as e:
-                        print ("second attempt at copy failed, quitting",e)
+                        print ("ERROR: second attempt at copy failed, quitting",e)
                         break
 
                     continue 
