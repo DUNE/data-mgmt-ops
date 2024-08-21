@@ -138,7 +138,7 @@ if __name__ == "__main__":
                 
             else:
                 if args.run is not None:
-                    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.file_type,args.file_type,args.run,args.data_tier,data_stream,skip, chunk)
+                    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,skip, chunk)
                     srun = str(args.run).zfill(10)
                     jobtag = "run%s"%srun
                 
