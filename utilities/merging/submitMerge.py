@@ -39,15 +39,15 @@ if __name__ == "__main__":
 
     debug = args.debug
 
-    if args.run is None:
-        print ("You have to set a run number")
+    if args.run is None or args.version is None:
+        print ("You have to set a run number --run and the code version --version")
         sys.exit(1)
 
     if args.maketar is False and args.usetar is None:
         print ("you either have to set --maketar or provide --usetar value")
         sys.exit(1)
 
-    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  ordered "%(args.detector,args.file_type,args.run,args.data_tier)
+    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
 
     print ("query",query)
 
@@ -56,11 +56,18 @@ if __name__ == "__main__":
 
     numfiles  = info["count"]
 
+    if numfiles == 0:
+        print("No files found, if running mc you need to set --file_type=mc")
+        sys.exit(1)
+        
     if numfiles > args.nfiles:
-        numfiles = args.nfiles     
+        numfiles = args.nfiles 
+
+
     if args.destination is None:
         srun = str(args.run).zfill(10)
-        jobtag = "run%s"%srun
+        sskip = str(args.skip).zfill(6)
+        jobtag = "run%s_%s_"%(srun,sskip)+timeform()
 
         destination = "/pnfs/dune/scratch/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
     else:
@@ -69,6 +76,11 @@ if __name__ == "__main__":
     if not os.path.exists(destination):
         print ("make a destination",destination)
         os.mkdir(destination)
+    # else:
+    #     olddir = destination+"."+timeform()
+    #     print ("destination directory",jobtag,"already exists, moving out of the way to",os.path.basename(olddir))
+    #     os.rename(destination,olddir)
+    #     os.mkdir(destination)
 
     
 
@@ -108,6 +120,7 @@ if __name__ == "__main__":
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
         environs += "-e DATA_TIER=%s "%args.data_tier
+        environs += "-e VERSION=%s "%args.version 
         environs += "-e DESTINATION=%s "%destination
         environs += "-e USERNAME=%s "%os.getenv("USER")
         cmd = "jobsub_submit "

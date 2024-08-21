@@ -107,7 +107,8 @@ if __name__ == "__main__":
     parser.add_argument("--test",help="write to test area",default=False,action='store_true')
     #parser.add_argument("--skip",type=int, help="skip on query",default=0)
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
-    parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
+    parser.add_argument('--version',help='software version for input query',default=None,type=str)
+    parser.add_argument('--merge_version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     
     args = parser.parse_args()
@@ -132,13 +133,13 @@ if __name__ == "__main__":
         if debug: print (data_stream,chunk,skip)
         while todo:
             if args.workflow is not None:
-                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.data_tier,data_stream,skip, chunk)
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.data_tier,data_stream,args.version, skip, chunk)
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             else:
                 if args.run is not None:
-                    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,skip, chunk)
+                    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,args.version,skip, chunk)
                     srun = str(args.run).zfill(10)
                     jobtag = "run%s"%srun
                 
@@ -323,7 +324,7 @@ if __name__ == "__main__":
             if debug: print (flist)
             try:
                 retcode = run_merge(newfilename=newfile, newnamespace=None, 
-                                datatier="root-tuple", application=args.application,version =args.version, flist=goodfiles, 
+                                datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
                                 merge_type="metacat", do_sort=0, user='', debug=debug)
                 print ("MergeRoot: retcode", retcode)
                 jsonfile = newfile+".json"

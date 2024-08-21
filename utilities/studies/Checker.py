@@ -41,20 +41,14 @@ if __name__ == '__main__':
         print ("arguments are --workflow or --run, --min, --max, optional --version")
         sys.exit(1)
 
-    fieldnames = ["run", "data_stream", "timestamp", "version", "check", 
-                  "raw:count", "raw:total_size_gb", "raw:size_per_file_gb", 
-                  "trigprim:count", "trigprim:total_size_gb", "trigprim:size_per_file_gb", 
-                  "full-reconstructed:count", "full-reconstructed:total_size_gb", "full-reconstructed:size_per_file_gb", "full-reconstructed:check",
-                  "root-tuple-virtual:count", "root-tuple-virtual:total_size_gb", "root-tuple-virtual:size_per_file_gb", "root-tuple-virtual:check"]
-
     parser = argparse.ArgumentParser(description='check by run or workflow')
 
     parser.add_argument("--workflow",help='key is workflow',default=False,action='store_true')
     parser.add_argument("--run",help='key is run',default=False,action='store_true')
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
-    parser.add_argument('--min',help='minimum key',type=int,default=None)
+    parser.add_argument('--min',help='miniumum key',type=int,default=None)
     parser.add_argument('--max',help='maximum key',type=int,default=None)
-    parser.add_argument('--version',help='code version',type=str,default=None)
+    parser.add_argument('--version',help='code version',type=int,default=None)
     
     args = parser.parse_args()
 
@@ -77,6 +71,7 @@ if __name__ == '__main__':
     if args.workflow:
         audit_type = "workflow"
         
+    print ("audit_type is ",audit_type,args.run,args.workflow)
     version = args.version 
 
     if version is None:
@@ -99,7 +94,7 @@ if __name__ == '__main__':
         snippet = "core.runs[any]=%d"%key
         if args.workflow:
             snippet = "dune.workflow['workflow_id'] in (%d)" %key
-        query = "files where "+snippet+" and core.run_type=hd-protodune and core.file_type=detector " 
+        query = "files where "+snippet+" and core.run_type=hd-protodune and core.file_type=detector" 
         
         try:
             result = mc_client.query(query,summary="count")
@@ -133,9 +128,6 @@ if __name__ == '__main__':
 
                 if version != "ALL" and data_tier not in ["raw","trigprim"]:
                     query += "and core.application.version=%s"%(version)
-                
-                if data_tier not in ["raw","trigprim"]:
-                    query += " and dune.output_status=confirmed"
                 
                 #print (query)
                 try:
@@ -204,22 +196,22 @@ if __name__ == '__main__':
                             
                     if diff > 0 :
                         #print( "WARNING more",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
-                        msg = "WARNING more %s (%d) than reference (%d) in %s %d %s %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
+                        msg = "WARNING more %s (%d) than reference (%d) in %s %d %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream)
                         print (msg)
                         logfile.write(msg+"\n")
                         
                     if diff < 0 :
                         #print( "WARNING less",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
 
-                        msg = "WARNING less %s (%d) than reference (%d) in %s %d %s %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
+                        msg = "WARNING less %s (%d) than reference (%d) in %s %d %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream)
                         print (msg)
                         logfile.write(msg+"\n")
                     if diff == 0:
                         #print( "No Problem!!",data_tier,"(",data[key][data_stream][data_tier]["count"],") == raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type,key,data_stream)
-                        msg = "No Problem!! %s (%d) == (%d) in %s %d %s %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
+                        msg = "No Problem!! %s (%d) == (%d) in %s %d %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream)
                         print (msg)
                         logfile.write(msg+"\n")
                         
@@ -235,7 +227,7 @@ if __name__ == '__main__':
     f.close()
 
     summary = []
-    #fieldnames = [audit_type,"data_stream","timestamp","version","check"]
+    fieldnames = [audit_type,"data_stream","timestamp","version","check"]
     for key in data:
         #print (key)
         record = {}

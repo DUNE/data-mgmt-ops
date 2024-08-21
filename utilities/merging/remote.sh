@@ -45,15 +45,20 @@ cd $_CONDOR_SCRATCH_DIR
 
 
 echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
+                --file_type=$FILETYPE \
                 --skip=$SKIP --run=$RUN \
                 --data_tier=$DATA_TIER\
+                --version=$VERSION\
                 --destination=$DESTINATION\
                 --debug'
 
 time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
+                --file_type=$FILETYPE \
                 --skip=$SKIP --run=$RUN \
                 --data_tier=$DATA_TIER \
+                --version=$VERSION \
                 --destination=$DESTINATION \
+                --debug\
                 >& local.log
 
 
