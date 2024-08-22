@@ -55,6 +55,9 @@ if __name__ == '__main__':
     parser.add_argument('--min',help='minimum key',type=int,default=None)
     parser.add_argument('--max',help='maximum key',type=int,default=None)
     parser.add_argument('--version',help='code version',type=str,default=None)
+
+    now = datetime.datetime.now().timestamp()
+    timestamp = unix_to_timestamp(now)
     
     args = parser.parse_args()
 
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     data = {}
     if not os.path.exists("./audits"):
         os.mkdir("audits")
-    fname = "audits/audit-%s-%s-%d-%d.json"%(audit_type,version,keymin,keymax)
+    fname = "audits/audit-%s-%s-%d-%d-%s.json"%(audit_type,version,keymin,keymax,timestamp[0:8])
 
     logname = fname.replace(".json",".log")
     logfile = open(logname,'w')
