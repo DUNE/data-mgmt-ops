@@ -57,8 +57,8 @@ time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHU
                 --skip=$SKIP --run=$RUN \
                 --data_tier=$DATA_TIER \
                 --version=$VERSION \
+                --merge_version=$MERGE_VERSION \
                 --destination=$DESTINATION \
-                --debug\
                 >& local.log
 
 

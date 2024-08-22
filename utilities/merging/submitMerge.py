@@ -30,7 +30,8 @@ if __name__ == "__main__":
     #parser.add_argument("--test",help="write to test area",default=False,action='store_true')
     #parser.add_argument("--skip",type=int, help="skip on query",default=0)
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
-    parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
+    parser.add_argument('--version',help='software version of files to merge (required)',default=None,type=str)
+    parser.add_argument('--merge_version',help='software version for merged file [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--maketar',help="make a tarball",default=False,action='store_true')
     parser.add_argument('--usetar',help="full path for existing tarball",default=None,type=str)
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     debug = args.debug
 
     if args.run is None or args.version is None:
-        print ("You have to set a run number --run and the code version --version")
+        print ("You have to set a run number --run and the code version --version of the files you want to merge")
         sys.exit(1)
 
     if args.maketar is False and args.usetar is None:
@@ -121,6 +122,7 @@ if __name__ == "__main__":
         environs += "-e FILETYPE=%s "%args.file_type
         environs += "-e DATA_TIER=%s "%args.data_tier
         environs += "-e VERSION=%s "%args.version 
+        environs += "-e MERGE_VERSION=%s "%args.merge_version
         environs += "-e DESTINATION=%s "%destination
         environs += "-e USERNAME=%s "%os.getenv("USER")
         cmd = "jobsub_submit "

@@ -40,7 +40,9 @@ def mergeData(newpath,input_files):
     'use hadd to merge the data, no limit on length of list'
     #if os.path.exists(newpath):
     #newpath = newpath.replace(".root","_"+makeTimeStamp()+"_"+makeHash(input_files)+".root")
-    args = ["hadd", "-f", newpath] + input_files
+    #call("touch hadd_%d_%d.log"%(skip,chunk))
+    args = ["hadd", "-v", "0","-f", newpath] + input_files
+    #args += [" >>& hadd_%d_%d.log"%(skip,chunk)]
     #print (args)
     retcode = 1
     try:
@@ -125,6 +127,7 @@ if __name__ == "__main__":
 
 
     print ("starting up")
+    missed = []
     for data_stream in ["cosmics","calibration","physics"]:
         todo = True
         chunk = min(args.chunk,args.nfiles)
@@ -195,7 +198,7 @@ if __name__ == "__main__":
                     break
                 if debug: print ("rucio",list(result))
 
-                missed = []
+                
 
                 badsites = ["qmul","surfsara"]
                 goodsites = ["fnal"]
@@ -242,6 +245,7 @@ if __name__ == "__main__":
                         local.append(location)
                     goodfiles.append(did)
                     locations.append(location)
+                print (" list lengths goodfiles,locations", len(goodfiles),len(locations))
                     
                 #     rucio_args = ["rucio","list-file-replicas", "--pfns","--protocols=root", file]      
                 #     print ("rucio args",rucio_args)
@@ -378,6 +382,7 @@ if __name__ == "__main__":
                         break
 
                     continue 
-
+    for x in missed:
+        print ("file missed",x)
 
         
