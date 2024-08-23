@@ -67,6 +67,7 @@ echo "run returned " $?
 cat local.log
 mv local.log run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log
 ls 
+echo "ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION"
 ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION
 echo '#cmd: 	ls -lrt'
 ls -lrt

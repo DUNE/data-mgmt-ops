@@ -74,6 +74,9 @@ if __name__ == "__main__":
     else:
         destination = args.destination
 
+    if args.merge_version is None:
+        args.merge_version = args.version
+
     if not os.path.exists(destination):
         print ("make a destination",destination)
         os.mkdir(destination)
@@ -112,12 +115,13 @@ if __name__ == "__main__":
 
     bigskip = args.skip
     bigchunk = args.chunk*20
+    nfiles = min(bigchunk,numfiles)
     while bigskip <= numfiles:
         environs = ""
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
         environs += "-e RUN=%d "%args.run
-        environs += "-e NFILES=%d "%bigchunk
+        environs += "-e NFILES=%d "%nfiles
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
         environs += "-e DATA_TIER=%s "%args.data_tier
@@ -130,7 +134,7 @@ if __name__ == "__main__":
         cmd += "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
         cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
         cmd += "--role=Analysis "
-        cmd += "--expected-lifetime 4h "
+        cmd += "--expected-lifetime 8h "
         cmd += "--memory 3000MB "
         cmd += "--tar_file_name dropbox://"+location+" "
         cmd += "--use-cvmfs-dropbox " 
