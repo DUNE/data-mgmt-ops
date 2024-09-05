@@ -45,14 +45,19 @@ cd $_CONDOR_SCRATCH_DIR
 
 
 echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
+                --file_type=$FILETYPE \
                 --skip=$SKIP --run=$RUN \
                 --data_tier=$DATA_TIER\
+                --version=$VERSION\
                 --destination=$DESTINATION\
                 --debug'
 
 time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
+                --file_type=$FILETYPE \
                 --skip=$SKIP --run=$RUN \
                 --data_tier=$DATA_TIER \
+                --version=$VERSION \
+                --merge_version=$MERGE_VERSION \
                 --destination=$DESTINATION \
                 >& local.log
 
@@ -60,7 +65,9 @@ time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHU
 echo "run returned " $?
 
 cat local.log
-
+mv local.log run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log
+ls 
+ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION
 echo '#cmd: 	ls -lrt'
 ls -lrt
 

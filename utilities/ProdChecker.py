@@ -55,6 +55,9 @@ if __name__ == '__main__':
     parser.add_argument('--min',help='minimum key',type=int,default=None)
     parser.add_argument('--max',help='maximum key',type=int,default=None)
     parser.add_argument('--version',help='code version',type=str,default=None)
+
+    now = datetime.datetime.now().timestamp()
+    timestamp = unix_to_timestamp(now)
     
     args = parser.parse_args()
 
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     data = {}
     if not os.path.exists("./audits"):
         os.mkdir("audits")
-    fname = "audits/audit-%s-%s-%d-%d.json"%(audit_type,version,keymin,keymax)
+    fname = "audits/audit-%s-%s-%d-%d-%s.json"%(audit_type,version,keymin,keymax,timestamp[0:8])
 
     logname = fname.replace(".json",".log")
     logfile = open(logname,'w')
@@ -204,22 +207,22 @@ if __name__ == '__main__':
                             
                     if diff > 0 :
                         #print( "WARNING more",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
-                        msg = "WARNING more %s (%d) than reference (%d) in %s %d %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream)
+                        msg = "WARNING more %s (%d) than reference (%d) in %s %d %s %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
                         print (msg)
                         logfile.write(msg+"\n")
                         
                     if diff < 0 :
                         #print( "WARNING less",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
 
-                        msg = "WARNING less %s (%d) than reference (%d) in %s %d %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream)
+                        msg = "WARNING less %s (%d) than reference (%d) in %s %d %s %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
                         print (msg)
                         logfile.write(msg+"\n")
                     if diff == 0:
                         #print( "No Problem!!",data_tier,"(",data[key][data_stream][data_tier]["count"],") == raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type,key,data_stream)
-                        msg = "No Problem!! %s (%d) == (%d) in %s %d %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream)
+                        msg = "No Problem!! %s (%d) == (%d) in %s %d %s %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
                         print (msg)
                         logfile.write(msg+"\n")
                         
