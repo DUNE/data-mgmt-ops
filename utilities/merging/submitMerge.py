@@ -106,17 +106,20 @@ if __name__ == "__main__":
         print (location)
     else:
         location = args.usetar
-
+    print ("tarfile is ",location)
     if not os.path.exists("logs"):
         os.mkdir("logs")
-
+    
     cmd = "cp remote.sh %d_remote.sh"%args.run
     os.system(cmd)
 
     bigskip = args.skip
     bigchunk = args.chunk*20
     nfiles = min(bigchunk,numfiles)
-    while bigskip <= numfiles:
+    start = args.skip
+    end = start + numfiles
+    print (bigskip,numfiles,bigchunk,start,end)
+    while bigskip <= end:
         environs = ""
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
