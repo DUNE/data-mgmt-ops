@@ -344,4 +344,5 @@ if __name__ == '__main__':
                 if len(thelist) <= 0:
                     print ("readed end of list at",theskip)   
                 theskip += thelimit
+                if TESTME and theskip > 100: break
             fixer.cleanup() 

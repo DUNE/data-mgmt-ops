@@ -74,6 +74,9 @@ if __name__ == "__main__":
     else:
         destination = args.destination
 
+    if args.merge_version is None:
+        args.merge_version = args.version
+
     if not os.path.exists(destination):
         print ("make a destination",destination)
         os.mkdir(destination)
@@ -103,21 +106,25 @@ if __name__ == "__main__":
         print (location)
     else:
         location = args.usetar
-
+    print ("tarfile is ",location)
     if not os.path.exists("logs"):
         os.mkdir("logs")
-
+    
     cmd = "cp remote.sh %d_remote.sh"%args.run
     os.system(cmd)
 
     bigskip = args.skip
     bigchunk = args.chunk*20
-    while bigskip <= numfiles:
+    nfiles = min(bigchunk,numfiles)
+    start = args.skip
+    end = start + numfiles
+    print (bigskip,numfiles,bigchunk,start,end)
+    while bigskip <= end:
         environs = ""
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
         environs += "-e RUN=%d "%args.run
-        environs += "-e NFILES=%d "%bigchunk
+        environs += "-e NFILES=%d "%nfiles
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
         environs += "-e DATA_TIER=%s "%args.data_tier
@@ -130,7 +137,7 @@ if __name__ == "__main__":
         cmd += "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
         cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
         cmd += "--role=Analysis "
-        cmd += "--expected-lifetime 4h "
+        cmd += "--expected-lifetime 8h "
         cmd += "--memory 3000MB "
         cmd += "--tar_file_name dropbox://"+location+" "
         cmd += "--use-cvmfs-dropbox " 
