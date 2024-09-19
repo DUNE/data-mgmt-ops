@@ -71,6 +71,13 @@ if __name__ == "__main__":
     if numfiles > args.nfiles:
         numfiles = args.nfiles 
 
+    if args.run:
+        thetag  = "%d"%args.run 
+    
+    else:
+        thetag = "%s"%args.dataset.replace(":",'_x_').replace("__",".")
+
+
 
     if args.destination is None:
         sskip = str(args.skip).zfill(6)
@@ -78,11 +85,11 @@ if __name__ == "__main__":
             srun = str(args.run).zfill(10)
             jobtag = "run%s_%s_"%(srun,sskip)+timeform()
         else:
-            jobtag = "%s_%s"%(args.dataset.replace(":","_x_"),sskip)
+            jobtag = "%s_%s"%(thetag,sskip)+timeform()
         
         
 
-        destination = "/pnfs/dune/persistent/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
+        destination = "/pnfs/dune/scratch/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
     else:
         destination = args.destination
 
@@ -122,10 +129,12 @@ if __name__ == "__main__":
     if not os.path.exists("logs"):
         os.mkdir("logs")
     
+    
+    
     if args.run:
-        cmd = "cp remote.sh %d_remote.sh"%args.run
+        cmd = "cp remote.sh %s_remote.sh"%thetag
     else:
-        cmd = "cp remote.sh %s_remote.sh"%args.dataset.replace(":",'_x_')
+        cmd = "cp remote_dataset.sh %s_remote.sh"%thetag
 
     os.system(cmd)
 
@@ -139,8 +148,12 @@ if __name__ == "__main__":
         environs = ""
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
-        if args.run: environs += "-e RUN=%d "%args.run
-        if args.dataset: environs += "-e DATASET=%s "%args.dataset
+        if args.run: 
+            environs += "-e RUN=%d "%args.run
+            environs += "-e DATASET=None "
+        if args.dataset: 
+            environs += "-e DATASET=%s "%args.dataset
+            environs += "-e RUN=0 "
         environs += "-e NFILES=%d "%nfiles
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
@@ -160,13 +173,11 @@ if __name__ == "__main__":
         cmd += "--use-cvmfs-dropbox " 
 
         cmd += environs
-        if args.run:
-            cmd += " file://%d_remote.sh"%args.run
-            cmd += " >& logs/submit_%d_%s_%s.log"%(args.run,bigskip,timeform())
-        else:
-            cmd += " file://%s_remote.sh"%args.dataset.replace(":",'_x_')
-            cmd += " >& logs/submit_%s_%s_%s.log"%(args.dataset.replace(":",'_x_'),bigskip,timeform())
-
+        
+        cmd += " file://%s_remote.sh"%thetag
+        #cmd += " >& logs/submit_%s_%s_%s.log"%(thetag,bigskip,timeform())
+       
+        
         
         print (cmd)
         try:
