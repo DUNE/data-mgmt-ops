@@ -97,11 +97,11 @@ if __name__ == "__main__":
     #parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
     parser.add_argument("--workflow",type=int, help="workflow id to merge",default=None)
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
-    parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
     parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
+    parser.add_argument("--dataset",type=str, help="dataset", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
     parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     debug = args.debug
 
     if args.workflow is None and args.run is None and args.dataset is None:
-        print ("need to specify either workflow or run")
+        print ("need to specify either workflow or run or dataset ")
         sys.exit(1)
 
     # get a list of files from metacat
@@ -128,7 +128,8 @@ if __name__ == "__main__":
 
     print ("starting up")
     missed = []
-    for data_stream in ["cosmics","calibration","physics"]:
+    for data_stream in ["physics","cosmics","calibration"]:
+        if args.dataset and data_stream != "physics": continue # dataset doesn't look at stream so only do once
         todo = True
         chunk = min(args.chunk,args.nfiles)
         skip = args.skip
@@ -140,20 +141,19 @@ if __name__ == "__main__":
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
-            else:
-                if args.run is not None:
+            
+            elif args.run is not None:
                     query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,args.version,skip, chunk)
                     srun = str(args.run).zfill(10)
                     jobtag = "run%s"%srun
                 
-                else:
-                    if args.dataset is not None:
-                        query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
+            elif args.dataset is not None:
+                query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
                     
-                        jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
-                    else:
-                        print ("ERROR: need to supply --run, --workflow or --dataset")
-                        sys.exit(1)
+                jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
+            else:
+                print ("ERROR: need to supply --run, --workflow or --dataset")
+                sys.exit(1)
 
 
 
@@ -335,6 +335,7 @@ if __name__ == "__main__":
             except:
                 print ("MergeRoot: ERROR making merged metadata")
                 retcode +=4
+                sys.exit(retcode)
 
             if os.path.exists(newfile):
                 print ("clean up inputs")
@@ -342,15 +343,17 @@ if __name__ == "__main__":
 
             if args.destination is None:
 
-                topdestination = "/pnfs/dune/scratch/users/%s/merging/"%os.getenv("USER")
+                topdestination = "/pnfs/dune/persistent/users/%s/merging/"%os.getenv("USER")
                 if args.test:
-                    topdestination = "/pnfs/dune/scratch/users/%s/test_merging/"%os.getenv("USER")
+                    topdestination = "/pnfs/dune/persistent/users/%s/test_merging/"%os.getenv("USER")
                 destination = os.path.join(topdestination,jobtag)
-                mk_args = ["ifdh mkdir",destination]
+
+                mk_args = ["ifdh", "-p", "mkdir",destination]
                 try:
                     process = run(mk_args,capture_output=True,text=True)   
-                except:
-                    print("Could not make remote directory")
+                    print ("made output directory",destination)
+                except Exception as e:
+                    print("Could not make remote directory",e, destination)
                     sys.exit(100)
         
             else:

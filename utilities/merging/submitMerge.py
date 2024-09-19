@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Merge root files')
     
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
-    #parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
+    parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
     parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
@@ -38,17 +38,24 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
+
+
     debug = args.debug
 
-    if args.run is None or args.version is None:
-        print ("You have to set a run number --run and the code version --version of the files you want to merge")
+    if (args.run is None  or  args.version is None) and args.dataset is None:
+        print ("You have to set a run number --run and a --version, or a --dataset",args.run, args.version, args.dataset)
+
+        
         sys.exit(1)
 
     if args.maketar is False and args.usetar is None:
         print ("you either have to set --maketar or provide --usetar value")
         sys.exit(1)
 
-    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
+    if args.run:
+        query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
+    elif args.dataset:
+        query = "files from %s"%args.dataset
 
     print ("query",query)
 
@@ -66,15 +73,20 @@ if __name__ == "__main__":
 
 
     if args.destination is None:
-        srun = str(args.run).zfill(10)
         sskip = str(args.skip).zfill(6)
-        jobtag = "run%s_%s_"%(srun,sskip)+timeform()
+        if args.run:
+            srun = str(args.run).zfill(10)
+            jobtag = "run%s_%s_"%(srun,sskip)+timeform()
+        else:
+            jobtag = "%s_%s"%(args.dataset.replace(":","_x_"),sskip)
+        
+        
 
-        destination = "/pnfs/dune/scratch/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
+        destination = "/pnfs/dune/persistent/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
     else:
         destination = args.destination
 
-    if args.merge_version is None:
+    if args.merge_version is None and not args.dataset:
         args.merge_version = args.version
 
     if not os.path.exists(destination):
@@ -110,7 +122,11 @@ if __name__ == "__main__":
     if not os.path.exists("logs"):
         os.mkdir("logs")
     
-    cmd = "cp remote.sh %d_remote.sh"%args.run
+    if args.run:
+        cmd = "cp remote.sh %d_remote.sh"%args.run
+    else:
+        cmd = "cp remote.sh %s_remote.sh"%args.dataset.replace(":",'_x_')
+
     os.system(cmd)
 
     bigskip = args.skip
@@ -123,12 +139,13 @@ if __name__ == "__main__":
         environs = ""
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
-        environs += "-e RUN=%d "%args.run
+        if args.run: environs += "-e RUN=%d "%args.run
+        if args.dataset: environs += "-e DATASET=%s "%args.dataset
         environs += "-e NFILES=%d "%nfiles
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
         environs += "-e DATA_TIER=%s "%args.data_tier
-        environs += "-e VERSION=%s "%args.version 
+        if args.run: environs += "-e VERSION=%s "%args.version 
         environs += "-e MERGE_VERSION=%s "%args.merge_version
         environs += "-e DESTINATION=%s "%destination
         environs += "-e USERNAME=%s "%os.getenv("USER")
@@ -143,8 +160,14 @@ if __name__ == "__main__":
         cmd += "--use-cvmfs-dropbox " 
 
         cmd += environs
-        cmd += " file://%d_remote.sh"%args.run
-        cmd += " >& logs/submit_%d_%s_%s.log"%(args.run,bigskip,timeform())
+        if args.run:
+            cmd += " file://%d_remote.sh"%args.run
+            cmd += " >& logs/submit_%d_%s_%s.log"%(args.run,bigskip,timeform())
+        else:
+            cmd += " file://%s_remote.sh"%args.dataset.replace(":",'_x_')
+            cmd += " >& logs/submit_%s_%s_%s.log"%(args.dataset.replace(":",'_x_'),bigskip,timeform())
+
+        
         print (cmd)
         try:
             os.system(cmd)

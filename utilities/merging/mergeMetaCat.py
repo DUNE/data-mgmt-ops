@@ -32,7 +32,7 @@ def timeform(now):
     return int(time.mktime(nowTstamp))
 
 class mergeMeta():
-  #""" Base class for making metadata for a file based on parents"""
+    'Base class for making metadata for a file based on parents'
   
     def __init__(self, opts, debug):
         'basic setup for mergeMeta'
@@ -165,9 +165,9 @@ class mergeMeta():
                 with open(f, 'r') as metafile:
                     mainmeta = json.load(metafile)
             else:
-                if self.debug:  ("look for did",f)
+                if self.debug:  print ("look for did",f)
                 if ":" not in f:
-                    if self.debug:  ("file",f,"is missing namespace")
+                    if self.debug:  print ("file",f,"is missing namespace")
                     sys.exit(1)
                 parse = f.split(":")
 
@@ -217,7 +217,7 @@ class mergeMeta():
                     if thismeta[tag] not in mix[tag]:
                         mix[tag].append(thismeta[tag])
                         if self.debug:
-                            if self.debug:  ("tag",tag," has", len(mix[tag]), "mixes")
+                            if self.debug:  print ("tag",tag," has", len(mix[tag]), "mixes")
 
             #Get the first and last events and the count
             if self.debug and "core.first_event_number" in thismeta:
@@ -256,7 +256,7 @@ class mergeMeta():
             if (len(checks[tag]) == 0):
                 print ("mergeMetaCat: tag",tag,"is missing, hope this is ok")
                 continue
-            if(len(checks[tag]) > 1):
+            if(len(checks[tag]) > 1):               
                 print ("mergeMetaCat tag ", tag, " has problem ",checks[tag]," clean up file list and retry")
                 sys.exit(1)
             else:
@@ -280,7 +280,7 @@ class mergeMeta():
         # overwrite with the externals if they are there
         for tag in externals:
             if "." in tag:
-                if self.debug:  ("overwrite top levein info with external",tag,externals[tag])
+                if self.debug:  print("overwrite top levein info with external",tag,externals[tag])
                 newJsonMetaData[tag] = externals[tag]
         for tag in special_md:
             if "." in special_md:
@@ -317,13 +317,25 @@ class mergeMeta():
             newJsonMetaData["core.runs"] = runlist
             newJsonMetaData["core.runs_subruns"] = subrunlist
             newJsonData["parents"] = parentage
-            
+
+        fixes = {
+        "core.file_content_status": "good",
+        "retention.status": "active",
+        "retention.class": "unknown"
+        }
+
+        for k,v in fixes.items():
+            if k not in newJsonMetaData:
+                print ("patch missing MD",k,v)
+                newJsonMetaData[k]=v
+
         newJsonData["metadata"]=newJsonMetaData
+        print (newJsonMetaData)
         if user != '': newJsonData['creator'] = user
 
         for tag in externals:
             if "." not in tag:
-                if self.debug:  ("overwrite top levein info with external",tag,externals[tag])
+                if self.debug:  print("overwrite top levein info with external",tag,externals[tag])
                 newJsonData[tag] = externals[tag]
         if(self.debug):
             print ("mergeMetaCat: -------------------\n")
