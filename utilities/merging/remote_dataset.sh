@@ -44,34 +44,36 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
-                --file_type=$FILETYPE \
-                --skip=$SKIP \ 
-                --dataset=$DATASET \
-                --data_tier=$DATA_TIER\
-                --version=$VERSION\
-                --destination=$DESTINATION\
-                --debug'
-
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
+echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES \
                 --file_type=$FILETYPE \
                 --skip=$SKIP  \ 
                 --dataset=$DATASET \
                 --data_tier=$DATA_TIER \
                 --version=$VERSION \
                 --merge_version=$MERGE_VERSION \
-                --destination=$DESTINATION \
+                --destination=local \
+                >& local.log'
+
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py \
+                --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES \
+                --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET \
+                --data_tier=$DATA_TIER \
+                --version=$VERSION \
+                --merge_version=$MERGE_VERSION \
+                --destination=local \
                 >& local.log
 
 
 echo "run returned " $?
 
 cat local.log
-mv local.log set_${DATASET}_${SKIP}_${CHUNK}_${DATA_TIER}.log
+mv local.log merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log
 ls 
-echo "ifdh cp -D set_${$DATASET}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION"
-ifdh cp -D set_${$DATASET}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION
+echo "ifdh cp -D merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log $DESTINATION"
+ifdh cp -D merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log $DESTINATION
 echo '#cmd: 	ls -lrt'
+ifdh cp -D *.root $DESTINATION
+ifdh cp -D *.json $DESTINATION
 ls -lrt
 
 

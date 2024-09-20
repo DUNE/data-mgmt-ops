@@ -75,7 +75,7 @@ if __name__ == "__main__":
         thetag  = "%d"%args.run 
     
     else:
-        thetag = "%s"%args.dataset.replace(":",'_x_').replace("__",".")
+        thetag = "merging_%s"%timeform()
 
 
 
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             srun = str(args.run).zfill(10)
             jobtag = "run%s_%s_"%(srun,sskip)+timeform()
         else:
-            jobtag = "%s_%s"%(thetag,sskip)+timeform()
+            jobtag = "%s_%s"%(thetag,sskip)
         
         
 
@@ -161,6 +161,7 @@ if __name__ == "__main__":
         if args.run: environs += "-e VERSION=%s "%args.version 
         environs += "-e MERGE_VERSION=%s "%args.merge_version
         environs += "-e DESTINATION=%s "%destination
+        environs += "-e TIMESTAMP=%s "%timeform()
         environs += "-e USERNAME=%s "%os.getenv("USER")
         cmd = "jobsub_submit "
         cmd += "--group dune "
@@ -171,6 +172,7 @@ if __name__ == "__main__":
         cmd += "--memory 3000MB "
         cmd += "--tar_file_name dropbox://"+location+" "
         cmd += "--use-cvmfs-dropbox " 
+
 
         cmd += environs
         

@@ -61,7 +61,19 @@ def cleanup(local):
             os.remove(file)
     
 def makeName(md,jobtag,tier,skip,chunk):
+    sskip = str(skip).zfill(6)
+    schunk = str(chunk).zfill(6)
+    timestamp = makeTimeStamp()
     metadata = md["metadata"]
+    if "set" in jobtag[0:4]:
+        detector = metadata["core.run_type"]
+        campaign = metadata["dune.campaign"]
+        fcl = metadata["dune.config_file"]
+        app = metadata["core.application.name"]+"_"+metadata["core.application.version"]
+        fname = ("%s_%s_%s_%s_merged_skip%s_lim%s_%s.root"%(detector,campaign,fcl,app,sskip,schunk,timestamp))#.replace("__",".")
+        return fname
+    
+
     detector = metadata["core.run_type"]
     ftype = metadata["core.file_type"]
     stream = metadata["core.data_stream"]
@@ -69,16 +81,14 @@ def makeName(md,jobtag,tier,skip,chunk):
   
     source = metadata["dune.config_file"].replace(".fcl","")
 
-    if "set" in jobtag[0:4]:
-        localtag = jobtag.replace(detector+"__","")
-        localtag = localtag.replace(tier+"__","")
-        localtag = localtag.replace(".fcl","")
-    else:
-        localtag = jobtag
+    # if "set" in jobtag[0:4]:
+    #     localtag = jobtag.replace(detector+"__","")
+    #     localtag = localtag.replace(tier+"__","")
+    #     localtag = localtag.replace(".fcl","")
+    # else:
+    localtag = jobtag
 
-    sskip = str(skip).zfill(6)
-    schunk = str(chunk).zfill(6)
-    timestamp = makeTimeStamp()
+    
 
     fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s.root"%(detector,ftype,localtag,stream,source,tier,sskip,schunk,timestamp)
     return fname
@@ -295,9 +305,13 @@ if __name__ == "__main__":
                 newname ='_'.join(keep)
                 sskip = str(skip).zfill(6)
                 schunk = str(chunk).zfill(4)
+                
                 newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
                 print ("newname",newname)
+                
                 newname = makeName(firstmeta,jobtag,args.data_tier,skip,chunk)
+                print ("newname",newname)
+                
                 
             else:
                 print ("no good files left in list")
@@ -360,29 +374,33 @@ if __name__ == "__main__":
                 destination = args.destination
 
             if destination is not None and os.path.exists(jsonfile):
-    
+                 
                 cp_args = ["ifdh cp",newfile,jsonfile,destination]
-                cmd = "ifdh cp %s %s %s"%(newfile,jsonfile,destination)
-                print (cp_args)
-                try:
-                    completed_process = run(cp_args, capture_output=True,text=True)   
-                    print (completed_process)  
-                    print ("remove local copies")
-                    os.remove(newfile)
-                    os.remove(jsonfile)
-
-            
-                except Exception as e:
-                    print ("WARNING: doing copy to destination",e,cp_args,destination)
-                    print ("try again ", cmd)
-
-                    try: 
-                        os.system(cmd)
+                if destination == "local":
+                    continue
+                else:
+                    
+                    cmd = "ifdh cp %s %s %s"%(newfile,jsonfile,destination)
+                    print (cp_args)
+                    try:
+                        completed_process = run(cp_args, capture_output=True,text=True)   
+                        print (completed_process)  
+                        print ("remove local copies")
                         os.remove(newfile)
                         os.remove(jsonfile)
+
+                
                     except Exception as e:
-                        print ("ERROR: second attempt at copy failed, quitting",e)
-                        break
+                        print ("WARNING: doing copy to destination",e,cp_args,destination)
+                        print ("try again ", cmd)
+
+                        try: 
+                            os.system(cmd)
+                            os.remove(newfile)
+                            os.remove(jsonfile)
+                        except Exception as e:
+                            print ("ERROR: second attempt at copy failed, quitting",e)
+                            break
 
                     continue 
     for x in missed:
