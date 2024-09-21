@@ -12,4 +12,4 @@ export NFILES=10000
 export DETECTOR=fardet-vd
 export FILE_TYPE=mc
 #python mergeRoot.py --dataset=$DATASET --detector=fardet-vd --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=50 --nfiles=100 --destination=local --debug >& lar.log 
-python mergeRoot.py --listfile=$THELIST  --file_type=$FILE_TYPE  --chunk=$CHUNK --nfiles=$NFILES --skip=$SKIP --destination=local 
+python mergeRoot.py --listfile=$THELIST  --file_type=$FILE_TYPE  --chunk=$CHUNK --nfiles=$NFILES --skip=$SKIP --destination=local --merge_stage=final

@@ -148,6 +148,7 @@ if __name__ == "__main__":
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
+    parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     
     args = parser.parse_args()
 
@@ -443,7 +444,7 @@ if __name__ == "__main__":
                 
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, 
                                 datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug)
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage)
                 
                 
                 jsonfile = newfile+".json"

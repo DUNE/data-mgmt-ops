@@ -6,11 +6,11 @@ export MERGE_VERSION=v09_91_02d01
 export THEDATE=`date +%F-%H.%M.%S`
 #source setup_lar.sh
 
-export SKIP=0
+export SKIP=2000
 export CHUNK=100
 export NFILES=2000
 export DETECTOR=fardet-vd
 export FILE_TYPE=mc
 export DESTINATION=${DSCRATCH}/merging/${DETECTOR}_${SKIP}_${NFILES}_${FCL}_${THEDATE}
 #python mergeRoot.py --dataset=$DATASET --detector=fardet-vd --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=50 --nfiles=100 --destination=local --debug >& lar.log 
-python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES  --maketar --skip=$SKIP --destination=$DESTINATION --debug
+python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES  --maketar --skip=$SKIP --destination=$DESTINATION --debug --merge_stage=makecaf

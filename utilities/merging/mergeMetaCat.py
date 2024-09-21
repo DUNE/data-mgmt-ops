@@ -437,7 +437,7 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename, newnamespace, datatier, application, version, flist, merge_type, do_sort=0, user='', debug=False):
+def run_merge(newfilename, newnamespace, datatier, application, version, flist, merge_type, do_sort=0, user='', debug=False, stage="unknown"):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -477,7 +477,8 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 "retired_timestamp":None,
                 "updated_by":None,
                 "updated_timestamp":None,
-                "checksums":{"adler32":checksum}
+                "checksums":{"adler32":checksum},
+                "dune.merging_stage":stage
                 }
                 
     if application != None:
@@ -519,6 +520,7 @@ if __name__ == "__main__":
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
     parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
+    parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     args = parser.parse_args()
     # print (args.fileList)
     
@@ -542,4 +544,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage)

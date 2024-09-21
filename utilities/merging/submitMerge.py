@@ -37,6 +37,7 @@ if __name__ == "__main__":
     parser.add_argument('--usetar',help="full path for existing tarball",default=None,type=str)
     parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
+    parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     
     
     args = parser.parse_args()
@@ -171,6 +172,7 @@ if __name__ == "__main__":
         environs = ""
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
+        environs += "-e STAGE=%s "%args.merge_stage
         if args.run: 
             environs += "-e RUN=%d "%args.run
             environs += "-e DATASET=None "
