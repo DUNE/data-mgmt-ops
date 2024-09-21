@@ -35,6 +35,9 @@ if __name__ == "__main__":
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--maketar',help="make a tarball",default=False,action='store_true')
     parser.add_argument('--usetar',help="full path for existing tarball",default=None,type=str)
+    parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
+    parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
+    
     
     args = parser.parse_args()
 
@@ -52,17 +55,28 @@ if __name__ == "__main__":
         print ("you either have to set --maketar or provide --usetar value")
         sys.exit(1)
 
+    if args.uselar and args.lar_config is None:
+        print ("if using lar, you must provide a fcl file and merge_version=dunesw version")
+        sys.exit(1)
+
     if args.run:
         query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
+
     elif args.dataset:
         query = "files from %s"%args.dataset
 
     print ("query",query)
 
-    info = mc_client.query(query=query,summary="count")
+    info = mc_client.query(query=query+" limit 10000",summary="count")
     print (info)
 
     numfiles  = info["count"]
+
+    thetime = timeform()
+
+    if args.uselar and args.dataset is None:
+        print("currently can only run lar with datasets")
+        sys.exit(1)
 
     if numfiles == 0:
         print("No files found, if running mc you need to set --file_type=mc")
@@ -72,10 +86,15 @@ if __name__ == "__main__":
         numfiles = args.nfiles 
 
     if args.run:
-        thetag  = "%d"%args.run 
+        thetag  = "%d_%d_%d"%(args.skip,args.nfiles,args.run) 
     
     else:
-        thetag = "merging_%s"%timeform()
+        thetag = "merging_%d_%d_%s"%(args.skip,args.nfiles,thetime)
+
+    if args.uselar:
+        thetag = "merging_%d_%d_%s_%s"%(args.skip,args.nfiles,args.lar_config,thetime)
+
+    
 
 
 
@@ -83,7 +102,7 @@ if __name__ == "__main__":
         sskip = str(args.skip).zfill(6)
         if args.run:
             srun = str(args.run).zfill(10)
-            jobtag = "run%s_%s_"%(srun,sskip)+timeform()
+            jobtag = "run%s_%s_"%(srun,sskip)+thetime
         else:
             jobtag = "%s_%s"%(thetag,sskip)
         
@@ -120,7 +139,7 @@ if __name__ == "__main__":
         if not os.path.exists(tardir):
             os.mkdir(tardir)
         basedirname="."
-        tag = "tarball-%s"%timeform()
+        tag = "tarball-%s"%thetime
         location = MakeTarball(tmpdir=tmpdir,tardir=tardir,tag = tag,basedirname=basedirname,debug=True)
         print (location)
     else:
@@ -131,20 +150,24 @@ if __name__ == "__main__":
     
     
     
-    if args.run:
-        cmd = "cp remote.sh %s_remote.sh"%thetag
-    else:
-        cmd = "cp remote_dataset.sh %s_remote.sh"%thetag
+    # if args.run:
+    #     cmd = "cp remote.sh %s_remote.sh"%thetag
+    # else:
+    #     cmd = "cp remote_dataset.sh %s_remote.sh"%thetag
 
-    os.system(cmd)
+    # if args.uselar:
+    #     cmd = "cp remote_lar.sh lar_%s_remote.sh"%thetag
+
+    #os.system(cmd)
 
     bigskip = args.skip
     bigchunk = args.chunk*20
+    if args.uselar: bigchunk=args.chunk*1  # lar needs to be spread out more. 
     nfiles = min(bigchunk,numfiles)
     start = args.skip
     end = start + numfiles
     print (bigskip,numfiles,bigchunk,start,end)
-    while bigskip <= end:
+    while bigskip < end:  # should ths be < or <= ?
         environs = ""
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
@@ -161,12 +184,17 @@ if __name__ == "__main__":
         if args.run: environs += "-e VERSION=%s "%args.version 
         environs += "-e MERGE_VERSION=%s "%args.merge_version
         environs += "-e DESTINATION=%s "%destination
-        environs += "-e TIMESTAMP=%s "%timeform()
+        environs += "-e TIMESTAMP=%s "%thetime
         environs += "-e USERNAME=%s "%os.getenv("USER")
+        environs += "-e USELAR=%s "%args.uselar
+        environs += "-e LARCONFIG=%s "%args.lar_config
         cmd = "jobsub_submit "
         cmd += "--group dune "
         cmd += "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
-        cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
+        if args.uselar:
+            cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest "
+        else:
+            cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
         cmd += "--role=Analysis "
         cmd += "--expected-lifetime 8h "
         cmd += "--memory 3000MB "
@@ -175,13 +203,28 @@ if __name__ == "__main__":
 
 
         cmd += environs
+        here = os.environ["PWD"]
+        subname = "%d_%d_%s.sh"%(bigskip,nfiles,thetag)
+                
+        if args.run:
+            rcmd =  "cp remote.sh "+subname
+        if args.dataset:
+            rcmd =  "cp remote_dataset.sh "+subname
+        if args.uselar:
+            rcmd =  "cp remote_lar.sh "+subname
+
+        os.system(rcmd)
+        cmd += " file://"+os.path.join(here,subname)
         
-        cmd += " file://%s_remote.sh"%thetag
-        #cmd += " >& logs/submit_%s_%s_%s.log"%(thetag,bigskip,timeform())
+        cmd += " >& logs/submit_%d_%d_%s_%s_%s.log"%(bigskip,nfiles,thetag,bigskip,thetime)
        
         
         
         print (cmd)
+
+        cmdfile = open("logs/submit_%d_%d_%s_%s_%s.job"%(bigskip,nfiles,thetag,bigskip,thetime),'w')
+        cmdfile.write(cmd)
+        cmdfile.close()
         try:
             os.system(cmd)
         except:

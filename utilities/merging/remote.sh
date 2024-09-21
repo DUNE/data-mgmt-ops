@@ -21,11 +21,11 @@ echo '#cmd: 	ls -lt '
 ls -lt 
 
 
-echo '#cmd: 	export GFAL_PLUGIN_DIR=/usr/lib64/gfal2-plugins'
-export GFAL_PLUGIN_DIR=/usr/lib64/gfal2-plugins
+#echo '#cmd: 	export GFAL_PLUGIN_DIR=/usr/lib64/gfal2-plugins'
+#export GFAL_PLUGIN_DIR=/usr/lib64/gfal2-plugins
 
-echo '#cmd: 	export GFAL_CONFIG_DIR=/etc/gfal2.d'
-export GFAL_CONFIG_DIR=/etc/gfal2.d
+#echo '#cmd: 	export GFAL_CONFIG_DIR=/etc/gfal2.d'
+#export GFAL_CONFIG_DIR=/etc/gfal2.d
 
 echo '#cmd: 	ls'
 ls
@@ -49,7 +49,8 @@ echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CH
                 --skip=$SKIP --run=$RUN \
                 --data_tier=$DATA_TIER\
                 --version=$VERSION\
-                --destination=$DESTINATION\
+                --merge_version=$MERGE_VERSION \
+                --destination=local\
                 --debug'
 
 time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
@@ -58,7 +59,7 @@ time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHU
                 --data_tier=$DATA_TIER \
                 --version=$VERSION \
                 --merge_version=$MERGE_VERSION \
-                --destination=$DESTINATION \
+                --destination=local\
                 >& local.log
 
 
@@ -69,6 +70,8 @@ mv local.log run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log
 ls 
 echo "ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION"
 ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION
+ifdh cp -D *.json $DESTINATION
+ifdh cp -D *.root $DESTINATION 
 echo '#cmd: 	ls -lrt'
 ls -lrt
 

@@ -164,6 +164,7 @@ class mergeMeta():
                   
                 with open(f, 'r') as metafile:
                     mainmeta = json.load(metafile)
+                    if self.debug: print ("got metadata",mainmeta)
             else:
                 if self.debug:  print ("look for did",f)
                 if ":" not in f:
@@ -176,6 +177,7 @@ class mergeMeta():
                 print ("mergeMetaCat: file",f, "had no metadata")
                 sys.exit(1)
             thismeta = mainmeta["metadata"]
+            thisparents = mainmeta["parents"]
             #print (thismeta)
             if self.debug:
                 dumpList(thismeta)
@@ -242,7 +244,8 @@ class mergeMeta():
             if self.debug:
                 print (thismeta["core.runs"], runlist)
             # Get the list of parents
-            parentage.append({"fid":mainmeta["fid"]})
+            for parent in mainmeta["parents"]:
+                parentage.append(parent)
             
         
         #Start building the new metadata 
@@ -520,7 +523,7 @@ if __name__ == "__main__":
     # print (args.fileList)
     
     if args.jsonList is None and args.fileList == None:
-        print ("mergeMetaCat: need to provide name of a file contaiing either a list of local files or a list of metacat dids")
+        print ("mergeMetaCat: need to provide name of a file containing either a list of local files or a list of metacat dids")
         sys.exit(1)
     if args.t == "local":
         fname = args.jsonList
@@ -528,6 +531,7 @@ if __name__ == "__main__":
         fname = args.fileList
 
     if os.path.exists(fname):
+        
         f = open(fname,'r')
         x = f.readlines()
         flist = []
