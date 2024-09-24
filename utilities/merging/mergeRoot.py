@@ -214,14 +214,18 @@ if __name__ == "__main__":
                 thelistfile = open(args.listfile,'r')
                 flist = thelistfile.readlines()
                 thelistfile.close()
-                jobtag = "list-%s"%args.listfile
-                thefiles = flist.copy()
+                jobtag = "list-%s"%os.path.basename(args.listfile)
+                last = skip+chunk
+                if last > len(flist): last = len(flist)
+                if skip > len(flist): break
+                thefiles = flist.copy()[skip:last]
                 alist = []
                 mfiles = []
                 
+                
                 for f in thefiles:
                     file = f.strip()
-                    print ("check",os.path.dirname(file))
+                    #print ("check",os.path.dirname(file))
                     #dir = os.listdir(os.path.dirname(file))
                     filename = os.path.basename(file)
                     #print ('thedir',dir)

@@ -478,7 +478,8 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 "updated_by":None,
                 "updated_timestamp":None,
                 "checksums":{"adler32":checksum},
-                "dune.merging_stage":stage
+                "dune.merging_stage":stage,
+                "dune.output_status": "merged"
                 }
                 
     if application != None:

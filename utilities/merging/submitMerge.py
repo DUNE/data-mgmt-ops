@@ -162,7 +162,7 @@ if __name__ == "__main__":
     #os.system(cmd)
 
     bigskip = args.skip
-    bigchunk = args.chunk*20
+    bigchunk = args.chunk*10
     if args.uselar: bigchunk=args.chunk*2 # lar needs to be spread out more. 
     nfiles = min(bigchunk,numfiles)
     start = args.skip
