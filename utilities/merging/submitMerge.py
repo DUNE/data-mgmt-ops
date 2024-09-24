@@ -64,11 +64,11 @@ if __name__ == "__main__":
         query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
 
     elif args.dataset:
-        query = "files from %s"%args.dataset
+        query = "files from %s ordered skip %d limit %d "%(args.dataset,args.skip,args.nfiles)
 
     print ("query",query)
 
-    info = mc_client.query(query=query+" limit 10000",summary="count")
+    info = mc_client.query(query=query,summary="count")
     print (info)
 
     numfiles  = info["count"]
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
     bigskip = args.skip
     bigchunk = args.chunk*20
-    if args.uselar: bigchunk=args.chunk*1  # lar needs to be spread out more. 
+    if args.uselar: bigchunk=args.chunk*2 # lar needs to be spread out more. 
     nfiles = min(bigchunk,numfiles)
     start = args.skip
     end = start + numfiles
