@@ -180,6 +180,12 @@ if __name__ == "__main__":
         print ("If using Lar you should provide --lar_config and --merge_version=lar_version")
         sys.exit(1)
 
+    if args.listfile:
+        thelistfile = open(args.listfile,'r')
+        theflist = thelistfile.readlines()
+        thelistfile.close()
+        jobtag = "list-%s"%os.path.basename(args.listfile)
+
 
     print ("starting up")
     missed = []
@@ -211,18 +217,15 @@ if __name__ == "__main__":
                 jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
             elif args.listfile is not None:
                  
-                thelistfile = open(args.listfile,'r')
-                flist = thelistfile.readlines()
-                thelistfile.close()
-                jobtag = "list-%s"%os.path.basename(args.listfile)
+
                 last = skip+chunk
-                if last > len(flist): last = len(flist)
-                if skip > len(flist): break
-                thefiles = flist.copy()[skip:last]
+                if last > len(theflist): last = len(flist)
+                if skip > len(theflist): break
+                thefiles = (theflist.copy())[skip:last]
                 alist = []
                 mfiles = []
                 
-                
+                print ("listfile list",skip,last,len(thefiles))
                 for f in thefiles:
                     file = f.strip()
                     #print ("check",os.path.dirname(file))
