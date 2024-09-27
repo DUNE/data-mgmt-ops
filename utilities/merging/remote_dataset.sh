@@ -44,36 +44,37 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
+echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES \
                 --file_type=$FILETYPE \
-                --skip=$SKIP --run=$RUN \
-                --data_tier=$DATA_TIER\
-                --version=$VERSION\
-                --merge_version=$MERGE_VERSION \
-                --destination=local\
-                --debug'
-
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
-                --file_type=$FILETYPE \
-                --skip=$SKIP --run=$RUN \
+                --skip=$SKIP  \ 
+                --dataset=$DATASET \
                 --data_tier=$DATA_TIER \
                 --version=$VERSION \
                 --merge_version=$MERGE_VERSION \
                 --destination=local \
-                --merge_stage=$STAGE 
+                >& local.log'
+
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py \
+                --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES \
+                --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET \
+                --data_tier=$DATA_TIER \
+                --version=$VERSION \
+                --merge_version=$MERGE_VERSION \
+                --destination=local \
+                 --merge_stage=$STAGE \
                 >& local.log
 
 
 echo "run returned " $?
 
 cat local.log
-mv local.log run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log
+mv local.log merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log
 ls 
-echo "ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION"
-ifdh cp -D run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION
-ifdh cp -D *.json $DESTINATION
-ifdh cp -D *.root $DESTINATION 
+echo "ifdh cp -D merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log $DESTINATION"
+ifdh cp -D merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log $DESTINATION
 echo '#cmd: 	ls -lrt'
+ifdh cp -D *.root $DESTINATION
+ifdh cp -D *.json $DESTINATION
 ls -lrt
 
 

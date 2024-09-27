@@ -3,6 +3,7 @@ from subprocess import call,run
 from metacat.webapi import MetaCatClient
 from mergeMetaCat import run_merge
 from datetime import datetime, timezone
+from ROOT import TFile
 import argparse
 import shutil
 import json
@@ -15,6 +16,20 @@ mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
 
 #def doit():
 #    run_merge(newfilename=fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=None, version=None, flist=None, do_sort=True, merge_type="metacat", user=os.getenv("USER"), debug=False)
+
+def pnfs2xrootd(filename):
+    return filename.replace("/pnfs/","root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/")
+
+def checkFile(filepath):
+    f = 0
+    try:
+        f = TFile.Open(filepath,"READONLY")
+        return True
+    except Exception as e:
+        print ("could not open",filepath,e)
+        return False
+
+
 
 def makeTimeStamp():
     'make a timestamp'
@@ -54,33 +69,65 @@ def mergeData(newpath,input_files):
         print("MergeRoot: Error from hadd!")   
     return newpath,retcode
 
+def mergeLar(newpath,input_files,config):
+    'use larto  merge the data, no limit on length of list'
+    #if os.path.exists(newpath):
+    #newpath = newpath.replace(".root","_"+makeTimeStamp()+"_"+makeHash(input_files)+".root")
+    #call("touch hadd_%d_%d.log"%(skip,chunk))
+    args = ["lar", "-c", config] + input_files
+    print ("lar call", args)
+    #args += [" >>& hadd_%d_%d.log"%(skip,chunk)]
+    #print (args)
+    retcode = 1
+    try:
+        retcode = call(args)
+    except:
+        print ("error in lar merge")
+        retcode +=2
+    if retcode != 0:
+        print("MergeRoot: Error from lar")   
+    os.rename('./caf.root',newpath)
+    return newpath,retcode
+
 def cleanup(local):
     for file in local:
         if "cache" in file:
             print ("removing",file)
             os.remove(file)
     
-def makeName(md,jobtag,tier,skip,chunk):
+def makeName(md,jobtag,tier,skip,chun,stage):
+   
+    sskip = str(skip).zfill(6)
+    schunk = str(chunk).zfill(6)
+    timestamp = makeTimeStamp()
     metadata = md["metadata"]
+    if "set" in jobtag[0:4]:
+        detector = metadata["core.run_type"]
+        campaign = metadata["dune.campaign"]
+        fcl = metadata["dune.config_file"]
+        app = metadata["core.application.name"]+"_"+metadata["core.application.version"]
+        fname = ("%s_%s_%s_%s_merged_skip%s_lim%s_stage_%s_%s.root"%(detector,campaign,fcl,app,sskip,schunk,stage,timestamp))#.replace("__",".")
+        return fname
+    
+
     detector = metadata["core.run_type"]
     ftype = metadata["core.file_type"]
     stream = metadata["core.data_stream"]
     tier = metadata["core.data_tier"]
-  
+    
     source = metadata["dune.config_file"].replace(".fcl","")
 
-    if "set" in jobtag[0:4]:
-        localtag = jobtag.replace(detector+"__","")
-        localtag = localtag.replace(tier+"__","")
-        localtag = localtag.replace(".fcl","")
-    else:
-        localtag = jobtag
+    # if "set" in jobtag[0:4]:
+    #     localtag = jobtag.replace(detector+"__","")
+    #     localtag = localtag.replace(tier+"__","")
+    #     localtag = localtag.replace(".fcl","")
+    # else:
+    localtag = jobtag.replace(".txt","")
 
-    sskip = str(skip).zfill(6)
-    schunk = str(chunk).zfill(6)
-    timestamp = makeTimeStamp()
+    
+    
 
-    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s.root"%(detector,ftype,localtag,stream,source,tier,sskip,schunk,timestamp)
+    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,localtag,stream,source,tier,sskip,schunk,stage,timestamp)
     return fname
 
     # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
@@ -93,15 +140,16 @@ if __name__ == "__main__":
 
     outsize = 4000000000
 
-    parser = argparse.ArgumentParser(description='Merge Data - need to choose run, workflow or dataset')
+    parser = argparse.ArgumentParser(description='Merge Data - need to choose run, workflow, dataset or listfile')
     #parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
+    parser.add_argument("--listfile",type=str, help="file containing a list of files to merge, they must have json in the same director")
     parser.add_argument("--workflow",type=int, help="workflow id to merge",default=None)
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
-    parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
     parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
+    parser.add_argument("--dataset",type=str, help="dataset", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
     parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
@@ -112,23 +160,40 @@ if __name__ == "__main__":
     parser.add_argument('--version',help='software version for input query',default=None,type=str)
     parser.add_argument('--merge_version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
+    parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
+    parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
+    parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     
     args = parser.parse_args()
 
     debug = args.debug
 
-    if args.workflow is None and args.run is None and args.dataset is None:
-        print ("need to specify either workflow or run")
+    if args.workflow is None and args.run is None and args.dataset is None and args.listfile is None:
+        print ("need to specify either workflow or run or dataset ")
         sys.exit(1)
 
     # get a list of files from metacat
 
     replica_client=ReplicaClient()
 
+    if args.uselar and not args.lar_config and not args.merge_version:
+        print ("If using Lar you should provide --lar_config and --merge_version=lar_version")
+        sys.exit(1)
+
+    if args.listfile:
+        thelistfile = open(args.listfile,'r')
+        theflist = thelistfile.readlines()
+        thelistfile.close()
+        jobtag = "list-%s"%os.path.basename(args.listfile)
+
 
     print ("starting up")
     missed = []
-    for data_stream in ["cosmics","calibration","physics"]:
+    for data_stream in ["", "physics","cosmics","calibration"]:
+        if (args.dataset or args.listfile) and data_stream != "":
+            continue # dataset doesn't look at stream so only do once
+        elif not (args.dataset or args.listfile) and data_stream == "":
+            continue # this is when you need to do the loop over data_stream
         todo = True
         chunk = min(args.chunk,args.nfiles)
         skip = args.skip
@@ -140,50 +205,93 @@ if __name__ == "__main__":
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
-            else:
-                if args.run is not None:
+            
+            elif args.run is not None:
                     query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,args.version,skip, chunk)
                     srun = str(args.run).zfill(10)
                     jobtag = "run%s"%srun
                 
-                else:
-                    if args.dataset is not None:
-                        query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
+            elif args.dataset is not None:
+                query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
                     
-                        jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
-                    else:
-                        print ("ERROR: need to supply --run, --workflow or --dataset")
-                        sys.exit(1)
+                jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
+            elif args.listfile is not None:
+                 
 
+                last = skip+chunk
+                if last > len(theflist): last = len(flist)
+                if skip > len(theflist): break
+                thefiles = (theflist.copy())[skip:last]
+                alist = []
+                mfiles = []
+                
+                print ("listfile list",skip,last,len(thefiles))
+                for f in thefiles:
+                    file = f.strip()
+                    #print ("check",os.path.dirname(file))
+                    #dir = os.listdir(os.path.dirname(file))
+                    filename = os.path.basename(file)
+                    #print ('thedir',dir)
+                    if args.debug:("print check file",file)
 
+                    
+                    #print ("exists",os.path.lexists(file),(filename in dir))
+                    if not os.path.exists(file):
+                        print ("file",file,"does not exist, skipping")
+                        continue
+                    mfile = file+".json"
+                    mfilename = os.path.basename(mfile)
+                    #if args.debug:("print check metafile",mfile,mfilename in dir,os.path.exists(mfile))
+                    if not os.path.exists(mfile):
+                        
+                        print ("metafile",file,"has no metadata, skipping")
+                        continue
+                    # store nfs for metadata
+                    mfiles.append((mfile))
+                    # store xroot for actual file
+                    alist.append(pnfs2xrootd(file))
+                #if args.debug:
+                #    print (alist)
+                #    print (mfiles)
+                
+            else:
+                print ("ERROR: need to supply --run, --workflow or --dataset")
+                sys.exit(1)
+ 
+            if not args.listfile: 
+                print ("mergeRoot: metacat query = ", query)
+                alist = list(mc_client.query(query=query))
 
-            print ("mergeRoot: metacat query = ", query)
-            alist = list(mc_client.query(query=query))
             if len(alist)<= 0:
                 print ("mergeRoot: DONE")
                 todo = False
                 break
 
-            theinfo = mc_client.query(query=query,summary="count")
+            if not args.listfile:
+                theinfo = mc_client.query(query=query,summary="count")
         
-            if debug: print (theinfo)
+                if debug: print (theinfo)
             
             flist = []
             ruciolist = []
             local = []
 
             # make lists
-            for file in alist:
-                thedid = "%s:%s"%(file["namespace"],file["name"])
-                flist.append(thedid)
-                if debug: print ("new file",file)
-                ruciolist.append({"scope":file["namespace"],"name":file["name"]})
-                
-            if debug: print (ruciolist)
+            if not args.listfile:
+                for file in alist:
+                    thedid = "%s:%s"%(file["namespace"],file["name"])
+                    flist.append(thedid)
+                    if debug: print ("new file",file)
+                    ruciolist.append({"scope":file["namespace"],"name":file["name"]})
+                    
+                if debug: print (ruciolist)
         # now get a list of locations from rucio
         #     
-            if test: # this just allows tests without using rucio
-                locations =  makeFake(os.path.join(os.getenv("TMP"),"fake.root"),flist,os.getenv("TMP"))
+            if args.listfile:  # this just allows tests without using rucio
+                locations =  alist.copy()
+                goodfiles = mfiles
+                local = locations
+                
             else:   
                 retcode = 0
                 locations = []  
@@ -242,23 +350,16 @@ if __name__ == "__main__":
                             continue
                         local.append(os.path.join("./cache",os.path.basename(location)))
                     else: # at fnal
+                        if not checkFile(location):  # can I open the file? 
+                            print ("BIG PROBLEM - cannot read file",location)
+                            missed.append(did)
+                            continue
+
                         local.append(location)
                     goodfiles.append(did)
                     locations.append(location)
                 print (" list lengths goodfiles,locations", len(goodfiles),len(locations))
-                    
-                #     rucio_args = ["rucio","list-file-replicas", "--pfns","--protocols=root", file]      
-                #     print ("rucio args",rucio_args)
-                #     completed_process = run(rucio_args, capture_output=True,text=True)   
-                #     thepath = completed_process.stdout.strip()
-                #     print ("rucio output",thepath)
-                #     # this is here so you can skip files from known bad sites. 
-                #     if ("qmul" in thepath): 
-                #         print ("SKIPPING QMUL")
-                #         continue
-                #     print (file,thepath)
-                #     goodfiles.append(file)
-                #     locations.append(thepath)
+        
 
             if debug: print ("local",local)
 
@@ -269,35 +370,52 @@ if __name__ == "__main__":
             if len(goodfiles) >= 1:
                 
                 print (goodfiles[0])
-                firstmeta = mc_client.get_file(did=goodfiles[0],with_metadata=True)
-                firstmeta["core.data_tier"] = args.data_tier
-                firstname = firstmeta["name"]
-                pieces = firstname.split("_")
-                pieces = pieces[0:2]+pieces[7:]
-                keep = []
+                if not args.listfile:
+                    firstmeta = mc_client.get_file(did=goodfiles[0],with_metadata=True)
+                else:
+                    f1 = open(goodfiles[0],'r')
+                    firstmeta = json.load(f1)
+                    if "namespace" in firstmeta:
+                        namespace = firstmeta["namespace"]
+                    else:
+                        namespace = "unknown"
+                    f1.close()
+                #firstmeta["core.data_tier"] = args.data_tier
+                # firstname = firstmeta["name"]
+                # pieces = firstname.split("_")
+                # pieces = pieces[0:2]+pieces[7:]
+                # keep = []
                 
-                for i in range(0,len(pieces)):
-                    x = pieces[i]
-                    #print (x[0:3],x[0:3])
-                    if x[0:3] == "run": 
+                # if args.listfile: 
+                #     namespace=firstmeta["namespace"]
+                # for i in range(0,len(pieces)):
+                #     x = pieces[i]
+                #     #print (x[0:3],x[0:3])
+                #     if x[0:3] == "run": 
                         
-                        continue
-                    #if x[0:4] == "2024": continue
-                    if "datawriter" in x: 
+                #         continue
+                #     #if x[0:4] == "2024": continue
+                #     if "datawriter" in x: 
                     
-                        continue
-                    if "dataflow" in x: continue
-                    keep.append(x)
+                #         continue
+                #     if "dataflow" in x: continue
+                #     keep.append(x)
                 
 
                     
                 
-                newname ='_'.join(keep)
-                sskip = str(skip).zfill(6)
-                schunk = str(chunk).zfill(4)
-                newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
+                # newname ='_'.join(keep)
+                # sskip = str(skip).zfill(6)
+                # schunk = str(chunk).zfill(4)
+                
+                # newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
+                # print ("newname",newname)
+                filecount = chunk
+                if len(goodfiles) - skip < chunk:
+                    filecount = len(goodfiles) - skip
+                newname = makeName(firstmeta,jobtag,args.data_tier,skip,filecount,args.merge_stage)
                 print ("newname",newname)
-                newname = makeName(firstmeta,jobtag,args.data_tier,skip,chunk)
+                
                 
             else:
                 print ("no good files left in list")
@@ -312,12 +430,17 @@ if __name__ == "__main__":
                 todo = False
             
             outputfile = newname
-            newfile,retcode = mergeData(outputfile,local)
+            if args.uselar:
+                newfile,retcode = mergeLar(outputfile,local,args.lar_config) #lar
+            else:  
+                newfile,retcode = mergeData(outputfile,local) #hadd
+            print ("merged data", newfile,retcode)
 
             if retcode != 0:
                 errlog = open(outputfile+".failure",'w')
                 json.dump(goodfiles,errlog,indent=4)
                 errlog.close()
+                continue 
 
 
 
@@ -326,15 +449,30 @@ if __name__ == "__main__":
 
             #print (thelist)
             if debug: print (flist)
-            try:
-                retcode = run_merge(newfilename=newfile, newnamespace=None, 
+            if True:
+                merge_type = "metacat"
+                newnamespace=None
+                jsonlist = None
+                if args.listfile: 
+                    merge_type="local"
+                    newnamespace = namespace
+                    
+                    
+                    
+
+                
+                retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, 
                                 datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
-                                merge_type="metacat", do_sort=0, user='', debug=debug)
-                print ("MergeRoot: retcode", retcode)
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage)
+                
+                
                 jsonfile = newfile+".json"
-            except:
+                print ("MergeRoot: retcode", retcode,jsonfile)
+
+            else:
                 print ("MergeRoot: ERROR making merged metadata")
                 retcode +=4
+                sys.exit(retcode)
 
             if os.path.exists(newfile):
                 print ("clean up inputs")
@@ -342,44 +480,50 @@ if __name__ == "__main__":
 
             if args.destination is None:
 
-                topdestination = "/pnfs/dune/scratch/users/%s/merging/"%os.getenv("USER")
+                topdestination = "/pnfs/dune/persistent/users/%s/merging/"%os.getenv("USER")
                 if args.test:
-                    topdestination = "/pnfs/dune/scratch/users/%s/test_merging/"%os.getenv("USER")
-                destination = os.path.join(topdestination,jobtag)
-                mk_args = ["ifdh mkdir",destination]
+                    topdestination = "/pnfs/dune/persistent/users/%s/test_merging/"%os.getenv("USER")
+                destination = os.path.join(topdestination,jobtag+"_"+makeTimeStamp())
+                
+                mk_args = ["ifdh", "-p", "mkdir",destination]
                 try:
                     process = run(mk_args,capture_output=True,text=True)   
-                except:
-                    print("Could not make remote directory")
+                    print ("made output directory",destination)
+                except Exception as e:
+                    print("Could not make remote directory",e, destination)
                     sys.exit(100)
         
             else:
                 destination = args.destination
 
             if destination is not None and os.path.exists(jsonfile):
-    
-                cp_args = ["ifdh cp",newfile,jsonfile,destination]
-                cmd = "ifdh cp %s %s %s"%(newfile,jsonfile,destination)
-                print (cp_args)
-                try:
-                    completed_process = run(cp_args, capture_output=True,text=True)   
-                    print (completed_process)  
-                    print ("remove local copies")
-                    os.remove(newfile)
-                    os.remove(jsonfile)
-
-            
-                except Exception as e:
-                    print ("WARNING: doing copy to destination",e,cp_args,destination)
-                    print ("try again ", cmd)
-
-                    try: 
-                        os.system(cmd)
+                 
+                cp_args = ["ifdh", "cp","-D", newfile,jsonfile,destination]
+                if destination == "local":
+                    continue
+                else:
+                    
+                    cmd = "ifdh cp %s %s %s"%(newfile,jsonfile,destination)
+                    print (cp_args)
+                    try:
+                        completed_process = run(cp_args, capture_output=True,text=True)   
+                        print (completed_process)  
+                        print ("remove local copies")
                         os.remove(newfile)
                         os.remove(jsonfile)
+
+                
                     except Exception as e:
-                        print ("ERROR: second attempt at copy failed, quitting",e)
-                        break
+                        print ("WARNING: doing copy to destination",e,cp_args,destination)
+                        print ("try again ", cmd)
+
+                        try: 
+                            os.system(cmd)
+                            os.remove(newfile)
+                            os.remove(jsonfile)
+                        except Exception as e:
+                            print ("ERROR: second attempt at copy failed, quitting",e)
+                            break
 
                     continue 
     for x in missed:
