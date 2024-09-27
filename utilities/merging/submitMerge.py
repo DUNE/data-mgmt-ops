@@ -1,12 +1,17 @@
+""" script to submit mergeRoot as a batch job, has similar arguments
+H. Schellman, Sept 2024
+"""
+
 import os,sys
+import argparse
+
+from metacat.webapi import MetaCatClient
 
 import MakeTarball
 
-import argparse
-
 from MakeTarball import timeform,MakeTarball
 
-from metacat.webapi import MetaCatClient
+
 mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
     
 
@@ -17,9 +22,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Merge root files')
     
-    parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
+    parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default=None)
     parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
-    parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
+    parser.add_argument("--chunk",type=int, help="number of files/merge this step, should be < 100",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
@@ -27,8 +32,6 @@ if __name__ == "__main__":
     parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
 
-    #parser.add_argument("--test",help="write to test area",default=False,action='store_true')
-    #parser.add_argument("--skip",type=int, help="skip on query",default=0)
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
     parser.add_argument('--version',help='software version of files to merge (required)',default=None,type=str)
     parser.add_argument('--merge_version',help='software version for merged file [inherits]',default=None,type=str)
@@ -42,15 +45,22 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-
-
     debug = args.debug
+
+    if not args.detector:
+        print ("You must specify a detector: hd-protodune, fardet-vd ... or we won't know what to do with the output")
+        sys.exit(1)
 
     if (args.run is None  or  args.version is None) and args.dataset is None:
         print ("You have to set a run number --run and a --version, or a --dataset",args.run, args.version, args.dataset)
 
         
         sys.exit(1)
+
+    if args.uselar and not args.dataset:
+        print ("right now you can only use lar with the dataset option")
+        sys.exit(1)
+
 
     if args.maketar is False and args.usetar is None:
         print ("you either have to set --maketar or provide --usetar value")
@@ -63,6 +73,7 @@ if __name__ == "__main__":
     if args.run:
         query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
 
+    
     elif args.dataset:
         query = "files from %s ordered skip %d limit %d "%(args.dataset,args.skip,args.nfiles)
 
@@ -86,14 +97,24 @@ if __name__ == "__main__":
     if numfiles > args.nfiles:
         numfiles = args.nfiles 
 
+    # make well formatted strings
+
+    sskip = str(args.skip).zfill(6)
+    snfiles = str(args.nfiles).zfill(6)
+
     if args.run:
-        thetag  = "%d_%d_%d"%(args.skip,args.nfiles,args.run) 
+        srun = str(args.run).zfill(10)
+    else:
+        srun = ""
+
+    if args.run:
+        thetag  = "%s_%s_%s"%(srun,sskip,snfiles) 
     
     else:
-        thetag = "merging_%d_%d_%s"%(args.skip,args.nfiles,thetime)
+        thetag = "merging_%s_%s_%s"%(sskip,snfiles,thetime)
 
     if args.uselar:
-        thetag = "merging_%d_%d_%s_%s"%(args.skip,args.nfiles,args.lar_config,thetime)
+        thetag = "merging_%s_%s_%s_%s"%(sskip,snfiles,args.lar_config,thetime)
 
     
 
@@ -119,15 +140,7 @@ if __name__ == "__main__":
     if not os.path.exists(destination):
         print ("make a destination",destination)
         os.mkdir(destination)
-    # else:
-    #     olddir = destination+"."+timeform()
-    #     print ("destination directory",jobtag,"already exists, moving out of the way to",os.path.basename(olddir))
-    #     os.rename(destination,olddir)
-    #     os.mkdir(destination)
-
-    
-
-    
+     
 
     print ("number of files to process is ",numfiles)
     location = None
@@ -142,25 +155,15 @@ if __name__ == "__main__":
         basedirname="."
         tag = "tarball-%s"%thetime
         location = MakeTarball(tmpdir=tmpdir,tardir=tardir,tag = tag,basedirname=basedirname,debug=True)
-        print (location)
+        #print ("tar location is ",location)
     else:
         location = args.usetar
     print ("tarfile is ",location)
-    if not os.path.exists("logs"):
-        os.mkdir("logs")
+    logdir = os.path.join(os.getenv("PWD"),"logs")
+    if not os.path.exists(logdir):
+        os.mkdir(logdir)
+    print ("submit logs will appear in",logdir)
     
-    
-    
-    # if args.run:
-    #     cmd = "cp remote.sh %s_remote.sh"%thetag
-    # else:
-    #     cmd = "cp remote_dataset.sh %s_remote.sh"%thetag
-
-    # if args.uselar:
-    #     cmd = "cp remote_lar.sh lar_%s_remote.sh"%thetag
-
-    #os.system(cmd)
-
     bigskip = args.skip
     bigchunk = args.chunk*10
     if args.uselar: bigchunk=args.chunk*2 # lar needs to be spread out more. 
@@ -206,7 +209,7 @@ if __name__ == "__main__":
 
         cmd += environs
         here = os.environ["PWD"]
-        subname = "%d_%d_%s.sh"%(bigskip,nfiles,thetag)
+        subname = "%s/%d_%d_%s.sh"%(logdir,bigskip,nfiles,thetag)
                 
         if args.run:
             rcmd =  "cp remote.sh "+subname
@@ -218,20 +221,17 @@ if __name__ == "__main__":
         os.system(rcmd)
         cmd += " file://"+os.path.join(here,subname)
         
-        cmd += " >& logs/submit_%d_%d_%s_%s_%s.log"%(bigskip,nfiles,thetag,bigskip,thetime)
+        cmd += " >& %s/submit_%d_%d_%s_%s_%s.log"%(logdir,bigskip,nfiles,thetag,bigskip,thetime)
        
         
         
         print (cmd)
 
-        cmdfile = open("logs/submit_%d_%d_%s_%s_%s.job"%(bigskip,nfiles,thetag,bigskip,thetime),'w')
+        cmdfile = open("%s/submit_%d_%d_%s_%s_%s.job"%(logdir,bigskip,nfiles,thetag,bigskip,thetime),'w')
         cmdfile.write(cmd)
         cmdfile.close()
         try:
             os.system(cmd)
-        except:
-            print ("submission failed for some reason")
+        except Exception as e:
+            print ("submission failed for some reason",e,"need to submit from AL9 window")
         bigskip += bigchunk
-
-
-

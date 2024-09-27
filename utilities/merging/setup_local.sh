@@ -1,8 +1,10 @@
-export DWORK=dunegpvm11.fnal.gov:/exp/dune/data/users/schellma/data-mgmt-ops/utilities
-export DDTEST=dunegpvm11.fnal.gov:/pnfs/dune/scratch/users/$USER/ddtest
+# local setup
+export DWORK=dunegpvm11.fnal.gov:/exp/dune/data/users/$USER/data-mgmt-ops/utilities
+export DSCRATCH=/pnfs/dune/scratch/users/$USER
+export MERGING=${DSCRATCH}/merging
 export HERE=$PWD
 export PATH=${HOME}/.local/bin:$PATH
-export SQL_QUERY_PATH=${HERE}/sql
+
 export PYTHONPATH=$HERE:$HERE/..:${PYTHONPATH}
 
 export DATA_DISPATCHER_URL=https://metacat.fnal.gov:9443/dune/dd/data
