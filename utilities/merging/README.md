@@ -8,7 +8,7 @@ H. Schellman, August 2024
 usage: submitMerge.py [-h] [--detector DETECTOR] [--dataset DATASET] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP] [--run RUN]
                       [--destination DESTINATION] [--data_tier DATA_TIER] [--file_type FILE_TYPE] [--application APPLICATION]
                       [--version VERSION] [--merge_version MERGE_VERSION] [--debug] [--maketar] [--usetar USETAR] [--uselar]
-                      [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE]
+                      [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE] [--project_tag PROJECT_TAG]
 
 Merge root files
 
@@ -39,6 +39,8 @@ options:
                         fcl file to use with lar when making tuples, required with --uselar
   --merge_stage MERGE_STAGE
                         stage of merging, final for last step
+  --project_tag PROJECT_TAG
+                        tag to describe the project you are doing
 ~~~
 
 the `--run` and `--workflow` options create a query from DETECTOR, FILE_TYPE, DATA_TIER, VERSION
@@ -48,8 +50,8 @@ the --dataset option uses an existing metacat dataset and does not build its own
 example of submissions split up within a run
 
 ~~~
-python submitMerge.py --run=28023 --chunk=50 --data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=0 # first 2000
-python submitMerge.py --run=28023 --chunk=50 --data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=2000 # next 2000
+python submitMerge.py --run=28023 --chunk=50 --data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=0 --project_tag=hd-keepup-tuples# first 2000
+python submitMerge.py --run=28023 --chunk=50 --data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=2000 --project_tag=pdhd-keepup-tuples # next 2000
 ....
 ~~~
 
@@ -61,7 +63,7 @@ example of using lar to create Cafs.
 here $MERGE_VERSION is the dunesw version you are running to do the caf creation
 
 ~~~
-python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES  --maketar --skip=$SKIP --destination=$DESTINATION --debug
+python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES  --maketar --skip=$SKIP --destination=$DESTINATION --project_tag=fdvd-make-caf--debug
 ~~~
 
 currently the lar version only works with datasets. 
@@ -96,7 +98,7 @@ arguments are similar to `submitMerge.py`
 usage: mergeRoot.py [-h] [--listfile LISTFILE] [--workflow WORKFLOW] [--detector DETECTOR] [--chunk CHUNK] [--nfiles NFILES]
                     [--skip SKIP] [--run RUN] [--dataset DATASET] [--destination DESTINATION] [--data_tier DATA_TIER]
                     [--file_type FILE_TYPE] [--test] [--application APPLICATION] [--version VERSION] [--merge_version MERGE_VERSION]
-                    [--debug] [--uselar] [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE]
+                    [--debug] [--uselar] [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE] 
 
 Merge Data - need to choose run, workflow, dataset or listfile
 
@@ -150,7 +152,7 @@ export FILE_TYPE=mc
 # THELIST contains a list of paths to the root files.
 # this writes to the local disk - do not run in app area.
 
-python mergeRoot.py --listfile=$THELIST  --file_type=$FILE_TYPE  --chunk=$CHUNK --nfiles=$NFILES --skip=$SKIP --destination=local --merge_stage=final
+python mergeRoot.py --listfile=$THELIST  --file_type=$FILE_TYPE  --chunk=$CHUNK --nfiles=$NFILES --skip=$SKIP --destination=local --merge_stage=final 
 
 
 
