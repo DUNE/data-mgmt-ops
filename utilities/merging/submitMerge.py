@@ -41,6 +41,7 @@ if __name__ == "__main__":
     parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
+    parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
     
     
     args = parser.parse_args()
@@ -102,34 +103,40 @@ if __name__ == "__main__":
     sskip = str(args.skip).zfill(6)
     snfiles = str(args.nfiles).zfill(6)
 
+    if args.project_tag:
+        project =  args.project_tag  +"_"
+    else:
+        project = ""
+    
+
     if args.run:
         srun = str(args.run).zfill(10)
     else:
         srun = ""
 
     if args.run:
-        thetag  = "%s_%s_%s"%(srun,sskip,snfiles) 
+        thetag  = "run_%s%s_%s_%s_%s"%(project,srun,sskip,snfiles,thetime) 
     
     else:
-        thetag = "merging_%s_%s_%s"%(sskip,snfiles,thetime)
+        thetag = "merging_%s%s_%s_%s"%(project, sskip,snfiles,thetime)
 
     if args.uselar:
-        thetag = "merging_%s_%s_%s_%s"%(sskip,snfiles,args.lar_config,thetime)
+        thetag = "merging_%s%s_%s_%s_%s"%(project,sskip,snfiles,(args.lar_config).replace(".fcl",""),thetime)
 
     
-
+    print ("make a new tag ", thetag)
 
 
     if args.destination is None:
-        sskip = str(args.skip).zfill(6)
+        
         if args.run:
-            srun = str(args.run).zfill(10)
-            jobtag = "run%s_%s_"%(srun,sskip)+thetime
+            
+            jobtag = "%s_"%thetag
+            
         else:
-            jobtag = "%s_%s"%(thetag,sskip)
+            jobtag = "%s_"%(thetag)
         
         
-
         destination = "/pnfs/dune/scratch/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
     else:
         destination = args.destination

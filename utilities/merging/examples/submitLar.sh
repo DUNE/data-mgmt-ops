@@ -11,4 +11,7 @@ export NFILES=25000 # place a sane limit, if more need to be done you need to bu
 export DETECTOR=fardet-vd
 export FILE_TYPE=mc
 export DESTINATION=${DSCRATCH}/merging/${DETECTOR}_${SKIP}_${NFILES}_${FCL}_${THEDATE}
-python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES  --maketar --skip=$SKIP --destination=$DESTINATION --debug --merge_stage=makecaf
+python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR \
+ --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES \
+  --maketar --skip=$SKIP --destination=$DESTINATION --debug --merge_stage=makecaf \
+  --project_tag="fdvd-makecaf-nuenergy"
