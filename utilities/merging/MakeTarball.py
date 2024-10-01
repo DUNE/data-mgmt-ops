@@ -5,7 +5,7 @@ import os,sys,time,datetime
 
 def timeform():
   now = datetime.datetime.now()
-  timeFormat = "%Y%m%d%H%M%S-local"
+  timeFormat = "%Y%m%d%H%M%S"
   nowtime = now.strftime(timeFormat)
   return nowtime
 

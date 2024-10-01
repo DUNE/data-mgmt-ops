@@ -419,6 +419,10 @@ if __name__ == "__main__":
                 
             else:
                 print ("no good files left in list")
+
+            # store these to pass to metadata
+            theskip = skip
+            thecount = filecount
                
             skip += chunk
             count += chunk
@@ -463,7 +467,7 @@ if __name__ == "__main__":
                 
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, 
                                 datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage)
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=theskip,nfiles=thecount)
                 
                 
                 jsonfile = newfile+".json"

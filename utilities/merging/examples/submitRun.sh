@@ -8,9 +8,9 @@ export DATATIER="root-tuple-virtual"
 
 # these say how the merging will be done 
 export SKIP=0
-export CHUNK=100
-export NFILES=3000
-export STAGE=stage1
+export CHUNK=50
+export NFILES=300
+export STAGE=testing
 
 python submitMerge.py --run $RUN --version $VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES\
  --file_type=$FILETYPE --detector=$DETECTOR --data_tier=$DATATIER --merge_stage=$STAGE --maketar

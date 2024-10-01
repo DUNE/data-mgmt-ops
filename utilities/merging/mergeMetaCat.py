@@ -437,7 +437,8 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename, newnamespace, datatier, application, version, flist, merge_type, do_sort=0, user='', debug=False, stage="unknown"):
+def run_merge(newfilename, newnamespace, datatier, application, version, flist, \
+               merge_type, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -459,6 +460,8 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
     print (" about to do checksum on newfilename",newfilename)
     checksum = CheckSum.Adler32(newfilename)
     if debug: print ("Checksum is ",newfilename,checksum)
+
+    
  
     externals = {
                 "name": os.path.basename(newfilename),
@@ -479,17 +482,19 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 "updated_timestamp":None,
                 "checksums":{"adler32":checksum},
                 "dune.merging_stage":stage,
+                "dune.merging_range":[skip, nfiles],
                 "dune.output_status": "merged"
                 }
+    if debug: print ("externals", externals)
                 
     if application != None:
         externals["core.application.name"] = application
     if version != None:
         externals["core.application.version"] = version
 
-    DEBUG = 0
-    if DEBUG:
-        print (externals)
+    # DEBUG = 0
+    # if DEBUG:
+    #     print (externals)
     #test = maker.checkmerge(inputfiles)
     #print ("mergeMetaCat: merge status",test)
     #if test:

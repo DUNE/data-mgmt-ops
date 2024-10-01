@@ -172,7 +172,7 @@ if __name__ == "__main__":
     print ("submit logs will appear in",logdir)
     
     bigskip = args.skip
-    bigchunk = args.chunk*10
+    bigchunk = args.chunk*5
     if args.uselar: bigchunk=args.chunk*2 # lar needs to be spread out more. 
     nfiles = min(bigchunk,numfiles)
     start = args.skip
@@ -209,7 +209,8 @@ if __name__ == "__main__":
             cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
         cmd += "--role=Analysis "
         cmd += "--expected-lifetime 8h "
-        cmd += "--memory 3000MB "
+        cmd += "--memory 4000MB "
+        cmd += "--disk 20GB "
         cmd += "--tar_file_name dropbox://"+location+" "
         cmd += "--use-cvmfs-dropbox " 
 
