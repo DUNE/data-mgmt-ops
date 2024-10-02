@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
-    parser.add_argument('--direct_parentage',type=bool,default=False,action='store_true')
+    parser.add_argument('--direct_parentage',default=False,action='store_true')
     
     args = parser.parse_args()
 
