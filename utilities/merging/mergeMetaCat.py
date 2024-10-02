@@ -115,8 +115,8 @@ class mergeMeta():
         return True
 
   
-    def concatenate(self, the_list, externals, user=''):
-        
+    def concatenate(self, the_list, externals, user='', direct_parentage=False):
+    
       # here are things that are unique to the output and must be supplied externally
         for tag in self.externals:
             if not tag in externals:
@@ -173,11 +173,15 @@ class mergeMeta():
                 parse = f.split(":")
 
                 mainmeta = mc_client.get_file(name=parse[1],namespace=parse[0])# ,with_metadata=True,with_provenance=True)
-            if mainmeta == None:
+            if mainmeta is None:
                 print ("mergeMetaCat: file",f, "had no metadata")
                 sys.exit(1)
+            thisfid = mainmeta["fid"]
             thismeta = mainmeta["metadata"]
             thisparents = mainmeta["parents"]
+            if thisparents is None or len(thisparents) == 0 or direct_parentage:
+                print ("making this file the parent rather than from metadata",thisfid)
+                thisparents = [thisfid]
             #print (thismeta)
             if self.debug:
                 dumpList(thismeta)
@@ -438,7 +442,7 @@ class mergeMeta():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
 def run_merge(newfilename, newnamespace, datatier, application, version, flist, \
-               merge_type, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None):
+               merge_type, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -487,7 +491,7 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 }
     if debug: print ("externals", externals)
                 
-    if application != None:
+    if application is not None:
         externals["core.application.name"] = application
     if version != None:
         externals["core.application.version"] = version
@@ -499,7 +503,7 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
     #print ("mergeMetaCat: merge status",test)
     #if test:
     if debug: print ("mergeMetaCat: concatenate")
-    meta = maker.concatenate(inputfiles,externals, user=user)
+    meta = maker.concatenate(inputfiles,externals, user=user, direct_parentage=False
     if debug: print ("mergeMetaCat: done")
     #print(meta)
     
@@ -527,6 +531,7 @@ if __name__ == "__main__":
     parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
+    parser.add_argument('--direct_parentage',type=bool,default=False,action='store_true')
     args = parser.parse_args()
     # print (args.fileList)
     
