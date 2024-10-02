@@ -1,10 +1,11 @@
-########## metadata helper ##############
+'''######### metadata helper ##############
 
 # this provides a meta data merger class which given a defined list of external information about a file and a list of input files, will produce metadata for the output.
 
 # originally used by MINERvA
 
 # H Schellman, Sept. 13, 2021
+'''
 
 import os,sys,time,datetime
 from metacat.webapi import MetaCatClient
@@ -116,6 +117,7 @@ class mergeMeta():
 
   
     def concatenate(self, the_list, externals, user='', direct_parentage=False):
+        ''' actually do the merge of metadata'''
     
       # here are things that are unique to the output and must be supplied externally
         for tag in self.externals:
@@ -363,20 +365,26 @@ class mergeMeta():
         try:
             status,fixes = TypeChecker(newJsonData,verbose=False)
             if not status: print ("mergeMetaCat: Checked metadata",status,fixes)
-        except:
-            print ("mergeMetaCat: TypeChecker failed")
+        except Exception as e:
+            print ("mergeMetaCat: TypeChecker failed",e)
         return newJsonData
     
     def setDebug(self, debug=False):
+        ''' set the debug flag'''
         self.debug = debug 
+
     def setSourceLocal(self):
+        ''' set the local source flag'''
         self.source = "local"
+
     def setSourceMetaCat(self):
+        ''' set the source to metacat'''
         self.source = "metacat"
 
 
     ##Method to grab some info parents
     def fillInFromParents(self, did, new_json_filename):
+        ''' get info from parents'''
          
         if self.source == "local":
             filename = did
@@ -500,7 +508,7 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 
     if application is not None:
         externals["core.application.name"] = application
-    if version != None:
+    if version is not None:
         externals["core.application.version"] = version
 
     # DEBUG = 0
@@ -543,7 +551,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # print (args.fileList)
     
-    if args.jsonList is None and args.fileList == None:
+    if args.jsonList is None and args.fileList is None:
         print ("mergeMetaCat: need to provide name of a file containing either a list of local files or a list of metacat dids")
         sys.exit(1)
     if args.t == "local":
