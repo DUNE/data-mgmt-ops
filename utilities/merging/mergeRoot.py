@@ -163,6 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
+    parser.add_argument('--direct_parentage',default=False,action='store_true')
     
     args = parser.parse_args()
 
@@ -219,7 +220,7 @@ if __name__ == "__main__":
                  
 
                 last = skip+chunk
-                if last > len(theflist): last = len(flist)
+                if last > len(theflist): last = len(theflist)
                 if skip > len(theflist): break
                 thefiles = (theflist.copy())[skip:last]
                 alist = []
@@ -467,7 +468,7 @@ if __name__ == "__main__":
                 
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, 
                                 datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=theskip,nfiles=thecount)
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=theskip,nfiles=thecount,direct_parentage=args.direct_parentage)
                 
                 
                 jsonfile = newfile+".json"

@@ -51,6 +51,7 @@ echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CH
                 --version=$VERSION\
                 --merge_version=$MERGE_VERSION \
                 --destination=local\
+                 --direct_parentage=$DIRECT_PARENTAGE \
                 --debug'
 
 time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
@@ -61,6 +62,7 @@ time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHU
                 --merge_version=$MERGE_VERSION \
                 --destination=local \
                 --merge_stage=$STAGE \
+                 --direct_parentage=$DIRECT_PARENTAGE \
                 >& local.log
 
 

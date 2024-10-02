@@ -176,12 +176,19 @@ class mergeMeta():
             if mainmeta is None:
                 print ("mergeMetaCat: file",f, "had no metadata")
                 sys.exit(1)
-            thisfid = mainmeta["fid"]
+            
             thismeta = mainmeta["metadata"]
             thisparents = mainmeta["parents"]
+            if "name" not in mainmeta:
+                thename = os.path.basename(f).replace(".json","")
+                print (" WARNING: had to make name from name of json file", thename)
+            else:
+                thename = mainmeta["name"]
             if thisparents is None or len(thisparents) == 0 or direct_parentage:
-                print ("making this file the parent rather than from metadata",thisfid)
-                thisparents = [thisfid]
+                print ("making this file the parent rather than from metadata")
+                
+                newparent = {"name":thename,"namespace":mainmeta["namespace"]}
+                thisparents = [newparent]
             #print (thismeta)
             if self.debug:
                 dumpList(thismeta)
@@ -248,7 +255,7 @@ class mergeMeta():
             if self.debug:
                 print (thismeta["core.runs"], runlist)
             # Get the list of parents
-            for parent in mainmeta["parents"]:
+            for parent in thisparents:
                 parentage.append(parent)
             
         
@@ -503,7 +510,8 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
     #print ("mergeMetaCat: merge status",test)
     #if test:
     if debug: print ("mergeMetaCat: concatenate")
-    meta = maker.concatenate(inputfiles,externals, user=user, direct_parentage=False
+    meta = maker.concatenate(inputfiles,externals, user=user, direct_parentage=False)
+    
     if debug: print ("mergeMetaCat: done")
     #print(meta)
     
@@ -531,7 +539,7 @@ if __name__ == "__main__":
     parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
-    parser.add_argument('--direct_parentage',type=bool,default=False,action='store_true')
+    parser.add_argument('--direct_parentage',default=False,action='store_true')
     args = parser.parse_args()
     # print (args.fileList)
     
@@ -555,4 +563,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage)
