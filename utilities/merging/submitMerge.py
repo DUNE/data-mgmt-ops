@@ -199,9 +199,9 @@ if __name__ == "__main__":
             environs += "-e DATASET=%s "%args.dataset
             environs += "-e RUN=0 "
         if args.direct_parentage:
-            environs += "-e DIRECT_PARENTAGE=True "
+            environs += "-e DIRECT_PARENTAGE='--direct_parentage' "
         else:
-            environs += "-e DIRECT_PARENTAGE=False "
+            environs += "-e DIRECT_PARENTAGE='' "
         environs += "-e NFILES=%d "%nfiles
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
