@@ -95,6 +95,12 @@ if __name__ == '__main__':
 
     logname = fname.replace(".json",".log")
     logfile = open(logname,'w')
+
+
+  
+    
+    mergecommandfilename = "submitMerge_%d_%d_%s.sub"%(keymin,keymax,version)
+    mergesubfile = open(mergecommandfilename,'w')
     for key in keys:
         
         data[key]={}
@@ -204,29 +210,57 @@ if __name__ == '__main__':
                         else:
                             reference = 0
                     diff = data[key][data_stream][data_tier]["count"] - reference
-                            
-                    if diff > 0 :
-                        #print( "WARNING more",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
-                        msg = "WARNING more %s (%d) than reference (%d) in %s %d %s %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
-                        print (msg)
-                        logfile.write(msg+"\n")
-                        
-                    if diff < 0 :
-                        #print( "WARNING less",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
-
-                        msg = "WARNING less %s (%d) than reference (%d) in %s %d %s %s"%(
-                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
-                        print (msg)
-                        logfile.write(msg+"\n")
+                    if reference > 0:
+                        fraction = diff/reference
+                    else:
+                        fraction = 0
+                    print ("fraction",fraction)
+                    donotmerge = True
                     if diff == 0:
                         #print( "No Problem!!",data_tier,"(",data[key][data_stream][data_tier]["count"],") == raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type,key,data_stream)
                         msg = "No Problem!! %s (%d) == (%d) in %s %d %s %s"%(
                         data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
                         print (msg)
                         logfile.write(msg+"\n")
+                        donotmerge *=0
+
+                    if (fraction < 0 and fraction > -0.01):
+                        #print( "No Problem!!",data_tier,"(",data[key][data_stream][data_tier]["count"],") == raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type,key,data_stream)
+                        msg = "Almost OK %s (%d) ~ (%d) in %s %d %s %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
+                        print (msg)
+                        logfile.write(msg+"\n")
+                        donotmerge *=0
+
+                    if diff > 0 :
+                        #print( "WARNING more",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
+                        msg = "WARNING more %s (%d) than reference (%d) in %s %d %s %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
+                        print (msg)
+                        logfile.write(msg+"\n")
+                        donotmerge *=1
+                        
+                    if (fraction < 0 and fraction <= -0.01):
+                        #print( "WARNING less",data_tier,"(",data[key][data_stream][data_tier]["count"],")than raw (",data[key][data_stream]["raw"]["count"],") in ",audit_type, key,data_stream)
+
+                        msg = "WARNING less %s (%d) than reference (%d) in %s %d %s %s"%(
+                        data_tier,data[key][data_stream][data_tier]["count"],reference,audit_type,key,data_stream,version)
+                        print (msg)
+                        logfile.write(msg+"\n")
+                        donotmerge *=1
+                    
                         
                     data[key][data_stream][data_tier]["check"] = diff
+                    if "tuple" in data_tier and args.run:
+                        if donotmerge:
+                            mergesubfile.write("#"+msg+"\n")
+                        mergecommand = "python submitMerge.py --run %s --version %s --skip=0 --chunk=100 --nfiles=100000\
+ --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual\
+      --merge_stage=stage1 --usetar=$TARFILE # %s \n"%(key,args.version,data[key][data_stream][data_tier]["count"])
+                        mergesubfile.write(mergecommand)
+                    
+   
+
 
 
         #print(run, data[key])

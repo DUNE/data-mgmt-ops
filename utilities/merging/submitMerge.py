@@ -11,6 +11,8 @@ import MakeTarball
 
 from MakeTarball import timeform,MakeTarball
 
+from preMergeAudit import checklist
+
 
 mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
     
@@ -86,6 +88,13 @@ if __name__ == "__main__":
     numfiles  = info["count"]
 
     thetime = timeform()
+
+    fids,duplicates = checklist(usemeta=True,query=query)
+    if len(duplicates) > 0:
+        print ("there are duplicates in this sample, can't merge",len(duplicates))
+        sys.exit(1)
+    else:
+        print ("passed a duplicates test with no problems")
 
     if args.uselar and args.dataset is None:
         print("currently can only run lar with datasets")
@@ -190,9 +199,9 @@ if __name__ == "__main__":
             environs += "-e DATASET=%s "%args.dataset
             environs += "-e RUN=0 "
         if args.direct_parentage:
-            environs += "-e DIRECT_PARENTAGE=True"
+            environs += "-e DIRECT_PARENTAGE=True "
         else:
-            environs += "-e DIRECT_PARENTAGE=False"
+            environs += "-e DIRECT_PARENTAGE=False "
         environs += "-e NFILES=%d "%nfiles
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
