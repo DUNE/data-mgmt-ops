@@ -256,7 +256,7 @@ if __name__ == '__main__':
                             mergesubfile.write("#"+msg+"\n")
                         mergecommand = "python submitMerge.py --run %s --version %s --skip=0 --chunk=100 --nfiles=100000\
  --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual\
-      --merge_stage=stage1 --usetar=$TARFILE # %s \n"%(key,args.version,data[key][data_stream][data_tier]["count"])
+      --merge_stage=final --usetar=$TARFILE # %s %s \n"%(key,args.version,data_stream,data[key][data_stream][data_tier]["count"])
                         mergesubfile.write(mergecommand)
                     
    

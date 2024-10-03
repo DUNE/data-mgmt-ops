@@ -95,7 +95,7 @@ def cleanup(local):
             print ("removing",file)
             os.remove(file)
     
-def makeName(md,jobtag,tier,skip,chun,stage):
+def makeName(md,jobtag,tier,skip,chunk,stage):
    
     sskip = str(skip).zfill(6)
     schunk = str(chunk).zfill(6)
@@ -113,7 +113,7 @@ def makeName(md,jobtag,tier,skip,chun,stage):
     detector = metadata["core.run_type"]
     ftype = metadata["core.file_type"]
     stream = metadata["core.data_stream"]
-    tier = metadata["core.data_tier"]
+    tier = metadata["core.data_tier"].replace("-virtual","")
     
     source = metadata["dune.config_file"].replace(".fcl","")
 
