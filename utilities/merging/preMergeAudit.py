@@ -69,7 +69,7 @@ if __name__ == "__main__":
     #fids,duplicates = checklist(usemeta=True,thelistfile=None,query=testquery)
     if len(duplicates) > 0:
         print ("found duplicates",len(duplicates))
-        k = open("duplicates.txt")
+        k = open("duplicates.txt",'w')
         for x in duplicates:
             k.write(x)
         k.close()
