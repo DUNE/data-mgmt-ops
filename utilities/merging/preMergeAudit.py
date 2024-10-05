@@ -13,6 +13,7 @@ mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
 replica_client=ReplicaClient()
 
 def checklist(usemeta=False,query=None,thelistfile=None,verbose=False,rucio_site=NotImplementedError):
+    max = 1000
     duplicates = []
     fids = []
     missed = []
@@ -25,6 +26,10 @@ def checklist(usemeta=False,query=None,thelistfile=None,verbose=False,rucio_site
         f.close()
     
     print ("# of files",len(alist))
+
+    if len(alist)> max:
+        print ("WARNING, truncated checks at first ",max,"files")
+        alist = alist[0:max]
 
     for filename in alist:
     

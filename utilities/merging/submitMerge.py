@@ -4,6 +4,7 @@ H. Schellman, Sept 2024
 
 import os,sys
 import argparse
+import json
 
 from metacat.webapi import MetaCatClient
 
@@ -69,6 +70,10 @@ if __name__ == "__main__":
         print ("you either have to set --maketar or provide --usetar value")
         sys.exit(1)
 
+    if args.usetar and not os.path.exists(args.usetar):
+        print("tarfile does not exist",args.usetar)
+        sys.exit(1)
+
     if args.uselar and args.lar_config is None:
         print ("if using lar, you must provide a fcl file and merge_version=dunesw version")
         sys.exit(1)
@@ -89,12 +94,7 @@ if __name__ == "__main__":
 
     thetime = timeform()
 
-    fids,duplicates = checklist(usemeta=True,query=query)
-    if len(duplicates) > 0:
-        print ("there are duplicates in this sample, can't merge",len(duplicates))
-        sys.exit(1)
-    else:
-        print ("passed a duplicates test with no problems")
+    
 
     if args.uselar and args.dataset is None:
         print("currently can only run lar with datasets")
@@ -140,15 +140,30 @@ if __name__ == "__main__":
         
         if args.run:
             
-            jobtag = "%s_"%thetag
+            jobtag = "%s"%thetag
             
         else:
-            jobtag = "%s_"%(thetag)
+            jobtag = "%s"%(thetag)
         
         
         destination = "/pnfs/dune/scratch/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
     else:
         destination = args.destination
+
+    fids,duplicates,missing = checklist(usemeta=True,query=query,rucio_site="fnal")
+    if len(duplicates) > 0:
+        print ("there are duplicates in this sample, can't merge",len(duplicates))
+        sys.exit(1)
+    else:
+        print ("passed a duplicates test with no problems")
+    
+    if len(missing) > 0:
+        print ("there are",len(missing)," files not available at the merge site, giving up")
+        missed = open(jobtag+"_missing.log",'w')
+        
+        json.dump(missing,missed,indent=4)
+        missed.close()
+        sys.exit(1)
 
     if args.merge_version is None and not args.dataset:
         args.merge_version = args.version
