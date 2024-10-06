@@ -412,8 +412,8 @@ if __name__ == "__main__":
                 # newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
                 # print ("newname",newname)
                 filecount = chunk
-                if len(goodfiles) - skip < chunk:
-                    filecount = len(goodfiles) - skip
+                if len(goodfiles) < chunk:
+                    filecount = len(goodfiles) 
                 newname = makeName(firstmeta,jobtag,args.data_tier,skip,filecount,args.merge_stage)
                 print ("newname",newname)
                 
