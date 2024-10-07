@@ -86,8 +86,16 @@ def mergeLar(newpath,input_files,config):
         retcode +=2
     if retcode != 0:
         print("MergeRoot: Error from lar")   
-    os.rename('./caf.root',newpath)
+    
+    if os.path.exists("./caf.root"): 
+        os.rename('./caf.root',newpath)
+    elif os.path.exists("./larMerge.root"): 
+        os.rename('./larMerge.root',newpath)
+    else:
+        print (" can't figure out output name")
+        retcode+=100
     return newpath,retcode
+
 
 def cleanup(local):
     for file in local:
