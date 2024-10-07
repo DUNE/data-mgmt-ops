@@ -1,5 +1,6 @@
 # local setup
 export DWORK=dunegpvm11.fnal.gov:/exp/dune/data/users/$USER/data-mgmt-ops/utilities
+export DUNEPRO=dunegpvm11.fnal.gov:/exp/dune/data/users/dunepro/merging/data-mgmt-ops/utilities/merging
 export DSCRATCH=/pnfs/dune/scratch/users/$USER
 export MERGING=${DSCRATCH}/merging
 export HERE=$PWD

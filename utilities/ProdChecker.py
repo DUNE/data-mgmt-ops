@@ -252,12 +252,15 @@ if __name__ == '__main__':
                         
                     data[key][data_stream][data_tier]["check"] = diff
                     if "tuple" in data_tier and args.run:
-                        if donotmerge:
-                            mergesubfile.write("#"+msg+"\n")
+                        
                         mergecommand = "python submitMerge.py --run %s --version %s --skip=0 --chunk=100 --nfiles=100000\
  --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual\
       --merge_stage=final --usetar=$TARFILE # %s %s \n"%(key,args.version,data_stream,data[key][data_stream][data_tier]["count"])
-                        mergesubfile.write(mergecommand)
+                        if donotmerge:
+                            mergesubfile.write("#"+msg+"\n")
+                            mergesubfile.write("#"+mergecommand)
+                        else:
+                            mergesubfile.write(mergecommand)
                     
    
 

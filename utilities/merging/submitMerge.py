@@ -235,7 +235,10 @@ if __name__ == "__main__":
             cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest "
         else:
             cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
-        cmd += "--role=Analysis "
+        if os.getenv("USER") is not "dunepro":
+            cmd += "--role=Analysis "
+        else:
+            cmd += "--role=Production "
         cmd += "--expected-lifetime 8h "
         cmd += "--memory 4000MB "
         cmd += "--disk 20GB "
