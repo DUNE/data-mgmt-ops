@@ -235,7 +235,7 @@ if __name__ == "__main__":
             cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest "
         else:
             cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
-        if os.getenv("USER") is not "dunepro":
+        if os.getenv("USER") != "dunepro":
             cmd += "--role=Analysis "
         else:
             cmd += "--role=Production "
