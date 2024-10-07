@@ -95,7 +95,7 @@ def cleanup(local):
             print ("removing",file)
             os.remove(file)
     
-def makeName(md,jobtag,tier,skip,chun,stage):
+def makeName(md,jobtag,tier,skip,chunk,stage):
    
     sskip = str(skip).zfill(6)
     schunk = str(chunk).zfill(6)
@@ -113,7 +113,7 @@ def makeName(md,jobtag,tier,skip,chun,stage):
     detector = metadata["core.run_type"]
     ftype = metadata["core.file_type"]
     stream = metadata["core.data_stream"]
-    tier = metadata["core.data_tier"]
+    tier = metadata["core.data_tier"].replace("-virtual","")
     
     source = metadata["dune.config_file"].replace(".fcl","")
 
@@ -163,6 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
+    parser.add_argument('--direct_parentage',default=False,action='store_true')
     
     args = parser.parse_args()
 
@@ -219,7 +220,7 @@ if __name__ == "__main__":
                  
 
                 last = skip+chunk
-                if last > len(theflist): last = len(flist)
+                if last > len(theflist): last = len(theflist)
                 if skip > len(theflist): break
                 thefiles = (theflist.copy())[skip:last]
                 alist = []
@@ -411,14 +412,18 @@ if __name__ == "__main__":
                 # newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
                 # print ("newname",newname)
                 filecount = chunk
-                if len(goodfiles) - skip < chunk:
-                    filecount = len(goodfiles) - skip
+                if len(goodfiles) < chunk:
+                    filecount = len(goodfiles) 
                 newname = makeName(firstmeta,jobtag,args.data_tier,skip,filecount,args.merge_stage)
                 print ("newname",newname)
                 
                 
             else:
                 print ("no good files left in list")
+
+            # store these to pass to metadata
+            theskip = skip
+            thecount = filecount
                
             skip += chunk
             count += chunk
@@ -463,7 +468,7 @@ if __name__ == "__main__":
                 
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, 
                                 datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage)
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=theskip,nfiles=thecount,direct_parentage=args.direct_parentage)
                 
                 
                 jsonfile = newfile+".json"

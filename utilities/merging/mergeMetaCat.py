@@ -1,10 +1,11 @@
-########## metadata helper ##############
+'''######### metadata helper ##############
 
 # this provides a meta data merger class which given a defined list of external information about a file and a list of input files, will produce metadata for the output.
 
 # originally used by MINERvA
 
 # H Schellman, Sept. 13, 2021
+'''
 
 import os,sys,time,datetime
 from metacat.webapi import MetaCatClient
@@ -115,8 +116,9 @@ class mergeMeta():
         return True
 
   
-    def concatenate(self, the_list, externals, user=''):
-        
+    def concatenate(self, the_list, externals, user='', direct_parentage=False):
+        ''' actually do the merge of metadata'''
+    
       # here are things that are unique to the output and must be supplied externally
         for tag in self.externals:
             if not tag in externals:
@@ -173,11 +175,22 @@ class mergeMeta():
                 parse = f.split(":")
 
                 mainmeta = mc_client.get_file(name=parse[1],namespace=parse[0])# ,with_metadata=True,with_provenance=True)
-            if mainmeta == None:
+            if mainmeta is None:
                 print ("mergeMetaCat: file",f, "had no metadata")
                 sys.exit(1)
+            
             thismeta = mainmeta["metadata"]
             thisparents = mainmeta["parents"]
+            if "name" not in mainmeta:
+                thename = os.path.basename(f).replace(".json","")
+                print (" WARNING: had to make name from name of json file", thename)
+            else:
+                thename = mainmeta["name"]
+            if thisparents is None or len(thisparents) == 0 or direct_parentage:
+                print ("making this file the parent rather than from metadata")
+                
+                newparent = {"name":thename,"namespace":mainmeta["namespace"]}
+                thisparents = [newparent]
             #print (thismeta)
             if self.debug:
                 dumpList(thismeta)
@@ -244,7 +257,7 @@ class mergeMeta():
             if self.debug:
                 print (thismeta["core.runs"], runlist)
             # Get the list of parents
-            for parent in mainmeta["parents"]:
+            for parent in thisparents:
                 parentage.append(parent)
             
         
@@ -352,20 +365,26 @@ class mergeMeta():
         try:
             status,fixes = TypeChecker(newJsonData,verbose=False)
             if not status: print ("mergeMetaCat: Checked metadata",status,fixes)
-        except:
-            print ("mergeMetaCat: TypeChecker failed")
+        except Exception as e:
+            print ("mergeMetaCat: TypeChecker failed",e)
         return newJsonData
     
     def setDebug(self, debug=False):
+        ''' set the debug flag'''
         self.debug = debug 
+
     def setSourceLocal(self):
+        ''' set the local source flag'''
         self.source = "local"
+
     def setSourceMetaCat(self):
+        ''' set the source to metacat'''
         self.source = "metacat"
 
 
     ##Method to grab some info parents
     def fillInFromParents(self, did, new_json_filename):
+        ''' get info from parents'''
          
         if self.source == "local":
             filename = did
@@ -437,7 +456,8 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename, newnamespace, datatier, application, version, flist, merge_type, do_sort=0, user='', debug=False, stage="unknown"):
+def run_merge(newfilename, newnamespace, datatier, application, version, flist, \
+               merge_type, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -459,6 +479,8 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
     print (" about to do checksum on newfilename",newfilename)
     checksum = CheckSum.Adler32(newfilename)
     if debug: print ("Checksum is ",newfilename,checksum)
+
+    
  
     externals = {
                 "name": os.path.basename(newfilename),
@@ -479,22 +501,25 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 "updated_timestamp":None,
                 "checksums":{"adler32":checksum},
                 "dune.merging_stage":stage,
+                "dune.merging_range":[skip, nfiles],
                 "dune.output_status": "merged"
                 }
+    if debug: print ("externals", externals)
                 
-    if application != None:
+    if application is not None:
         externals["core.application.name"] = application
-    if version != None:
+    if version is not None:
         externals["core.application.version"] = version
 
-    DEBUG = 0
-    if DEBUG:
-        print (externals)
+    # DEBUG = 0
+    # if DEBUG:
+    #     print (externals)
     #test = maker.checkmerge(inputfiles)
     #print ("mergeMetaCat: merge status",test)
     #if test:
     if debug: print ("mergeMetaCat: concatenate")
-    meta = maker.concatenate(inputfiles,externals, user=user)
+    meta = maker.concatenate(inputfiles,externals, user=user, direct_parentage=False)
+    
     if debug: print ("mergeMetaCat: done")
     #print(meta)
     
@@ -522,10 +547,11 @@ if __name__ == "__main__":
     parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
+    parser.add_argument('--direct_parentage',default=False,action='store_true')
     args = parser.parse_args()
     # print (args.fileList)
     
-    if args.jsonList is None and args.fileList == None:
+    if args.jsonList is None and args.fileList is None:
         print ("mergeMetaCat: need to provide name of a file containing either a list of local files or a list of metacat dids")
         sys.exit(1)
     if args.t == "local":
@@ -545,4 +571,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage)

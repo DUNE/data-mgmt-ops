@@ -1,5 +1,5 @@
-export DWORK=dunegpvm11.fnal.gov:/exp/dune/data/users/schellma/data-mgmt-ops/utilities
-export DDTEST=dunegpvm11.fnal.gov:/pnfs/dune/scratch/users/$USER/ddtest
+#export DWORK=dunegpvm11.fnal.gov:/exp/dune/data/users/schellma/data-mgmt-ops/utilities
+#export DDTEST=dunegpvm11.fnal.gov:/pnfs/dune/scratch/users/$USER/ddtest
 export HERE=$PWD
 export PATH=${HOME}/.local/bin:$PATH
 

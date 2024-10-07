@@ -65,8 +65,15 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
         "root-tuple-virtual":["core.event_count","core.first_event_number","core.last_event_number"]
         }
 
-   
-    did = filemd["namespace"]+":"+filemd["name"]
+    valid = True
+    fixes = {}
+    if "name" in filemd:
+        did = filemd["namespace"]+":"+filemd["name"]
+    else:
+        print ("ERROR: name not in metadata, continuing but this is invalid and I cannot fix it from metadata only")
+        tempname = "UNKNOWN"
+        did = "UNKNOWN:UNKNOWN"
+        valid = False
 
     # do this as file may not have an fid yet, but fid makes shorter error messages. 
     if "fid" in filemd:
@@ -75,8 +82,7 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
         fid = did
 
     # start out with valid and no fixes needed    
-    valid = True
-    fixes = {}
+    
 
     # loop over default md keys
 
@@ -90,6 +96,7 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
             if errfile is not None: errfile.write(error)
             valid *= False
             print (filemd.keys())
+            continue
             
                 
         # check type
@@ -137,6 +144,11 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
         if md[x] not in core:
             print ("unknown required metadata field",x,"=",md[x])
             valid *= False
+    for x,v in md.items():
+        if x != x.lower() and x.lower() not in md.keys():
+            valid *=False
+            print ("OOPS upper case",x)
+            fixes[x.lower()]=v
     if not valid:
         print (did, " fails basic metadata tests")
         if len(fixes) !=0:
@@ -145,9 +157,7 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
     
     # look for upper case in keys
 
-    for x,v in md.items():
-        if x != x.lower():
-            print ("OOPS upper case",x)
+    
             
             
             

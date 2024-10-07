@@ -1,0 +1,85 @@
+python submitMerge.py --run 28005 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 64 
+python submitMerge.py --run 28006 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 4746 
+python submitMerge.py --run 28007 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 5264 
+python submitMerge.py --run 28009 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 488 
+python submitMerge.py --run 28010 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 10822 
+python submitMerge.py --run 28011 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 552 
+#WARNING more root-tuple-virtual (7491) than reference (5352) in run 28012 physics v09_91_02d01
+python submitMerge.py --run 28012 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 7491 
+#WARNING more root-tuple-virtual (192) than reference (96) in run 28014 cosmics v09_91_02d01
+python submitMerge.py --run 28014 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 192 
+#WARNING more root-tuple-virtual (11720) than reference (7032) in run 28016 cosmics v09_91_02d01
+python submitMerge.py --run 28016 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 11720 
+python submitMerge.py --run 28017 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 5595 
+python submitMerge.py --run 28018 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 2 
+python submitMerge.py --run 28019 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 1 
+python submitMerge.py --run 28023 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 9184 
+python submitMerge.py --run 28024 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 1498 
+python submitMerge.py --run 28025 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 639 
+python submitMerge.py --run 28027 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 136 
+python submitMerge.py --run 28028 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 336 
+python submitMerge.py --run 28029 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 88 
+python submitMerge.py --run 28031 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 256 
+python submitMerge.py --run 28034 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 1143 
+python submitMerge.py --run 28035 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 3852 
+python submitMerge.py --run 28046 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 743 
+python submitMerge.py --run 28047 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 824 
+#WARNING more root-tuple-virtual (7471) than reference (6520) in run 28049 physics v09_91_02d01
+python submitMerge.py --run 28049 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 7471 
+#WARNING more root-tuple-virtual (416) than reference (208) in run 28051 physics v09_91_02d01
+python submitMerge.py --run 28051 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 416 
+#WARNING more root-tuple-virtual (1358) than reference (680) in run 28052 physics v09_91_02d01
+python submitMerge.py --run 28052 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 1358 
+#WARNING more root-tuple-virtual (527) than reference (264) in run 28053 cosmics v09_91_02d01
+python submitMerge.py --run 28053 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 527 
+#WARNING more root-tuple-virtual (1816) than reference (944) in run 28054 physics v09_91_02d01
+python submitMerge.py --run 28054 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 1816 
+#WARNING more root-tuple-virtual (307) than reference (200) in run 28055 cosmics v09_91_02d01
+python submitMerge.py --run 28055 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 307 
+#WARNING more root-tuple-virtual (162) than reference (136) in run 28056 cosmics v09_91_02d01
+python submitMerge.py --run 28056 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 162 
+python submitMerge.py --run 28057 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 160 
+python submitMerge.py --run 28058 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 336 
+#WARNING more root-tuple-virtual (19473) than reference (16616) in run 28059 physics v09_91_02d01
+python submitMerge.py --run 28059 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 19473 
+python submitMerge.py --run 28062 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 872 
+python submitMerge.py --run 28065 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 72 
+python submitMerge.py --run 28066 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 448 
+python submitMerge.py --run 28067 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 136 
+python submitMerge.py --run 28071 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 696 
+#WARNING less root-tuple-virtual (10595) than reference (10856) in run 28072 physics v09_91_02d01
+python submitMerge.py --run 28072 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 10595 
+python submitMerge.py --run 28073 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 72 
+#WARNING less root-tuple-virtual (1146) than reference (1160) in run 28074 physics v09_91_02d01
+python submitMerge.py --run 28074 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 1146 
+#WARNING less root-tuple-virtual (47) than reference (48) in run 28078 physics v09_91_02d01
+python submitMerge.py --run 28078 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 47 
+python submitMerge.py --run 28082 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 1760 
+python submitMerge.py --run 28083 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 320 
+python submitMerge.py --run 28084 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 2424 
+python submitMerge.py --run 28085 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 6780 
+python submitMerge.py --run 28086 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 20670 
+python submitMerge.py --run 28090 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 96 
+python submitMerge.py --run 28091 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 176 
+#WARNING more root-tuple-virtual (2921) than reference (2920) in run 28092 physics v09_91_02d01
+python submitMerge.py --run 28092 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 2921 
+#WARNING more root-tuple-virtual (3585) than reference (3584) in run 28094 cosmics v09_91_02d01
+python submitMerge.py --run 28094 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 3585 
+#WARNING more root-tuple-virtual (3801) than reference (3800) in run 28095 physics v09_91_02d01
+python submitMerge.py --run 28095 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 3801 
+python submitMerge.py --run 28096 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 24 
+#WARNING more root-tuple-virtual (555) than reference (552) in run 28097 physics v09_91_02d01
+python submitMerge.py --run 28097 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 555 
+python submitMerge.py --run 28098 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 1256 
+python submitMerge.py --run 28099 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 2120 
+python submitMerge.py --run 28105 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 376 
+python submitMerge.py --run 28106 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 2040 
+python submitMerge.py --run 28109 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 8703 
+python submitMerge.py --run 28111 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 40 
+python submitMerge.py --run 28112 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # physics 448 
+python submitMerge.py --run 28113 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 2416 
+python submitMerge.py --run 28116 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 6728 
+#WARNING more root-tuple-virtual (759) than reference (482) in run 28135 cosmics v09_91_02d01
+python submitMerge.py --run 28135 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 759 
+python submitMerge.py --run 28146 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 257 
+python submitMerge.py --run 28199 --version v09_91_02d01 --skip=0 --chunk=100 --nfiles=100000 --file_type=detector --detector=hd-protodune --data_tier=root-tuple-virtual      --merge_stage=final --usetar=$TARFILE # cosmics 24 

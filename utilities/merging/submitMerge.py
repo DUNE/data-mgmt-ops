@@ -4,12 +4,15 @@ H. Schellman, Sept 2024
 
 import os,sys
 import argparse
+import json
 
 from metacat.webapi import MetaCatClient
 
 import MakeTarball
 
 from MakeTarball import timeform,MakeTarball
+
+from preMergeAudit import checklist
 
 
 mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
@@ -42,7 +45,7 @@ if __name__ == "__main__":
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
-    
+    parser.add_argument('--direct_parentage',default=False,action='store_true')
     
     args = parser.parse_args()
 
@@ -67,6 +70,10 @@ if __name__ == "__main__":
         print ("you either have to set --maketar or provide --usetar value")
         sys.exit(1)
 
+    if args.usetar and not os.path.exists(args.usetar):
+        print("tarfile does not exist",args.usetar)
+        sys.exit(1)
+
     if args.uselar and args.lar_config is None:
         print ("if using lar, you must provide a fcl file and merge_version=dunesw version")
         sys.exit(1)
@@ -86,6 +93,8 @@ if __name__ == "__main__":
     numfiles  = info["count"]
 
     thetime = timeform()
+
+    
 
     if args.uselar and args.dataset is None:
         print("currently can only run lar with datasets")
@@ -131,15 +140,30 @@ if __name__ == "__main__":
         
         if args.run:
             
-            jobtag = "%s_"%thetag
+            jobtag = "%s"%thetag
             
         else:
-            jobtag = "%s_"%(thetag)
+            jobtag = "%s"%(thetag)
         
         
         destination = "/pnfs/dune/scratch/users/%s/merging/%s"%(os.getenv("USER"),jobtag)
     else:
         destination = args.destination
+
+    fids,duplicates,missing = checklist(usemeta=True,query=query,rucio_site="fnal")
+    if len(duplicates) > 0:
+        print ("there are duplicates in this sample, can't merge",len(duplicates))
+        sys.exit(1)
+    else:
+        print ("passed a duplicates test with no problems")
+    
+    if len(missing) > 0:
+        print ("there are",len(missing)," files not available at the merge site, giving up")
+        missed = open(jobtag+"_missing.log",'w')
+        
+        json.dump(missing,missed,indent=4)
+        missed.close()
+        sys.exit(1)
 
     if args.merge_version is None and not args.dataset:
         args.merge_version = args.version
@@ -172,7 +196,7 @@ if __name__ == "__main__":
     print ("submit logs will appear in",logdir)
     
     bigskip = args.skip
-    bigchunk = args.chunk*10
+    bigchunk = args.chunk*5
     if args.uselar: bigchunk=args.chunk*2 # lar needs to be spread out more. 
     nfiles = min(bigchunk,numfiles)
     start = args.skip
@@ -189,6 +213,10 @@ if __name__ == "__main__":
         if args.dataset: 
             environs += "-e DATASET=%s "%args.dataset
             environs += "-e RUN=0 "
+        if args.direct_parentage:
+            environs += "-e DIRECT_PARENTAGE='--direct_parentage' "
+        else:
+            environs += "-e DIRECT_PARENTAGE='' "
         environs += "-e NFILES=%d "%nfiles
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
@@ -207,9 +235,13 @@ if __name__ == "__main__":
             cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-dev-sl7:latest "
         else:
             cmd += "--singularity-image /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-el9:latest "
-        cmd += "--role=Analysis "
+        if os.getenv("USER") != "dunepro":
+            cmd += "--role=Analysis "
+        else:
+            cmd += "--role=Production "
         cmd += "--expected-lifetime 8h "
-        cmd += "--memory 3000MB "
+        cmd += "--memory 4000MB "
+        cmd += "--disk 20GB "
         cmd += "--tar_file_name dropbox://"+location+" "
         cmd += "--use-cvmfs-dropbox " 
 
