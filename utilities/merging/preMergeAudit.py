@@ -63,13 +63,14 @@ def checklist(usemeta=False,query=None,thelistfile=None,verbose=False,rucio_site
        
         if rucio_site and usemeta:
             location = None
+            did = themeta["namespace"]+":"+themeta["name"]
             try:
                 rucioname  = {"scope":filename["namespace"],"name":filename["name"]}
                 result = list(replica_client.list_replicas([rucioname]))
             except Exception as e:
                 result = None
                 print('--- Rucio list_replicas call fails: ' + str(e))
-                location 
+                location = None
             for file in result:
                 did = file["scope"]+":"+file["name"]
                 pfns = file["pfns"]
