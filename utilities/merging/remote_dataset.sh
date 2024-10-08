@@ -62,7 +62,8 @@ time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py \
                 --version=$VERSION \
                 --merge_version=$MERGE_VERSION \
                 --destination=local \
-                 --merge_stage=$STAGE \
+                --merge_stage=$STAGE \
+                --datasetName=$DATASETNAME \
                  $DIRECT_PARENTAGE \
                 >& local.log
 

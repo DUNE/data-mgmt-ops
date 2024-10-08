@@ -46,6 +46,8 @@ if __name__ == "__main__":
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
     parser.add_argument('--direct_parentage',default=False,action='store_true')
+    parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
+    
     
     args = parser.parse_args()
 
@@ -207,6 +209,8 @@ if __name__ == "__main__":
         environs = "-e CHUNK=%d "%args.chunk
         environs += "-e SKIP=%d "%bigskip
         environs += "-e STAGE=%s "%args.merge_stage
+        if args.datasetName:
+            environs += "-e DATASETNAME=%s "%args.datasetName
         if args.run: 
             environs += "-e RUN=%d "%args.run
             environs += "-e DATASET=None "
@@ -221,8 +225,8 @@ if __name__ == "__main__":
         environs += "-e DETECTOR=%s "%args.detector
         environs += "-e FILETYPE=%s "%args.file_type
         environs += "-e DATA_TIER=%s "%args.data_tier
-        if args.run: environs += "-e VERSION=%s "%args.version 
-        environs += "-e MERGE_VERSION=%s "%args.merge_version
+        if args.run and args.version: environs += "-e VERSION=%s "%args.version 
+        if args.merge_version: environs += "-e MERGE_VERSION=%s "%args.merge_version
         environs += "-e DESTINATION=%s "%destination
         environs += "-e TIMESTAMP=%s "%thetime
         environs += "-e USERNAME=%s "%os.getenv("USER")

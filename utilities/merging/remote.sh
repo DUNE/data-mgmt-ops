@@ -44,24 +44,26 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
+echo "time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles=$NFILES \
                 --file_type=$FILETYPE \
                 --skip=$SKIP --run=$RUN \
-                --data_tier=$DATA_TIER\
-                --version=$VERSION\
-                --merge_version=$MERGE_VERSION \
-                --destination=local\
-                $DIRECT_PARENTAGE \
-                --debug'
-
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES\
-                --file_type=$FILETYPE \
-                --skip=$SKIP --run=$RUN \
-                --data_tier=$DATA_TIER \
+                --data_tier=$DATA_TIER \ 
                 --version=$VERSION \
                 --merge_version=$MERGE_VERSION \
                 --destination=local \
                 --merge_stage=$STAGE \
+                $DIRECT_PARENTAGE \
+                --datasetName=$DATASETNAME \
+                >& local.log"
+
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles=$NFILES \
+                --file_type=$FILETYPE \
+                --run=$RUN \
+                --skip=$SKIP \ --data_tier=${DATA_TIER} \ 
+                --merge_version=$MERGE_VERSION \
+                --destination=local \
+                --merge_stage=$STAGE \
+                --version=${VERSION} \
                 $DIRECT_PARENTAGE \
                 --datasetName=$DATASETNAME \
                 >& local.log

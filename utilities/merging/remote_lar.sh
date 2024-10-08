@@ -57,13 +57,11 @@ echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py \
                 --merge_version=$MERGE_VERSION \
                 --destination=local \
                 --uselar \
+                --datasetName=$DATASETNAME \
                 $DIRECT_PARENTAGE \
                 --lar_config=${LARCONFIG} '
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=${DETECTOR} --chunk=${CHUNK} \ 
---nfiles=${NFILES} --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER \ 
---version=$VERSION --merge_version=$MERGE_VERSION --destination=local --uselar --lar_config=${LARCONFIG}\
- --merge_stage=$STAGE  $DIRECT_PARENTAGE \
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=${DETECTOR} --chunk=${CHUNK} --nfiles=${NFILES} --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --uselar --lar_config=${LARCONFIG} --merge_stage=${STAGE}  $DIRECT_PARENTAGE \
  >& local.log
 
 
