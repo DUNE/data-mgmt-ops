@@ -22,7 +22,7 @@ def MakeTarball(tmpdir=None,tardir=None,tag=None,basedirname=None,debug=False):
 
         if debug: print ("Making tar",cmd)
         os.system(cmd)
-
+        
         cmd2 = "xrdcp %s %s/"%(tarpath,tardir)
         
         if debug: print ("Copying tar",cmd2)

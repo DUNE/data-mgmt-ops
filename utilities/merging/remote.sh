@@ -63,6 +63,7 @@ time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHU
                 --destination=local \
                 --merge_stage=$STAGE \
                 $DIRECT_PARENTAGE \
+                --datasetName=$DATASETNAME \
                 >& local.log
 
 
