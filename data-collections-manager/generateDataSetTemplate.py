@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument("--json",type=str,help="path of a json file you want to make a dataset template from")
     parser.add_argument("--tag",type=str,help="tag to keep track of versions of dataset")
     parser.add_argument("--description",type=str,help="human-readable description")
-
+    parser.add_argument("--dataset_filename",type=str,help="short name to give your output dataset specification file (actual dataset name is generated later)",default="dataset_template.json")
     args = parser.parse_args()
 
     if not os.path.exists(args.json):
@@ -62,3 +62,6 @@ if __name__ == "__main__":
     datasetmd = cloneMD(mainmd,deftag=args.tag,description=args.description,verbose=False)
 
     print (json.dumps(datasetmd,indent=4))
+    g = open(args.dataset_filename,'w')
+    json.dump(datasetmd,g,indent=4)
+    g.close()
