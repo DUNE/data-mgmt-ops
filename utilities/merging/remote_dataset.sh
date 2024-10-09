@@ -1,5 +1,8 @@
 #!/bin/sh
 echo '#cmd: 	cd $INPUT_TAR_DIR_LOCAL'
+
+## the environmentals in this file for job parameters will be replaced with real values in the submitMerge command
+
 cd $INPUT_TAR_DIR_LOCAL
 
 # export DETECTOR='hd-protodune'
@@ -44,36 +47,18 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo 'python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES \
-                --file_type=$FILETYPE \
-                --skip=$SKIP  \ 
-                --dataset=$DATASET \
-                --data_tier=$DATA_TIER \
-                --version=$VERSION \
-                --merge_version=$MERGE_VERSION \
-                --destination=local \
-                $DIRECT_PARENTAGE \
-                >& local.log'
+echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE >& local.log"
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py \
-                --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES \
-                --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET \
-                --data_tier=$DATA_TIER \
-                --version=$VERSION \
-                --merge_version=$MERGE_VERSION \
-                --destination=local \
-                 --merge_stage=$STAGE \
-                 $DIRECT_PARENTAGE \
-                >& local.log
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE >& local.log
 
 
 echo "run returned " $?
 
 cat local.log
-mv local.log merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log
+mv local.log merged_$SKIP_$CHUNK_$TIMESTAMP.log
 ls 
-echo "ifdh cp -D merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log $DESTINATION"
-ifdh cp -D merged_${SKIP}_${CHUNK}_${TIMESTAMP}.log $DESTINATION
+echo "ifdh cp -D merged_$SKIP_$CHUNK_$TIMESTAMP.log $DESTINATION"
+ifdh cp -D merged_$SKIP_$CHUNK_$TIMESTAMP.log $DESTINATION
 echo '#cmd: 	ls -lrt'
 ifdh cp -D *.root $DESTINATION
 ifdh cp -D *.json $DESTINATION

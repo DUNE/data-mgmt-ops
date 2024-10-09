@@ -3,3 +3,4 @@ git add *.py
 git add *.md
 git add examples/*.sh
 git add examples/*.md
+git add fcl/*.fcl

@@ -75,6 +75,7 @@ def mergeLar(newpath,input_files,config):
     #newpath = newpath.replace(".root","_"+makeTimeStamp()+"_"+makeHash(input_files)+".root")
     #call("touch hadd_%d_%d.log"%(skip,chunk))
     args = ["lar", "-c", config] + input_files
+    print (args[0],args[1],args[2],args[3])
     print ("lar call", args)
     #args += [" >>& hadd_%d_%d.log"%(skip,chunk)]
     #print (args)
@@ -85,7 +86,7 @@ def mergeLar(newpath,input_files,config):
         print ("error in lar merge")
         retcode +=2
     if retcode != 0:
-        print("MergeRoot: Error from lar")   
+        print("MergeRoot: Error from lar",retcode)   
     
     if os.path.exists("./caf.root"): 
         os.rename('./caf.root',newpath)
@@ -140,6 +141,31 @@ def makeName(md,jobtag,tier,skip,chunk,stage):
 
     # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
 
+
+
+    detector = metadata["core.run_type"]
+    ftype = metadata["core.file_type"]
+    stream = metadata["core.data_stream"]
+    tier = metadata["core.data_tier"].replace("-virtual","")
+    
+    source = metadata["dune.config_file"].replace(".fcl","")
+
+    # if "set" in jobtag[0:4]:
+    #     localtag = jobtag.replace(detector+"__","")
+    #     localtag = localtag.replace(tier+"__","")
+    #     localtag = localtag.replace(".fcl","")
+    # else:
+    localtag = jobtag.replace(".txt","")
+
+    
+    
+
+    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,localtag,stream,source,tier,sskip,schunk,stage,timestamp)
+    return fname
+
+    # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
+
+
 if __name__ == "__main__":
 
     test=False
@@ -157,7 +183,7 @@ if __name__ == "__main__":
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
-    parser.add_argument("--dataset",type=str, help="dataset", default=None)
+    parser.add_argument("--dataset",type=str, help="input dataset", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
     parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
@@ -172,6 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--direct_parentage',default=False,action='store_true')
+    parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
     
     args = parser.parse_args()
 
@@ -376,6 +403,8 @@ if __name__ == "__main__":
 
             # copy files to local area for merge
 
+            filecount = 0
+
             if len(goodfiles) >= 1:
                 
                 print (goodfiles[0])
@@ -474,7 +503,7 @@ if __name__ == "__main__":
                     
 
                 
-                retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, 
+                retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
                                 datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
                                 merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=theskip,nfiles=thecount,direct_parentage=args.direct_parentage)
                 

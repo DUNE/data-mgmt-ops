@@ -32,6 +32,23 @@ def timeform(now):
     nowTstamp= time.strptime(nowtime,timeFormat)
     return int(time.mktime(nowTstamp))
 
+def makeDataSetName(meta):
+    tags = meta["metadata"]
+    order = ["core.run_type", "DUNE.campaign", "core.data_tier", "core.application.version",
+             "dune.config_file", "dune_mc.gen_fcl_filename", "core.data_stream", "deftag"]
+    name = "merged_"
+    for i in order:
+        if i in tags and tags[i] is not None:
+            new = tags[i]
+            if i == "deftag":
+                new = tags[i]
+            name += new
+            name += "_"
+    name = name[:-1]
+    name = name.replace('.fcl', '')
+    print ("datasetName",name)
+    return name
+
 class mergeMeta():
     'Base class for making metadata for a file based on parents'
   
@@ -456,8 +473,8 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename, newnamespace, datatier, application, version, flist, \
-               merge_type, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
+def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=None, application=None, version=None, flist=None, \
+               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -502,7 +519,7 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
                 "checksums":{"adler32":checksum},
                 "dune.merging_stage":stage,
                 "dune.merging_range":[skip, nfiles],
-                "dune.output_status": "merged"
+                "dune.output_status": "merged",
                 }
     if debug: print ("externals", externals)
                 
@@ -518,7 +535,14 @@ def run_merge(newfilename, newnamespace, datatier, application, version, flist, 
     #print ("mergeMetaCat: merge status",test)
     #if test:
     if debug: print ("mergeMetaCat: concatenate")
+
+
     meta = maker.concatenate(inputfiles,externals, user=user, direct_parentage=False)
+
+    if not datasetName:
+        datasetName = makeDataSetName(meta)
+    print ("datasetName=",datasetName)
+    meta["metadata"]["dune.dataset_name"]=datasetName
     
     if debug: print ("mergeMetaCat: done")
     #print(meta)
@@ -537,6 +561,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Merge Meta')
     parser.add_argument("--fileName", type=str, help="Name of merged file", default="new.root")
     parser.add_argument("--nameSpace", type=str, help="new namespace for merged file [same as parents]", default=None)
+    parser.add_argument("--datasetName", type=str, help="optional name of dataset this will go into", default=None)
     parser.add_argument('--jsonList', help='Name of file containing list of json files if -t=local', default=None, type=str)
     parser.add_argument('--fileList', help='Name of file containing list of metacat did if -t=metacat', default=None, type=str)
     parser.add_argument('-s', help='Do Sort?', default=1, type=int)
@@ -571,4 +596,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datasetName=args.datasetName, datatier=args.dataTier, application=args.application, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage)

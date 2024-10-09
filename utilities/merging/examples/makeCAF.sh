@@ -6,8 +6,8 @@ export THEDATE=`date +%Y%m%dT%H%M%S`
 
 
 export SKIP=0  # start at the begining 
-export CHUNK=50 # merge 100 files at once
-export NFILES=100 # place a small limit for testing, you can raise this a lot. if more need to be done you need to bump up skip to the previous NFILES
+export CHUNK=20 # merge 20 files at once - you want to adjust this. 
+export NFILES=50 # place a small limit for testing, you can raise this a lot. if more need to be done you need to bump up skip to the previous NFILES
 export DETECTOR=fardet-vd
 export FILE_TYPE=mc
 export DESTINATION=${DSCRATCH}/merging/${DETECTOR}_${SKIP}_${NFILES}_${FCL}_${THEDATE}

@@ -18,11 +18,11 @@ def MakeTarball(tmpdir=None,tardir=None,tag=None,basedirname=None,debug=False):
         if debug: print (" in directory",os.getcwd())
         tarname = "myareatar_%s.tar.gz"%(tag)
         tarpath = os.path.join(tmpdir,tarname)
-        cmd = "tar --exclude={*.git,*.png,*.pdf,*.gif,*.csv,*.root,*.tbz2,*.log,*.job,*.json} -zcf  %s %s"%(tarpath,basedirname)
+        cmd = "tar --exclude={*.git,*.png,*.pdf,*.gif,*.csv,*.root,*.tbz2,*.log,*.job,*.json,*.failure} -zcf  %s %s"%(tarpath,basedirname)
 
         if debug: print ("Making tar",cmd)
         os.system(cmd)
-
+        
         cmd2 = "xrdcp %s %s/"%(tarpath,tardir)
         
         if debug: print ("Copying tar",cmd2)
