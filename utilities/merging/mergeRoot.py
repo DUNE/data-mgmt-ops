@@ -403,6 +403,8 @@ if __name__ == "__main__":
 
             # copy files to local area for merge
 
+            filecount = 0
+
             if len(goodfiles) >= 1:
                 
                 print (goodfiles[0])

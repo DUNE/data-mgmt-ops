@@ -205,33 +205,81 @@ if __name__ == "__main__":
     end = start + numfiles
     print (bigskip,numfiles,bigchunk,start,end)
     while bigskip < end:  # should ths be < or <= ?
+        subname = "%s/%d_%d_%s.sh"%(logdir,bigskip,nfiles,thetag)
+        if args.run:
+            g = open("remote.sh",'r')
+        if args.dataset:
+            g = open("remote_dataset.sh",'r')
+        if args.uselar:
+            g = open("remote_lar.sh",'r')
+        sub = open(subname,'w')
+        lines = g.readlines()
+        for line in lines:
+    
+            newline = line.replace("$CHUNK","%d"%args.chunk)
+            newline = newline.replace("$SKIP","%d"%bigskip)
+            if args.merge_stage: 
+                newline = newline.replace("$STAGE",args.merge_stage)
+            if args.datasetName: 
+                newline = newline.replace("$DATASETNAME",args.datasetName)
+            if args.run:
+                newline = newline.replace("$RUN","%d"%args.run)
+
+            else:
+                newline = newline.replace("$RUN","%d"%0)
+            if args.dataset:
+                newline = newline.replace("$DATASET",args.dataset)
+            else:
+                newline = newline.replace("$DATASET","0")
+            if args.direct_parentage:
+                newline = newline.replace("$DIRECTPARENTAGE","--direct_parentage")
+            else:
+                newline = newline.replace("$DIRECTPARENTAGE","")
+            newline = newline.replace("$NFILES","%d"%nfiles)
+            newline = newline.replace("$DETECTOR",args.detector)
+            if args.data_tier: newline = newline.replace("$DATA_TIER",args.data_tier)
+            newline = newline.replace("$FILETYPE",args.file_type)
+            if args.version: newline = newline.replace("$VERSION",args.version)
+            if args.merge_version: newline = newline.replace("$MERGE_VERSION",args.merge_version)
+            newline = newline.replace("$DESTINATION",destination)
+            newline = newline.replace("$TIMESTAMP",thetime)
+            newline = newline.replace("$USERNAME",os.getenv("USER"))
+            if args.uselar:
+                newline = newline.replace("$USELAR","--uselar")
+            if args.lar_config:
+                newline = newline.replace("$LARCONFIG",args.lar_config)
+            sub.write(newline)
+            #print (newline)
+        sub.close()
         environs = ""
-        environs = "-e CHUNK=%d "%args.chunk
-        environs += "-e SKIP=%d "%bigskip
-        environs += "-e STAGE=%s "%args.merge_stage
-        if args.datasetName:
-            environs += "-e DATASETNAME=%s "%args.datasetName
-        if args.run: 
-            environs += "-e RUN=%d "%args.run
-            environs += "-e DATASET=None "
-        if args.dataset: 
-            environs += "-e DATASET=%s "%args.dataset
-            environs += "-e RUN=0 "
-        if args.direct_parentage:
-            environs += "-e DIRECT_PARENTAGE='--direct_parentage' "
-        else:
-            environs += "-e DIRECT_PARENTAGE='' "
-        environs += "-e NFILES=%d "%nfiles
-        environs += "-e DETECTOR=%s "%args.detector
-        environs += "-e FILETYPE=%s "%args.file_type
-        environs += "-e DATA_TIER=%s "%args.data_tier
-        if args.run and args.version: environs += "-e VERSION=%s "%args.version 
+        # environs = ""
+        #environs = "-e CHUNK=%d "%args.chunk
+        #environs += "-e SKIP=%d "%bigskip
+        #environs += "-e STAGE=%s "%args.merge_stage
+        # if args.datasetName:
+        #     environs += "-e DATASETNAME=%s "%args.datasetName
+        #if args.run: 
+        #    environs += "-e RUN=%d "%args.run
+        # if args.dataset: 
+        #     environs += "-e DATASET=%s "%args.dataset
+        #     environs += "-e RUN=0 "
+        # if args.direct_parentage:
+        #     environs += "-e DIRECT_PARENTAGE='--direct_parentage' "
+        # else:
+        #     environs += "-e DIRECT_PARENTAGE='' "
+        #environs += "-e NFILES=%d "%nfiles
+        #environs += "-e DETECTOR=%s "%args.detector
+        #environs += "-e FILETYPE=%s "%args.file_type
+        #environs += "-e DATA_TIER=%s "%args.data_tier
+
+        # these are needed to set up lar
+        #if args.run and args.version: environs += "-e VERSION=%s "%args.version 
         if args.merge_version: environs += "-e MERGE_VERSION=%s "%args.merge_version
-        environs += "-e DESTINATION=%s "%destination
-        environs += "-e TIMESTAMP=%s "%thetime
-        environs += "-e USERNAME=%s "%os.getenv("USER")
-        environs += "-e USELAR=%s "%args.uselar
-        environs += "-e LARCONFIG=%s "%args.lar_config
+        # environs += "-e DESTINATION=%s "%destination
+        # environs += "-e TIMESTAMP=%s "%thetime
+        # environs += "-e USERNAME=%s "%os.getenv("USER")
+        # environs += "-e USELAR=%s "%args.uselar
+        # environs += "-e LARCONFIG=%s "%args.lar_config
         cmd = "jobsub_submit "
         cmd += "--group dune "
         cmd += "--resource-provides=usage_model=DEDICATED,OPPORTUNISTIC "
@@ -252,16 +300,16 @@ if __name__ == "__main__":
 
         cmd += environs
         here = os.environ["PWD"]
-        subname = "%s/%d_%d_%s.sh"%(logdir,bigskip,nfiles,thetag)
+        #subname = "%s/%d_%d_%s.sh"%(logdir,bigskip,nfiles,thetag)
                 
-        if args.run:
-            rcmd =  "cp remote.sh "+subname
-        if args.dataset:
-            rcmd =  "cp remote_dataset.sh "+subname
-        if args.uselar:
-            rcmd =  "cp remote_lar.sh "+subname
+        # if args.run:
+        #     rcmd =  "cp remote.sh "+subname
+        # if args.dataset:
+        #     rcmd =  "cp remote_dataset.sh "+subname
+        # if args.uselar:
+        #     rcmd =  "cp remote_lar.sh "+subname
 
-        os.system(rcmd)
+        # os.system(rcmd)
         cmd += " file://"+os.path.join(here,subname)
         
         cmd += " >& %s/submit_%d_%d_%s_%s_%s.log"%(logdir,bigskip,nfiles,thetag,bigskip,thetime)

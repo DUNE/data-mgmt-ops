@@ -1,13 +1,13 @@
-# example submission for running lar on a dataset
+# example submission for running lar on a dataset to make cafs
 export DATASET="fardet-vd:fardet-vd__full-reconstructed__v09_81_00d02__reco2_dunevd10kt_nu_1x8x6_3view_30deg_geov3__prodgenie_nu_dunevd10kt_1x8x6_3view_30deg__out1__v2_official"
 export FCL=cafmaker_dunevd10kt_1x8x6_3view_30deg_runreco-nuenergy_geov3.fcl
 export MERGE_VERSION=v09_91_02d01
-export THEDATE=`date +%F-%H.%M.%S`
+export THEDATE=`date +%Y%m%dT%H%M%S`
 
 
 export SKIP=0  # start at the begining 
 export CHUNK=50 # merge 100 files at once
-export NFILES=500 # place a small limit for testing, you can raise this a lot. if more need to be done you need to bump up skip to the previous NFILES
+export NFILES=100 # place a small limit for testing, you can raise this a lot. if more need to be done you need to bump up skip to the previous NFILES
 export DETECTOR=fardet-vd
 export FILE_TYPE=mc
 export DESTINATION=${DSCRATCH}/merging/${DETECTOR}_${SKIP}_${NFILES}_${FCL}_${THEDATE}

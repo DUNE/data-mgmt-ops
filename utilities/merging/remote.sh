@@ -1,4 +1,6 @@
 #!/bin/sh
+## the environmentals in this file for job parameters will be replaced with real values in the submitMerge command
+
 echo '#cmd: 	cd $INPUT_TAR_DIR_LOCAL'
 cd $INPUT_TAR_DIR_LOCAL
 
@@ -44,43 +46,25 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo "time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles=$NFILES \
-                --file_type=$FILETYPE \
-                --skip=$SKIP --run=$RUN \
-                --data_tier=$DATA_TIER \ 
-                --version=$VERSION \
-                --merge_version=$MERGE_VERSION \
-                --destination=local \
-                --merge_stage=$STAGE \
-                $DIRECT_PARENTAGE \
-                --datasetName=$DATASETNAME \
-                >& local.log"
-
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py  --detector=$DETECTOR --chunk=$CHUNK --nfiles=$NFILES \
-                --file_type=$FILETYPE \
-                --run=$RUN \
-                --skip=$SKIP \ --data_tier=${DATA_TIER} \ 
-                --merge_version=$MERGE_VERSION \
-                --destination=local \
-                --merge_stage=$STAGE \
-                --version=${VERSION} \
-                $DIRECT_PARENTAGE \
-                --datasetName=$DATASETNAME \
-                >& local.log
+echo " python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --chunk=$CHUNK --nfiles=$NFILES --file_type=$FILETYPE --run=$RUN --skip=$SKIP --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=$DATASETNAME >& local.log"
 
 
-echo "run returned " $?
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --chunk=$CHUNK --nfiles=$NFILES --file_type=$FILETYPE --run=$RUN --skip=$SKIP --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=$DATASETNAME >& local.log
+
+export retcode=$?
+echo "run returned " retcode
 
 cat local.log
-# mv local.log run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log
+# mv local.log run_$RUN_$SKIP_$CHUNK_$DATA_TIER.log
 # ls 
-echo "ifdh cp run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log $DESTINATION"
+echo "ifdh cp run_$RUN_$SKIP_$CHUNK_$DATA_TIER.log $DESTINATION"
 ls -lrt local.log
-ifdh cp local.log $DESTINATION/run_${RUN}_${SKIP}_${CHUNK}_${DATA_TIER}.log
+ifdh cp local.log $DESTINATION/run_$RUN_$SKIP_$CHUNK_$DATA_TIER.log
 ifdh cp -D *.json $DESTINATION
 ifdh cp -D *.root $DESTINATION 
 echo '#cmd: 	ls -lrt'
 ls -lrt
+
 
 
 

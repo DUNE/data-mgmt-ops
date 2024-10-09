@@ -33,7 +33,7 @@ export CHUNK=50
 export NFILES=100
 export STAGE=testing
 
-python buildMerge.py --run $RUN --version $VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES \
---file_type=$FILETYPE --detector=$DETECTOR --data_tier=$DATATIER --merge_stage=$STAGE --maketar \
---project_tag="testing"
-
+#python buildMerge.py --run $RUN --version $VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES \
+#--file_type=$FILETYPE --detector=$DETECTOR --data_tier=$DATATIER --merge_stage=$STAGE --maketar \
+#--project_tag="testing"
+# just does a submission

@@ -2,7 +2,7 @@
 export DATASET="schellma:mc.fardet-hd.le_mc_2024a.v09_91_04d00.hit-reconstructed.prodmarley_nue_es_flat_dune10kt_1x2x6.fcl.mergetest"
 export FCL=artcat.fcl
 export MERGE_VERSION=v09_91_02d01
-export THEDATE=`date +%F-%H.%M.%S`
+export THEDATE=`date +%Y%m%dT%H%M%S`
 export TAG=supernova
 
 
