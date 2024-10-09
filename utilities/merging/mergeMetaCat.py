@@ -473,8 +473,8 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename, newnamespace, datasetName, datatier, application, version, flist, \
-               merge_type, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
+def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=None, application=None, version=None, flist=None, \
+               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -541,6 +541,7 @@ def run_merge(newfilename, newnamespace, datasetName, datatier, application, ver
 
     if not datasetName:
         datasetName = makeDataSetName(meta)
+    print ("datasetName=",datasetName)
     meta["metadata"]["dune.dataset_name"]=datasetName
     
     if debug: print ("mergeMetaCat: done")

@@ -221,7 +221,7 @@ if __name__ == "__main__":
             if args.merge_stage: 
                 newline = newline.replace("$STAGE",args.merge_stage)
             if args.datasetName: 
-                newline = newline.replace("$DATASETNAME",args.datasetName)
+                newline = newline.replace("${DATASETNAME}",args.datasetName)
             if args.run:
                 newline = newline.replace("$RUN","%d"%args.run)
 
@@ -256,8 +256,8 @@ if __name__ == "__main__":
         #environs = "-e CHUNK=%d "%args.chunk
         #environs += "-e SKIP=%d "%bigskip
         #environs += "-e STAGE=%s "%args.merge_stage
-        # if args.datasetName:
-        #     environs += "-e DATASETNAME=%s "%args.datasetName
+        if args.datasetName:
+            environs += "-e DATASETNAME=%s "%args.datasetName
         #if args.run: 
         #    environs += "-e RUN=%d "%args.run
         # if args.dataset: 
