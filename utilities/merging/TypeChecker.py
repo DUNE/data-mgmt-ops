@@ -62,7 +62,8 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
         "raw":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
         "binary-raw":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
         "trigprim":["dune.config_file", "dune_mc.gen_fcl_filename","dune_mc.geometry_version","core.application.family","core.application.name","core.application.version"],
-        "root-tuple-virtual":["core.event_count","core.first_event_number","core.last_event_number"]
+        "root-tuple-virtual":["core.event_count","core.first_event_number","core.last_event_number"],
+        "root-tuple-virtual-tar":["core.event_count","core.first_event_number","core.last_event_number"]
         }
 
     valid = True
@@ -141,7 +142,7 @@ def TypeChecker(filemd=None, errfile=None, verbose=False):
         if x not in md: 
             print ("required field",x,"not present")
             valid *=False      
-        if md[x] not in core:
+        if md[x] not in core and md[x][-4:]!="-tar":
             print ("unknown required metadata field",x,"=",md[x])
             valid *= False
     for x,v in md.items():

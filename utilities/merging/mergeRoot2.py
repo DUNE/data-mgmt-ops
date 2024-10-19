@@ -102,8 +102,7 @@ def mergeLar(newpath,input_files,config,debug=False):
         retcode+=100
     return newpath,retcode
 
-def metacat2location(alist=None,copylocal=False,debug=False):
-    # tries to get a file from FNAL or other site if not available
+def metacat2location(alist=None,debug=False):
     # alist is the result of a metacat query
 
     # first make a list in rucio format
@@ -139,11 +138,6 @@ def metacat2location(alist=None,copylocal=False,debug=False):
         for rse in pfns:
             if debug: print ("\n RSE",rse)
             badsite=0
-            if "fnal" in rse:
-                location = rse
-                if debug: print ("this as at FNAL",rse)
-                goodsite +=1
-                break
             for site in badsites:
                 if site in rse:
                     if debug: print ("this is a bad site",site)
@@ -153,9 +147,12 @@ def metacat2location(alist=None,copylocal=False,debug=False):
                 if site in rse:
                     if debug: print ("this is a good site",site)
                     goodsite +=1
-                    location = rse
                     break
-            if copylocal and not badsite:
+            if goodsite:   
+                if debug: print ("this site is ok",rse,badsites)
+                location = rse
+                break
+            if args.copylocal and not badsite:
                 if debug: print ("this site is ok",rse,badsites)
                 location = rse
                 break
@@ -166,10 +163,7 @@ def metacat2location(alist=None,copylocal=False,debug=False):
 
             continue
         if "fnal" not in location:
-            if debug: print ("good location but need to copy it over",location)
-            newlocation,retcode = makeLocalCopy(locationlist=[location],cache="cache",debug=debug)
-            if debug: print ("new local copy",newlocation)
-            location = newlocation[0]
+            location,retcode =copylocal(locationlist=[location],cache="cache",debug=False)
             #local.append(location)
         else: # at fnal
             if not checkFile(location):  # can I open the file? 
@@ -183,38 +177,19 @@ def metacat2location(alist=None,copylocal=False,debug=False):
         #locations.append(location)
         locationmap[did]=location
         local.append(location)
-    if len(flist) != len(locationmap.keys()):
-        print("WARNING: metacat2rucio could not find all the files",len(flist),len(locationmap.keys()))
-        
-        for x in flist:
-            print ("check",x)
-            if x not in list(locationmap.keys()):
-                print ("not there", x)
-        
-        retcode = 100
-    return locationmap,retcode
+    if debug: print (" list lengths goodfiles,locations", len(goodfiles),len(locations))
+    return locationmap,local,retcode
 
 def maketargz(list=None,tarname=None,localcache="cache",debug=False):
-    local = []
+
     try:
-        if debug: print("tarname",tarname)
         tar = tarfile.open(tarname,"w:gz")
         print ("open tarname", tarname)
-    except Exception as e:
-        print ("failed to open tar",e,tarname)
-        retcode = 2
-        return tarname,retcode
-    try:
-        local,retcode = makeLocalCopy(list,localcache,debug)
+        local,retcode = copylocal(list,localcache)
         if retcode != 0:
             print ("WARNING: could not get all files into cache, quitting",retcode)
             cleanup(local)
             return tarname,retcode
-    except Exception as e:
-        print ("local copy failed",e,list,localcache)
-        return tarname,4
-    try:
-        print ("start of taring")
         for file in local:
             #newfile = file
             if debug: print ("add file to tar",file)
@@ -227,7 +202,7 @@ def maketargz(list=None,tarname=None,localcache="cache",debug=False):
         cleanup(local)
         return tarname,1
 
-def makeLocalCopy(locationlist=None,cache="cache",debug=False):
+def copylocal(locationlist=None,cache="cache",debug=False):
     if not os.path.exists(cache):
         try:
             os.mkdir(cache)
@@ -235,21 +210,15 @@ def makeLocalCopy(locationlist=None,cache="cache",debug=False):
             print ("WARNING: No local cache could be defined",cache)
             return [],1
     local = []
-    if debug:
-        print ("locationlist",locationlist)
     for location in locationlist:
-        if cache in location or os.path.exists(os.path.join(cache,os.path.basename(location))):
-            if debug: print("using local copy",location)
-            local.append(os.path.join(cache,os.path.basename(location)))
-        else:
-            cp_args = ["xrdcp",location,cache]
-            try:
-                completed_process = run(cp_args, capture_output=True,text=True)   
-                if debug: print (completed_process)       
-            except Exception as e:
-                print ("WARNING: error doing local copy",e,location)
-                continue
-            local.append(os.path.join(cache,os.path.basename(location)))
+        cp_args = ["xrdcp",location,cache]
+        try:
+            completed_process = run(cp_args, capture_output=True,text=True)   
+            if debug: print (completed_process)       
+        except Exception as e:
+            print ("WARNING: error doing local copy",e,location)
+            continue
+        local.append(os.path.join(cache,os.path.basename(location)))
     retcode = len(locationlist)-len(local)
     return local,retcode
 
@@ -507,11 +476,9 @@ if __name__ == "__main__":
                 local = locations
                 
             else:   
-                locationmap,retcode=metacat2location(alist,copylocal=args.copylocal,debug=debug)
+                locationmap,local,retcode=metacat2location(alist,debug=True)
                 goodfiles = list(locationmap.keys())
                 local = list(locationmap.values())
-                print ("check list",local)
-                
                 if retcode != 0:
                     print ("WARNING: could not make a locations list")
                     break
@@ -660,7 +627,7 @@ if __name__ == "__main__":
                 newfile,retcode = mergeLar(outputfile,local,args.lar_config) #lar
                 print ("Use lar to merge")
             elif args.maketar:
-                newfile,retcode = maketargz(list=local,tarname=outputfile,debug=debug)
+                newfile,retcode = maketargz(list=local,tarname=outputfile)
                 print ("use tar to merge")
             else:  
                 newfile,retcode = mergeData(outputfile,local) #hadd
@@ -758,7 +725,7 @@ if __name__ == "__main__":
                             break
 
                     continue 
-    # for x in missed:
-    #     print ("file missed",x)
+    for x in missed:
+        print ("file missed",x)
 
         

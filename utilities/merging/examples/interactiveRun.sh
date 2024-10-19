@@ -9,7 +9,7 @@ export DATATIER="root-tuple-virtual"
 # these say how the merging will be done 
 export SKIP=0
 export CHUNK=5
-export NFILES=10
+export NFILES=12
 export STAGE=testing
 
 python mergeRoot.py --run $RUN --version $VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES\
