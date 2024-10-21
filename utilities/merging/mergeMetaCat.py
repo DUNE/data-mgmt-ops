@@ -527,6 +527,8 @@ def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=No
         externals["core.application.name"] = application
     if version is not None:
         externals["core.application.version"] = version
+    if "-tar" in datatier:
+        externals["core.file_format"] = "tar"
 
     # DEBUG = 0
     # if DEBUG:
