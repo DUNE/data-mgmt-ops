@@ -15,9 +15,6 @@ from rucio.common.exception import DataIdentifierNotFound, DataIdentifierAlready
 
 mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
 
-#def doit():
-#    run_merge(newfilename=fileName, newnamespace = args.nameSpace, datatier=args.dataTier, application=None, version=None, flist=None, do_sort=True, merge_type="metacat", user=os.getenv("USER"), debug=False)
-
 def pnfs2xrootd(filename):
     return filename.replace("/pnfs/","root://fndca1.fnal.gov:1094//pnfs/fnal.gov/usr/")
 
@@ -319,8 +316,37 @@ def makeName(md,jobtag,tier,skip,chunk,stage):
 
     # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
 
+def calculate_chunks(nfiles_total, skip_files, chunk_size):
+    """
+    Function to calculate the number of chunks for file processing.
 
+    Args:
+    - nfiles_total (int): Total number of files to process.
+    - skip_files (int): Number of files to skip initially.
+    - chunk_size (int): Number of files to process per chunk.
+
+    Returns:
+    - n_chunks (int): The total number of chunks required.
+    """
+    remaining_files = nfiles_total
+    # Ceiling division to calculate number of chunks needed
+    n_chunks = (remaining_files + chunk_size - 1) // chunk_size  # Total number of chunks required
+
+    print(f"Total files to process: {nfiles_total}")
+    print(f"Files to skip: {skip_files}")
+    print(f"Number of chunks: {n_chunks}\n")
+
+    return n_chunks
+
+ 
 if __name__ == "__main__":
+    """
+    Script to merge file chunks using a Metacat query, based on user input options such as workflow, run, dataset, etc.
+
+    This script splits the total number of files into smaller chunks, processes them chunk by chunk, and runs 
+    Metacat queries to retrieve the files based on user-defined conditions such as detector type, file type, 
+    workflow ID, data tier, run, dataset, and version. The chunks are processed in parallel streams for different data types (e.g., "physics", "cosmics", "calibration"). 
+    """
 
     test=False
    
@@ -366,9 +392,8 @@ if __name__ == "__main__":
         args.copylocal=True
 
     debug = args.debug
-
     if args.workflow is None and args.run is None and args.dataset is None and args.listfile is None:
-        print ("need to specify either workflow or run or dataset ")
+        print ("ERROR: need to specify either workflow or run or dataset or listfile ")
         sys.exit(1)
 
     # get a list of files from metacat
@@ -393,63 +418,60 @@ if __name__ == "__main__":
         args.output_data_tier = args.data_tier + "-tar"
 
     
+    nfiles_total = args.nfiles
 
     if args.listfile:
         thelistfile = open(args.listfile,'r')
         theflist = thelistfile.readlines()
         thelistfile.close()
+        nfiles_total = len(theflist)
         jobtag = "list-%s"%os.path.basename(args.listfile)
 
+    chunk_size = args.chunk
+    skip_files = args.skip
+       
+    n_chunks  = calculate_chunks(nfiles_total, skip_files, chunk_size)
 
     print ("starting up")
-    missed = []
     for data_stream in ["", "physics","cosmics","calibration"]:
         if (args.dataset or args.listfile) and data_stream != "":
             continue # dataset doesn't look at stream so only do once
         elif not (args.dataset or args.listfile) and data_stream == "":
             continue # this is when you need to do the loop over data_stream
-        todo = True
-        chunk = min(args.chunk,args.nfiles)
-        skip = args.skip
-        count = 0
-        if debug: print (data_stream,chunk,skip)
-        while todo:
+
+        for chunk_idx in range(n_chunks):
+            first_file_idx = skip_files + chunk_idx * chunk_size  # Starting index for this chunk
+            # For the last chunk, ensure we don't exceed the total number of files
+            last_file_idx = min(first_file_idx + chunk_size, skip_files + nfiles_total)
+    
             if args.workflow is not None:
-                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.data_tier,data_stream,args.version, skip, chunk)
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.data_tier,data_stream,args.version, first_file_idx, last_file_idx - first_file_idx )
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             
             elif args.run is not None:
-                    query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,args.version,skip, chunk)
-                    srun = str(args.run).zfill(10)
-                    jobtag = "run%s"%srun
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,args.version,first_file_idx, last_file_idx - first_file_idx)
+                srun = str(args.run).zfill(10)
+                jobtag = "run%s"%srun
                 
             elif args.dataset is not None:
-                query = "files from %s ordered skip %d limit %d"%(args.dataset,skip, chunk)
+                query = "files from %s ordered  %d limit %d"%(args.dataset,first_file_idx, last_file_idx - first_file_idx)
                     
                 jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
-            elif args.listfile is not None:
-                 
 
-                last = skip+chunk
-                if last > len(theflist): last = len(theflist)
-                if skip > len(theflist): break
-                thefiles = (theflist.copy())[skip:last]
+            elif args.listfile is not None:
+                print('doing filelist')
+                thefiles = (theflist.copy())[first_file_idx:last_file_idx]
                 alist = []
                 mfiles = []
                 
-                print ("listfile list",skip,last,len(thefiles))
+                print ("listfile list for this chunk: ",first_file_idx, len(thefiles))
                 for f in thefiles:
                     file = f.strip()
-                    #print ("check",os.path.dirname(file))
-                    #dir = os.listdir(os.path.dirname(file))
                     filename = os.path.basename(file)
-                    #print ('thedir',dir)
                     if args.debug:("print check file",file)
 
-                    
-                    #print ("exists",os.path.lexists(file),(filename in dir))
                     if not os.path.exists(file):
                         print ("file",file,"does not exist, skipping")
                         continue
@@ -460,123 +482,113 @@ if __name__ == "__main__":
                         
                         print ("metafile",file,"has no metadata, skipping")
                         continue
-                    # store nfs for metadata
                     mfiles.append((mfile))
                     # store xroot for actual file
                     alist.append(pnfs2xrootd(file))
-                #if args.debug:
-                #    print (alist)
-                #    print (mfiles)
-                
             else:
                 print ("ERROR: need to supply --run, --workflow or --dataset")
                 sys.exit(1)
- 
-            if not args.listfile: 
+
+            if not args.listfile:  
                 print ("mergeRoot: metacat query = ", query)
                 alist = list(mc_client.query(query=query))
-
-            if len(alist)<= 0:
-                print ("mergeRoot: DONE")
-                todo = False
-                break
-
-            if not args.listfile:
                 theinfo = mc_client.query(query=query,summary="count")
-        
-                if debug: print (theinfo)
-            
+
+            if debug:
+                if (theinfo['count']!= 0):
+                    print(f"Chunk {chunk_idx + 1}: Process files {first_file_idx} to {last_file_idx}")
+                    print(theinfo)
+
             flist = []
             ruciolist = []
             local = []
 
+            if len(alist)<= 0:
+                print ("mergeRoot: returning zero files, nothing to do")
+                break
+
             # make lists
-            # if not args.listfile:
-            #     for file in alist:
-            #         thedid = "%s:%s"%(file["namespace"],file["name"])
-            #         flist.append(thedid)
-            #         if debug: print ("new file",file)
-            #         ruciolist.append({"scope":file["namespace"],"name":file["name"]})
+            if not args.listfile:
+                for file in alist:
+                    thedid = "%s:%s"%(file["namespace"],file["name"])
+                    flist.append(thedid)
+                    if debug: print ("new file",file)
+                    ruciolist.append({"scope":file["namespace"],"name":file["name"]})
                     
-            #   if debug: print (ruciolist)
-        # now get a list of locations from rucio
-        #     
+                if debug: print (ruciolist)
+            # now get a list of locations from rucio
             if args.listfile:  # this just allows tests without using rucio
+                print("========== ")
+                print(alist)
                 locations =  alist.copy()
                 goodfiles = mfiles
                 local = locations
                 
             else:   
-                locationmap,retcode=metacat2location(alist,copylocal=args.copylocal,debug=debug)
-                goodfiles = list(locationmap.keys())
-                local = list(locationmap.values())
-                print ("check list",local)
-                
-                if retcode != 0:
-                    print ("WARNING: could not make a locations list")
+                retcode = 0
+                locations = []  
+                goodfiles = []
+                # doing this because I cannot figure out syntax to feed a list of files to rucio
+                try:
+                    result = list(replica_client.list_replicas(ruciolist)) # goes away if you don't grab it???
+                except Exception as e:
+                    result = None
+                    print('--- Rucio list_replicas call fails: ' + str(e))
+                    print(' stop this chunk',skip,chunk)
                     break
-                # retcode = 0
-                # locations = []  
-                # goodfiles = []
-                # # doing this because I cannot figure out syntax to feed a list of files to rucio
-                # try:
-                #     result = list(replica_client.list_replicas(ruciolist)) # goes away if you don't grab it???
-                # except Exception as e:
-                #     result = None
-                #     print('--- Rucio list_replicas call fails: ' + str(e))
-                #     print(' stop this chunk',skip,chunk)
-                #     break
-                # if debug: print ("rucio",list(result))
+                if debug: print ("rucio",list(result))
 
-                
-
-                # badsites = ["qmul","surfsara"]
-                # goodsites = ["fnal"]
-                # for file in result:
-                #     did = file["scope"]+":"+file["name"]
-                #     pfns = file["pfns"]
-                #     if debug: print ("\n ",did)
-                #     location = None
-                #     goodsite = 0
-
-                #     for rse in pfns:
-                #         if debug: print ("\n RSE",rse)
-                #         badsite=0
-                #         for site in badsites:
-                #             if site in rse:
-                #                 if debug: print ("this is a bad site",site)
-                #                 badsite +=1
-                #                 break
-                #         for site in goodsites:
-                #             if site in rse:
-                #                 if debug: print ("this is a good site",site)
-                #                 goodsite +=1
-                #                 break
-                #         if goodsite:   
-                #             if debug: print ("this site is ok",rse,badsites)
-                #             location = rse
-                #             break
-                #         if args.copylocal and not badsite:
-                #             if debug: print ("this site is ok",rse,badsites)
-                #             location = rse
-                #             break
+                badsites = ["qmul","surfsara"]
+                goodsites = ["fnal"]
+                for file in result:
+                    did = file["scope"]+":"+file["name"]
+                    pfns = file["pfns"]
+                    if debug: print ("\n ",did)
+                    location = None
+                    
+                    for rse in pfns:
+                        if debug: print ("\n RSE",rse)
+                        goodsite = False
+                        # for site in badsites:
+                        #     if site in rse:
+                        #         if debug: print ("this is a bad site",site)
+                        #         goodsite = False
+                        #         break
+                        for site in goodsites:
+                            if site in rse:
+                                if debug: print ("this is a good site",site)
+                                goodsite = True
+                                break
+                        if goodsite:     
+                            if debug: print ("this site is ok",rse,badsites)
+                            location = rse
+                            break
             
-                #     if location is None:
-                #         print ("giving up on this file",rse)
-                #         missed.append(did)
-                #         continue
-                #     if "fnal" not in location:
-                #         location,retcode =copylocal(locationlist=[location],cache="cache",debug=False)
-                #     else: # at fnal
-                #         if not checkFile(location):  # can I open the file? 
-                #             print ("BIG PROBLEM - cannot read file",location)
-                #             missed.append(did)
-                #             continue
+                    if location is None:
+                        print ("giving up on this file",rse)
+                        missed.append(did)
+                        continue
+                    if "fnal" not in location:
+                        cp_args = ["xrdcp",location,"./cache/."]
+                        try:
+                            completed_process = run(cp_args, capture_output=True,text=True)   
+                            if debug: print (completed_process)
+                    
+                            
+                        except Exception as e:
+                            print ("error doing local copy",e)
+                            continue
+                        local.append(os.path.join("./cache",os.path.basename(location)))
+                    else: # at fnal
+                        if not checkFile(location):  # can I open the file? 
+                            print ("BIG PROBLEM - cannot read file",location)
+                            missed.append(did)
+                            continue
 
-                #         local.append(location)
-                #     goodfiles.append(did)
-                #     locations.append(location)
-                # print (" list lengths goodfiles,locations", len(goodfiles),len(locations))
+                        local.append(location)
+                    goodfiles.append(did)
+                    locations.append(location)
+                print (" list lengths goodfiles,locations", len(goodfiles),len(locations))
         
 
             if debug: print ("local",local)
@@ -630,41 +642,21 @@ if __name__ == "__main__":
                 
                 # newname = newname.replace(".root","_merged_%s_%s_skip%s_lim%s_%s.root"%(data_stream,jobtag,sskip,schunk,makeTimeStamp()))
                 # print ("newname",newname)
-                filecount = chunk
-                if len(goodfiles) < chunk:
+                filecount = last_file_idx - first_file_idx
+                if len(goodfiles) < last_file_idx:
                     filecount = len(goodfiles) 
-                newname = makeName(firstmeta,jobtag,args.data_tier,skip,filecount,args.merge_stage)
-                if args.maketar:
-                    newname=newname+".tgz"
+                newname = makeName(firstmeta,jobtag,args.data_tier,first_file_idx,filecount,args.merge_stage)
                 print ("newname",newname)
                 
                 
             else:
                 print ("no good files left in list")
-
-            # store these to pass to metadata
-            theskip = skip
-            thecount = filecount
-               
-            skip += chunk
-            count += chunk
-
-            # give up on this chunk
-            if len(goodfiles) < 1: continue
-
-            if count >= args.nfiles: 
-                todo = False
-            
+            missed = []
             outputfile = newname
             if args.uselar:
                 newfile,retcode = mergeLar(outputfile,local,args.lar_config) #lar
-                print ("Use lar to merge")
-            elif args.maketar:
-                newfile,retcode = maketargz(list=local,tarname=outputfile,debug=debug)
-                print ("use tar to merge")
             else:  
                 newfile,retcode = mergeData(outputfile,local) #hadd
-                print ("use hadd to merge")
             print ("merged data", newfile,retcode)
 
             if retcode != 0:
@@ -673,12 +665,9 @@ if __name__ == "__main__":
                 errlog.close()
                 continue 
 
-
-
             
             print ("mergeRoot: output will go to ",newfile)
 
-            #print (thelist)
             if debug: print (flist)
             if True:
                 merge_type = "metacat"
@@ -687,15 +676,10 @@ if __name__ == "__main__":
                 if args.listfile: 
                     merge_type="local"
                     newnamespace = namespace
-                   
                     
-                    
-
-                
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
-                                datatier=args.output_data_tier, application=args.application,version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=theskip,nfiles=thecount,
-                                direct_parentage=args.direct_parentage)
+                                datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage)
                 
                 
                 jsonfile = newfile+".json"
@@ -706,9 +690,9 @@ if __name__ == "__main__":
                 retcode +=4
                 sys.exit(retcode)
 
-            # if os.path.exists(newfile):
-            #     print ("clean up inputs")
-            #     cleanup(local)
+            if os.path.exists(newfile):
+                print ("clean up inputs")
+                #cleanup(local)
 
             if args.destination is None:
 
@@ -756,9 +740,5 @@ if __name__ == "__main__":
                         except Exception as e:
                             print ("ERROR: second attempt at copy failed, quitting",e)
                             break
-
-                    continue 
-    # for x in missed:
-    #     print ("file missed",x)
-
-        
+            for x in missed:
+                print ("file missed",x)
