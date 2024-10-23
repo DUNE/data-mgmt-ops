@@ -381,7 +381,7 @@ if __name__ == "__main__":
     parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
     parser.add_argument("--maketar",help="make a gzipped tar file",default=False,action='store_true')
     parser.add_argument("--copylocal",help="copy files to local cache from remote",default=False,action='store_true')
-    parser.add_argument("--campaing",type=str,default=None,help="campaing name")
+    parser.add_argument("--campaign",type=str,default=None,help="campaign name")
 
     
 
