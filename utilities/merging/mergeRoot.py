@@ -679,7 +679,7 @@ if __name__ == "__main__":
                     newnamespace = namespace
                     
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
-                                datatier="root-tuple", application=args.application, configf=args.lar_config, campaign=args.campaing, version=args.merge_version, flist=goodfiles, 
+                                datatier="root-tuple", application=args.application, configf=args.lar_config, campaign=args.campaign, version=args.merge_version, flist=goodfiles, 
                                 merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage)
                 
                 
