@@ -47,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
     parser.add_argument('--direct_parentage',default=False,action='store_true')
     parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
+    parser.add_argument("--campaign", type=str, help="campaign", default=None)
     
     
     args = parser.parse_args()
@@ -265,6 +266,8 @@ if __name__ == "__main__":
                 newline = newline.replace("$USELAR","--uselar")
             if args.lar_config:
                 newline = newline.replace("$LARCONFIG",args.lar_config)
+            if args.campaign:
+                newline = newline.replace("$CAMPAIGN", args.campaign)
             sub.write(newline)
             #print (newline)
         sub.close()

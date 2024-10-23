@@ -370,7 +370,6 @@ if __name__ == "__main__":
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
 
     parser.add_argument("--test",help="write to test area",default=False,action='store_true')
-    #parser.add_argument("--skip",type=int, help="skip on query",default=0)
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
     parser.add_argument('--version',help='software version for input query',default=None,type=str)
     parser.add_argument('--merge_version',help='software version for merge [inherits]',default=None,type=str)
@@ -382,6 +381,7 @@ if __name__ == "__main__":
     parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
     parser.add_argument("--maketar",help="make a gzipped tar file",default=False,action='store_true')
     parser.add_argument("--copylocal",help="copy files to local cache from remote",default=False,action='store_true')
+    parser.add_argument("--campaing",type=str,default=None,help="campaing name")
 
     
 
@@ -502,6 +502,7 @@ if __name__ == "__main__":
             ruciolist = []
             local = []
 
+            missed = []
             if len(alist)<= 0:
                 print ("mergeRoot: returning zero files, nothing to do")
                 break
@@ -597,7 +598,6 @@ if __name__ == "__main__":
             # copy files to local area for merge
 
             filecount = 0
-
             if len(goodfiles) >= 1:
                 
                 print (goodfiles[0])
@@ -646,11 +646,13 @@ if __name__ == "__main__":
                     filecount = len(goodfiles) 
                 newname = makeName(firstmeta,jobtag,args.data_tier,first_file_idx,filecount,args.merge_stage)
                 print ("newname",newname)
-                
+                if args.maketar:
+                    newname=newname+".tgz"
+                print ("newname",newname)    
                 
             else:
                 print ("no good files left in list")
-            missed = []
+    
             outputfile = newname
             if args.uselar:
                 newfile,retcode = mergeLar(outputfile,local,args.lar_config) #lar
@@ -677,7 +679,7 @@ if __name__ == "__main__":
                     newnamespace = namespace
                     
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
-                                datatier="root-tuple", application=args.application,version=args.merge_version, flist=goodfiles, 
+                                datatier="root-tuple", application=args.application, configf=args.lar_config, campaign=args.campaing, version=args.merge_version, flist=goodfiles, 
                                 merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage)
                 
                 
