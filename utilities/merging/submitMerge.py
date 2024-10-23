@@ -228,9 +228,11 @@ if __name__ == "__main__":
         sub = open(subname,'w')
         lines = g.readlines()
         for line in lines:
-    
-            #newline = line.replace("$CHUNK","%d"%args.chunk)
-            newline = line.replace("$SKIP","%d"%first_file_idx)
+            # Note: since we are doing submission per chunk we don't need to specify the chunk size
+            # this is done based on numbers of chunks
+            _chunk = last_file_idx-first_file_idx
+            newline = line.replace("$CHUNK","%d"%_chunk)
+            newline = newline.replace("$SKIP","%d"%first_file_idx)
             if args.merge_stage: 
                 newline = newline.replace("$STAGE",args.merge_stage)
             if args.datasetName: 
