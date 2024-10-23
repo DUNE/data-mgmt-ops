@@ -47,9 +47,9 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE >& local.log"
+echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE >& local.log"
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --chunk=$CHUNK --nfiles $NFILES --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE >& local.log
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE >& local.log
 
 
 echo "run returned " $?

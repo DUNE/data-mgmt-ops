@@ -229,8 +229,8 @@ if __name__ == "__main__":
         lines = g.readlines()
         for line in lines:
     
-            newline = line.replace("$CHUNK","%d"%args.chunk)
-            newline = newline.replace("$SKIP","%d"%first_file_idx)
+            #newline = line.replace("$CHUNK","%d"%args.chunk)
+            newline = line.replace("$SKIP","%d"%first_file_idx)
             if args.merge_stage: 
                 newline = newline.replace("$STAGE",args.merge_stage)
             if args.datasetName: 
@@ -248,7 +248,9 @@ if __name__ == "__main__":
                 newline = newline.replace("$DIRECTPARENTAGE","--direct_parentage")
             else:
                 newline = newline.replace("$DIRECTPARENTAGE","")
-            newline = newline.replace("$NFILES","%d"%last_file_idx)
+            # tmp variable for number of files as we are ajusting the number of files per chunk
+            _nfiles = last_file_idx-first_file_idx
+            newline = newline.replace("$NFILES","%d"%_nfiles)
             newline = newline.replace("$DETECTOR",args.detector)
             if args.data_tier: newline = newline.replace("$DATA_TIER",args.data_tier)
             newline = newline.replace("$FILETYPE",args.file_type)
@@ -330,7 +332,7 @@ if __name__ == "__main__":
         
         
         print (cmd)
-
+        
         cmdfile = open("%s/submit_%d_%d_%s_%s_%s.job"%(logdir,first_file_idx,last_file_idx,thetag,first_file_idx,thetime),'w')
         cmdfile.write(cmd)
         cmdfile.close()
@@ -339,4 +341,4 @@ if __name__ == "__main__":
         except Exception as e:
             print ("submission failed for some reason",e,"need to submit from AL9 window")
         #bigskip += bigchunk
-     
+        

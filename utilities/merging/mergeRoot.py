@@ -456,8 +456,7 @@ if __name__ == "__main__":
                 jobtag = "run%s"%srun
                 
             elif args.dataset is not None:
-                query = "files from %s ordered  %d limit %d"%(args.dataset,first_file_idx, last_file_idx - first_file_idx)
-                    
+                query = "files from %s ordered skip %d limit %d"%(args.dataset,first_file_idx, last_file_idx - first_file_idx)
                 jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
 
             elif args.listfile is not None:
