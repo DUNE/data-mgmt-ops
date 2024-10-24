@@ -493,10 +493,10 @@ if __name__ == "__main__":
                 alist = list(mc_client.query(query=query))
                 theinfo = mc_client.query(query=query,summary="count")
 
-            if debug:
-                if (theinfo['count']!= 0):
-                    print(f"Chunk {chunk_idx + 1}: Process files {first_file_idx} to {last_file_idx}")
-                    print(theinfo)
+                if debug:
+                    if (theinfo['count']!= 0):
+                        print(f"Chunk {chunk_idx + 1}: Process files {first_file_idx} to {last_file_idx}")
+                        print(theinfo)
 
             flist = []
             ruciolist = []
