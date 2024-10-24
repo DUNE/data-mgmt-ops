@@ -47,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
     parser.add_argument('--direct_parentage',default=False,action='store_true')
     parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
+    parser.add_argument("--campaign", type=str, help="campaign", default=None)
     
     
     args = parser.parse_args()
@@ -196,16 +197,29 @@ if __name__ == "__main__":
     if not os.path.exists(logdir):
         os.mkdir(logdir)
     print ("submit logs will appear in",logdir)
+
+    chunk_size = args.chunk
+    nfiles_total = args.nfiles
+    skip_files = args.skip
+    # Compute how many files are remaining to process, without reducing the total files
+    remaining_files = nfiles_total
+
+    # Ceiling division to calculate number of chunks needed
+    n_chunks = (remaining_files + chunk_size - 1) // chunk_size  # Total number of chunks required
+
+    print(f"Total files to process: {nfiles_total}")
+    print(f"Files to skip: {skip_files}")
+    print(f"Number of chunks: {n_chunks}\n")
+
+    # Loop through each chunk, print the start and end file index for each chunk
+    for chunk_idx in range(n_chunks):
+        first_file_idx = skip_files + chunk_idx * chunk_size  # Starting index for this chunk
+        # For the last chunk, ensure we don't exceed the total number of files
+        last_file_idx = min(first_file_idx + chunk_size, skip_files + remaining_files)
     
-    bigskip = args.skip
-    bigchunk = args.chunk*5
-    if args.uselar: bigchunk=args.chunk*2 # lar needs to be spread out more. 
-    nfiles = min(bigchunk,numfiles)
-    start = args.skip
-    end = start + numfiles
-    print (bigskip,numfiles,bigchunk,start,end)
-    while bigskip < end:  # should ths be < or <= ?
-        subname = "%s/%d_%d_%s.sh"%(logdir,bigskip,nfiles,thetag)
+        print(f"Chunk {chunk_idx + 1}: Process files {first_file_idx} to {last_file_idx}")
+
+        subname = "%s/%d_%d_%s.sh"%(logdir,first_file_idx,last_file_idx,thetag)
         if args.run:
             g = open("remote.sh",'r')
         if args.dataset:
@@ -215,9 +229,11 @@ if __name__ == "__main__":
         sub = open(subname,'w')
         lines = g.readlines()
         for line in lines:
-    
-            newline = line.replace("$CHUNK","%d"%args.chunk)
-            newline = newline.replace("$SKIP","%d"%bigskip)
+            # Note: since we are doing submission per chunk we don't need to specify the chunk size
+            # this is done based on numbers of chunks
+            _chunk = last_file_idx-first_file_idx
+            newline = line.replace("$CHUNK","%d"%_chunk)
+            newline = newline.replace("$SKIP","%d"%first_file_idx)
             if args.merge_stage: 
                 newline = newline.replace("$STAGE",args.merge_stage)
             if args.datasetName: 
@@ -235,7 +251,9 @@ if __name__ == "__main__":
                 newline = newline.replace("$DIRECTPARENTAGE","--direct_parentage")
             else:
                 newline = newline.replace("$DIRECTPARENTAGE","")
-            newline = newline.replace("$NFILES","%d"%nfiles)
+            # tmp variable for number of files as we are ajusting the number of files per chunk
+            _nfiles = last_file_idx-first_file_idx
+            newline = newline.replace("$NFILES","%d"%_nfiles)
             newline = newline.replace("$DETECTOR",args.detector)
             if args.data_tier: newline = newline.replace("$DATA_TIER",args.data_tier)
             newline = newline.replace("$FILETYPE",args.file_type)
@@ -248,6 +266,8 @@ if __name__ == "__main__":
                 newline = newline.replace("$USELAR","--uselar")
             if args.lar_config:
                 newline = newline.replace("$LARCONFIG",args.lar_config)
+            if args.campaign:
+                newline = newline.replace("$CAMPAIGN", args.campaign)
             sub.write(newline)
             #print (newline)
         sub.close()
@@ -312,17 +332,18 @@ if __name__ == "__main__":
         # os.system(rcmd)
         cmd += " file://"+os.path.join(here,subname)
         
-        cmd += " >& %s/submit_%d_%d_%s_%s_%s.log"%(logdir,bigskip,nfiles,thetag,bigskip,thetime)
+        cmd += " >& %s/submit_%d_%d_%s_%s_%s.log"%(logdir,first_file_idx,last_file_idx,thetag,first_file_idx,thetime)
        
         
         
         print (cmd)
-
-        cmdfile = open("%s/submit_%d_%d_%s_%s_%s.job"%(logdir,bigskip,nfiles,thetag,bigskip,thetime),'w')
+        
+        cmdfile = open("%s/submit_%d_%d_%s_%s_%s.job"%(logdir,first_file_idx,last_file_idx,thetag,first_file_idx,thetime),'w')
         cmdfile.write(cmd)
         cmdfile.close()
         try:
             os.system(cmd)
         except Exception as e:
             print ("submission failed for some reason",e,"need to submit from AL9 window")
-        bigskip += bigchunk
+        #bigskip += bigchunk
+        

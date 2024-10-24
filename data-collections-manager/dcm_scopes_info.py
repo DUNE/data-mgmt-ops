@@ -22,45 +22,50 @@ rule_client = RuleClient()
 client = Client(account="dunepro")
 scope_client = ScopeClient()
 
-no_dunepro = ['ivm.A', 'user.jperry', 'user.illingwo',
-              'user.bjwhite', 'user.timm', 'test', 'wyuantest',
-              'user.wyuan', 'testpro', 'amcnab_test', 'calcuttj_test',
-              'dc4-interactive-tests', 'usertests', 'lbne', 'justin-logs'
-             ]
+# this is a list of non-official scopes or deprecated scopes
+no_duneofficial =['ivm.A', 'mcc11', 'mcc10', 'dune', 'user.jperry', 'user.illingwo',
+                'user.bjwhite', 'user.timm', 'test', 'wyuantest', 'user.wyuan', 'testpro',
+                'dc4', 'dc4-vd-coldbox-bottom', 'dc4-vd-coldbox-top', 'dc4-hd-protodune',
+                'dc4-output', 'amcnab_test', 'dc4-test', 'calcuttj_test', 'dc4-interactive-tests',
+                'neardet', 'lbne', 'justin-logs', 'justin-tutorial'] 
+
 def get_info(scope, datasets):
     """
-    Get replication rule information for specified datasets.
+    Get replication rule information for specified scopes or all.
     Args:
         scope (str): The Rucio scope.
         datasets (list): List of dataset names.
     Returns:
-        list: List of dictionaries containing replication rule information for each dataset.
+        list: List of dictionaries containing replication rule information for each scope.
     """
     info = []
     if scope is not None:
         scopes = [scope]
     else:
         scopes = scope_client.list_scopes()
-
     for scope in scopes:
-        if scope in no_dunepro:
+        if scope in no_duneofficial:
             continue
-        for mdata in rule_client.list_replication_rules({'scope': scope}):
+        for mdata in rule_client.list_replication_rules({'scope': scope, }):
+            #this does not work if there is no dataset
             if datasets:
                 # check a given dataset/container
                 if not mdata['name'] in datasets:
                     continue
-            if mdata['state'] != 'OK':
+            if mdata['state'] == 'SUSPENDED':
                 continue
-            files = did_client.list_files(scope, mdata['name'])
+            files = did_client.list_content(scope, mdata['name'])
             total_size = 0
             n_files = 0
             for file_info in files:
+                if file_info['type']!= 'FILE':
+                    continue
                 total_size += file_info['bytes']
                 n_files += 1
             _info = {
                 "scope": scope,
                 "dataset": mdata['name'],
+                "status": mdata['state'],
                 "catalog": "rucio",
                 "did": mdata["id"],
                 "did_type": mdata["did_type"],
@@ -84,9 +89,9 @@ if __name__ == "__main__":
     if args.datasets_file:
         with open(args.datasets_file) as file:
             while line := file.readline():
-                d = line.replace('\n', '')
-                datasets.append(d)
-
+                did = line.replace('\n', '')
+                name =did.split(":")[1]
+                datasets.append(name)
     info = get_info(scope, datasets)
     json = json.dumps(info)
     f = open(args.output_file, 'w')
