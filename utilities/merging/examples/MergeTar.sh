@@ -14,5 +14,5 @@ export FILE_TYPE=detector
 export DESTINATION=${DSCRATCH}/merging/tar_${DETECTOR}_${TAG}_${SKIP}_${NFILES}_${THEDATE}
 export DESTINATION=local
 python mergeRoot.py --run=28005 --version=v09_91_02d01 --file_type=$FILE_TYPE --detector=$DETECTOR \
- --merge_version=tar --maketar  --chunk=$CHUNK --nfiles=$NFILES --data_tier=root-tuple-virtual \
+ --merge_version=tar --maketar  --localcopy --chunk=$CHUNK --nfiles=$NFILES --data_tier=root-tuple-virtual \
   --skip=$SKIP --destination=$DESTINATION --debug --merge_stage=final --direct_parentage

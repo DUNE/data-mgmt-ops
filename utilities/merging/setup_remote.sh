@@ -19,7 +19,7 @@ spack load fife-utils@3.7.0
 spack load metacat@4.0.0
 spack load rucio-clients@33.3.0
 spack load sam-web-client@3.4%gcc@12.2.0 
-spack load r-m-dd-config@1.0 experiment=dune
+spack load r-m-dd-config experiment=dune
 
 export DATA_DISPATCHER_URL=https://metacat.fnal.gov:9443/dune/dd/data
 export DATA_DISPATCHER_AUTH_URL=https://metacat.fnal.gov:8143/auth/dune

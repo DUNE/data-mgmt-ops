@@ -15,4 +15,4 @@ export DESTINATION=${DSCRATCH}/merging/tar_${DETECTOR}_${TAG}_${SKIP}_${NFILES}_
 export DESTINATION=local
 python mergeRoot.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR \
  --merge_version=tar --maketar --chunk=$CHUNK --nfiles=$NFILES \
-  --skip=$SKIP --destination=$DESTINATION --merge_stage=final --direct_parentage
+  --skip=$SKIP --debug --destination=$DESTINATION --merge_stage=final --direct_parentage

@@ -22,10 +22,11 @@ def xrootd2pnfs(filename):
     tmp = filename.split("/usr/")
     return os.path.join("/pnfs/",tmp[1])
 
-def checkFile(filepath):
+def checkFile(filepath,debug):
     f = 0
     try:
         f = TFile.Open(filepath,"READONLY")
+        if debug: print("could open",filepath)
         return True
     except Exception as e:
         print ("could not open",filepath,e)
@@ -104,11 +105,17 @@ def metacat2location(alist=None,copylocal=False,debug=False):
     # alist is the result of a metacat query
 
     # first make a list in rucio format
+    count = 0
+    flist = []
+    ruciolist = []
     for file in alist:
         thedid = "%s:%s"%(file["namespace"],file["name"])
         flist.append(thedid)
-        if debug: print ("new file",file)
+        if debug: print ("new file",file,thedid)
         ruciolist.append({"scope":file["namespace"],"name":file["name"]})
+        count += 1
+
+    if debug: print("length of alist, ruciolist, count is",len(alist),len(ruciolist),count)
     retcode = 0
     locationmap = {}
     # doing this because I cannot figure out syntax to feed a list of files to rucio
@@ -119,7 +126,7 @@ def metacat2location(alist=None,copylocal=False,debug=False):
         print('--- Rucio list_replicas call fails: ' + str(e))
         print(' stop this chunk',skip,chunk)
         retcode = 1
-        return locationmap,local,1
+        return locationmap,1
     if debug: print ("rucio",list(result))
 
     
@@ -169,7 +176,7 @@ def metacat2location(alist=None,copylocal=False,debug=False):
             location = newlocation[0]
             #local.append(location)
         else: # at fnal
-            if not checkFile(location):  # can I open the file? 
+            if not checkFile(location,debug):  # can I open the file? 
                 print ("BIG PROBLEM - cannot read file",location)
                 locationmap[did]=None
                 continue
@@ -189,6 +196,7 @@ def metacat2location(alist=None,copylocal=False,debug=False):
                 print ("not there", x)
         
         retcode = 100
+    
     return locationmap,retcode
 
 def maketargz(list=None,tarname=None,localcache="cache",debug=False):
@@ -396,6 +404,9 @@ if __name__ == "__main__":
         print ("ERROR: need to specify either workflow or run or dataset or listfile ")
         sys.exit(1)
 
+    if args.datasetName is not None and ":" not in args.datasetName:
+        print("--datasetName must have format  <scope>:<datasetname>")
+
     # get a list of files from metacat
 
     replica_client=ReplicaClient()
@@ -491,10 +502,10 @@ if __name__ == "__main__":
             if not args.listfile:  
                 print ("mergeRoot: metacat query = ", query)
                 alist = list(mc_client.query(query=query))
-                theinfo = mc_client.query(query=query,summary="count")
+                theinfo = len(alist)
 
                 if debug:
-                    if (theinfo['count']!= 0):
+                    if (theinfo != 0):
                         print(f"Chunk {chunk_idx + 1}: Process files {first_file_idx} to {last_file_idx}")
                         print(theinfo)
 
@@ -525,70 +536,79 @@ if __name__ == "__main__":
                 local = locations
                 
             else:   
-                retcode = 0
-                locations = []  
-                goodfiles = []
-                # doing this because I cannot figure out syntax to feed a list of files to rucio
-                try:
-                    result = list(replica_client.list_replicas(ruciolist)) # goes away if you don't grab it???
-                except Exception as e:
-                    result = None
-                    print('--- Rucio list_replicas call fails: ' + str(e))
-                    print(' stop this chunk',skip,chunk)
-                    break
-                if debug: print ("rucio",list(result))
+                locationmap,retcode=metacat2location(alist,copylocal=args.copylocal,debug=debug)
+                goodfiles = list(locationmap.keys())
+                local = list(locationmap.values())
+                print ("check list",local)
+                 
+                if retcode != 0:
+                     print ("WARNING: could not make a locations list, setting goodfile to 0, error code was",retcode)
+                     goodfiles = []
+                     local = []
+                # retcode = 0
+                # locations = []  
+                # goodfiles = []
+                # # doing this because I cannot figure out syntax to feed a list of files to rucio
+                # try:
+                #     result = list(replica_client.list_replicas(ruciolist)) # goes away if you don't grab it???
+                # except Exception as e:
+                #     result = None
+                #     print('--- Rucio list_replicas call fails: ' + str(e))
+                #     print(' stop this chunk',skip,chunk)
+                #     break
+                # if debug: print ("rucio",list(result))
 
-                badsites = ["qmul","surfsara"]
-                goodsites = ["fnal"]
-                for file in result:
-                    did = file["scope"]+":"+file["name"]
-                    pfns = file["pfns"]
-                    if debug: print ("\n ",did)
-                    location = None
+                # badsites = ["qmul","surfsara"]
+                # goodsites = ["fnal"]
+                # for file in result:
+                #     did = file["scope"]+":"+file["name"]
+                #     pfns = file["pfns"]
+                #     if debug: print ("\n ",did)
+                #     location = None
                     
-                    for rse in pfns:
-                        if debug: print ("\n RSE",rse)
-                        goodsite = False
-                        # for site in badsites:
-                        #     if site in rse:
-                        #         if debug: print ("this is a bad site",site)
-                        #         goodsite = False
-                        #         break
-                        for site in goodsites:
-                            if site in rse:
-                                if debug: print ("this is a good site",site)
-                                goodsite = True
-                                break
-                        if goodsite:     
-                            if debug: print ("this site is ok",rse,badsites)
-                            location = rse
-                            break
+                #     for rse in pfns:
+                #         if debug: print ("\n RSE",rse)
+                #         goodsite = False
+                #         # for site in badsites:
+                #         #     if site in rse:
+                #         #         if debug: print ("this is a bad site",site)
+                #         #         goodsite = False
+                #         #         break
+                #         for site in goodsites:
+                #             if site in rse:
+                #                 if debug: print ("this is a good site",site)
+                #                 goodsite = True
+                #                 break
+                #         if goodsite:     
+                #             if debug: print ("this site is ok",rse,badsites)
+                #             location = rse
+                #             break
             
-                    if location is None:
-                        print ("giving up on this file",rse)
-                        missed.append(did)
-                        continue
-                    if "fnal" not in location:
-                        cp_args = ["xrdcp",location,"./cache/."]
-                        try:
-                            completed_process = run(cp_args, capture_output=True,text=True)   
-                            if debug: print (completed_process)
+                #     if location is None:
+                #         print ("giving up on this file",rse)
+                #         missed.append(did)
+                #         continue
+                #     if "fnal" not in location:
+                #         cp_args = ["xrdcp",location,"./cache/."]
+                #         try:
+                #             completed_process = run(cp_args, capture_output=True,text=True)   
+                #             if debug: print (completed_process)
                     
                             
-                        except Exception as e:
-                            print ("error doing local copy",e)
-                            continue
-                        local.append(os.path.join("./cache",os.path.basename(location)))
-                    else: # at fnal
-                        if not checkFile(location):  # can I open the file? 
-                            print ("BIG PROBLEM - cannot read file",location)
-                            missed.append(did)
-                            continue
+                #         except Exception as e:
+                #             print ("error doing local copy",e)
+                #             continue
+                #         local.append(os.path.join("./cache",os.path.basename(location)))
+                #     else: # at fnal
+                #         if not checkFile(location):  # can I open the file? 
+                #             print ("BIG PROBLEM - cannot read file",location)
+                #             missed.append(did)
+                #             continue
 
-                        local.append(location)
-                    goodfiles.append(did)
-                    locations.append(location)
-                print (" list lengths goodfiles,locations", len(goodfiles),len(locations))
+                #         local.append(location)
+                #     goodfiles.append(did)
+                #     locations.append(location)
+                # print (" list lengths goodfiles,locations", len(goodfiles),len(locations))
         
 
             if debug: print ("local",local)
@@ -652,10 +672,13 @@ if __name__ == "__main__":
                 
             else:
                 print ("no good files left in list")
-    
+                continue  # HMS added this 
             outputfile = newname
             if args.uselar:
                 newfile,retcode = mergeLar(outputfile,local,args.lar_config) #lar
+            elif args.maketar:
+                newfile,retcode = maketargz(list=local,tarname=outputfile,debug=debug)
+                print ("use tar to merge")
             else:  
                 newfile,retcode = mergeData(outputfile,local) #hadd
             print ("merged data", newfile,retcode)
@@ -741,5 +764,5 @@ if __name__ == "__main__":
                         except Exception as e:
                             print ("ERROR: second attempt at copy failed, quitting",e)
                             break
-            for x in missed:
-                print ("file missed",x)
+            # for x in missed:
+            #     print ("file missed",x)

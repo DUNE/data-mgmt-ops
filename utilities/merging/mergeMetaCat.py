@@ -36,7 +36,7 @@ def makeDataSetName(meta):
     tags = meta["metadata"]
     order = ["core.run_type", "DUNE.campaign", "core.data_tier", "core.application.version",
              "dune.config_file", "dune_mc.gen_fcl_filename", "core.data_stream", "deftag"]
-    name = "merged_"
+    name = meta["namespace"]+":"+"merged_"
     for i in order:
         if i in tags and tags[i] is not None:
             new = tags[i]
