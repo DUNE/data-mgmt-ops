@@ -58,6 +58,10 @@ if __name__ == "__main__":
         print ("You must specify a detector: hd-protodune, fardet-vd ... or we won't know what to do with the output")
         sys.exit(1)
 
+    if args.datasetName is not None and ":" not in args.datasetName:
+        print ("datasetName must have the format <namespace>:<filename>",args.datasetName)
+        sys.exit(1)
+
     if (args.run is None  or  args.version is None) and args.dataset is None:
         print ("You have to set a run number --run and a --version, or a --dataset",args.run, args.version, args.dataset)
 
@@ -238,6 +242,8 @@ if __name__ == "__main__":
                 newline = newline.replace("$STAGE",args.merge_stage)
             if args.datasetName: 
                 newline = newline.replace("${DATASETNAME}",args.datasetName)
+            else:
+                newline = newline.replace("--datasetName=${DATASETNAME}","")
             if args.run:
                 newline = newline.replace("$RUN","%d"%args.run)
 
