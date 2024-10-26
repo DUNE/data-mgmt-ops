@@ -528,7 +528,8 @@ def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=No
     if version is not None:
         externals["core.application.version"] = version
     externals["dune.config_file"] =  configf
-    externals["dune.campaign"] =  campaign
+    if campaign is not None and len(campaign)>0:  # this really should not happen. campaign should inherit
+        externals["dune.campaign"] =  campaign
  
     if "-tar" in datatier:
         externals["core.file_format"] = "tar"
