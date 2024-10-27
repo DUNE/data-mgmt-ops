@@ -6,9 +6,9 @@ export THEDATE=`date +%Y%m%dT%H%M%S`
 export TAG=test-tar
 
 
-export SKIP=1  # start at the begining 
-export CHUNK=2 # merge 100 files at once
-export NFILES=6 # place a small limit for testing, you can raise this a lot. if more need to be done you need to bump up skip to the previous NFILES
+export SKIP=2 # start at the begining 
+export CHUNK=3 # merge 100 files at once
+export NFILES=30 # place a small limit for testing, you can raise this a lot. if more need to be done you need to bump up skip to the previous NFILES
 export DETECTOR=fardet-hd
 export FILE_TYPE=mc
 export DESTINATION=${DSCRATCH}/merging/tar_${DETECTOR}_${TAG}_${SKIP}_${NFILES}_${THEDATE}

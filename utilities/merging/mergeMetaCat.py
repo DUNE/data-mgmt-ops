@@ -475,7 +475,7 @@ class mergeMeta():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
 def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=None, application=None, configf=None,  version=None, flist=None, \
-               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False, campaign=None):
+               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False, campaign=None, istar=False):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -533,9 +533,11 @@ def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=No
     if campaign is not None and len(campaign)>0:  # this really should not happen. campaign should inherit
         print ("campaign from parents overidden by ",campaign)
         externals["dune.campaign"] =  campaign
- 
-    if "-tar" in datatier:
+    if istar:
         externals["core.file_format"] = "tar"
+        if "-tar" not in externals["core.data_tier"]:
+            externals["core.data_tier"] = externals["core.data_tier"] + "-tar"
+        print ("patch the format for tar",externals["core.file_format"],externals["core.data_tier"])
 
     # DEBUG = 0
     # if DEBUG:

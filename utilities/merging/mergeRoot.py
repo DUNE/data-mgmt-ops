@@ -712,7 +712,7 @@ if __name__ == "__main__":
                     
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
                                 datatier="root-tuple", application=args.application, configf=args.lar_config, version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage,campaign=args.campaign)
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage,campaign=args.campaign,istar=args.maketar)
                 
                 
                 jsonfile = newfile+".json"
