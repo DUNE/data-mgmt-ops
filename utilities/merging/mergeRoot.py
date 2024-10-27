@@ -100,7 +100,7 @@ def mergeLar(newpath,input_files,config,debug=False):
         retcode+=100
     return newpath,retcode
 
-def metacat2location(alist=None,copylocal=False,debug=False):
+def metacat2location(alist=None,copylocal=False,debug=False,skip=0,chunk=0):
     # tries to get a file from FNAL or other site if not available
     # alist is the result of a metacat query
 
@@ -263,7 +263,7 @@ def cleanup(local,debug=False):
         if debug: print ("removing",file)
         os.remove(file)
 
-def makeName(md,jobtag,tier,skip,chunk,stage):
+def makeName(md,jobtag,tier,skip,chunk,stage,campaign=None):
    
     sskip = str(skip).zfill(6)
     schunk = str(chunk).zfill(6)
@@ -271,7 +271,7 @@ def makeName(md,jobtag,tier,skip,chunk,stage):
     metadata = md["metadata"]
     if "set" in jobtag[0:4]:
         detector = metadata["core.run_type"]
-        campaign = metadata["dune.campaign"]
+        if campaign is None: campaign = metadata["dune.campaign"]
         fcl = metadata["dune.config_file"]
         app = metadata["core.application.name"]+"_"+metadata["core.application.version"]
         fname = ("%s_%s_%s_%s_merged_skip%s_lim%s_stage_%s_%s.root"%(detector,campaign,fcl,app,sskip,schunk,stage,timestamp))#.replace("__",".")
@@ -281,7 +281,7 @@ def makeName(md,jobtag,tier,skip,chunk,stage):
     detector = metadata["core.run_type"]
 
     ftype = metadata["core.file_type"]
-    campaign = metadata["dune.campaign"]
+    if campaign is None: campaign = metadata["dune.campaign"]
     stream = metadata["core.data_stream"]
     tier = metadata["core.data_tier"].replace("-virtual","")
     
@@ -391,7 +391,7 @@ if __name__ == "__main__":
     parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
     parser.add_argument("--maketar",help="make a gzipped tar file",default=False,action='store_true')
     parser.add_argument("--copylocal",help="copy files to local cache from remote",default=False,action='store_true')
-    #parser.add_argument("--campaign",type=str,default=None,help="campaign name")
+    parser.add_argument("--campaign",type=str,default=None,help="campaign for the merge, default is campaign of the parents")
 
     
 
@@ -436,10 +436,17 @@ if __name__ == "__main__":
     if args.listfile:
         thelistfile = open(args.listfile,'r')
         theflist = thelistfile.readlines()
+        
+        # theskip = args.skip
+        # theend = args.skip + nfiles_total
+        # if theend > len(theflist):
+        #     theend = len(theflist)
+        
+        # theflist = theflist[theskip:theend]
         thelistfile.close()
-        nfiles_total = len(theflist)
+        #nfiles_total = len(theflist)
         jobtag = "list-%s"%os.path.basename(args.listfile)
-
+        #print (" use files ",theskip,"thru",theend-1,"from the file list")
     chunk_size = args.chunk
     skip_files = args.skip
        
@@ -473,7 +480,7 @@ if __name__ == "__main__":
                 jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
 
             elif args.listfile is not None:
-                print('doing filelist')
+                print('doing listfile',first_file_idx,last_file_idx)
                 thefiles = (theflist.copy())[first_file_idx:last_file_idx]
                 alist = []
                 mfiles = []
@@ -538,7 +545,7 @@ if __name__ == "__main__":
                 local = locations
                 
             else:   
-                locationmap,retcode=metacat2location(alist,copylocal=args.copylocal,debug=debug)
+                locationmap,retcode=metacat2location(alist,copylocal=args.copylocal,debug=debug, skip=first_file_idx, chunk=last_file_idx - first_file_idx)
                 goodfiles = list(locationmap.keys())
                 local = list(locationmap.values())
                 print ("check list",local)
@@ -666,7 +673,7 @@ if __name__ == "__main__":
                 filecount = last_file_idx - first_file_idx
                 if len(goodfiles) < last_file_idx:
                     filecount = len(goodfiles) 
-                newname = makeName(firstmeta,jobtag,args.data_tier,first_file_idx,filecount,args.merge_stage)
+                newname = makeName(firstmeta,jobtag,args.data_tier,first_file_idx,filecount,args.merge_stage,args.campaign)
                 print ("newname",newname)
                 if args.maketar:
                     newname=newname+".tgz"
@@ -705,7 +712,7 @@ if __name__ == "__main__":
                     
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
                                 datatier="root-tuple", application=args.application, configf=args.lar_config, version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage)
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage,campaign=args.campaign)
                 
                 
                 jsonfile = newfile+".json"

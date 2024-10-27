@@ -351,7 +351,7 @@ class mergeMeta():
             newJsonMetaData["core.runs"] = runlist
             newJsonMetaData["core.runs_subruns"] = subrunlist
             newJsonData["parents"] = parentage
-
+        
         fixes = {
         "core.file_content_status": "good",
         "retention.status": "active",
@@ -475,7 +475,7 @@ class mergeMeta():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
 def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=None, application=None, configf=None,  version=None, flist=None, \
-               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
+               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False, campaign=None):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -528,9 +528,11 @@ def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=No
         externals["core.application.name"] = application
     if version is not None:
         externals["core.application.version"] = version
-    externals["dune.config_file"] =  configf
-    #if campaign is not None and len(campaign)>0:  # this really should not happen. campaign should inherit
-        #externals["dune.campaign"] =  campaign
+    if configf is not None:
+        externals["dune.config_file"] =  configf
+    if campaign is not None and len(campaign)>0:  # this really should not happen. campaign should inherit
+        print ("campaign from parents overidden by ",campaign)
+        externals["dune.campaign"] =  campaign
  
     if "-tar" in datatier:
         externals["core.file_format"] = "tar"
@@ -578,7 +580,7 @@ if __name__ == "__main__":
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
     parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--config',help='config file',default=None)
-    #parser.add_argument('--campaign',help='campaign name',default=None)
+    parser.add_argument('--campaign',help='campaign name',default=None)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--direct_parentage',default=False,action='store_true')
@@ -605,4 +607,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datasetName=args.datasetName, datatier=args.dataTier, application=args.application, configf=args.config,  version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datasetName=args.datasetName, datatier=args.dataTier, application=args.application, configf=args.config,  version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage,campaign=args.campaign)
