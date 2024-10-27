@@ -279,7 +279,9 @@ def makeName(md,jobtag,tier,skip,chunk,stage):
     
 
     detector = metadata["core.run_type"]
+
     ftype = metadata["core.file_type"]
+    campaign = metadata["dune.campaign"]
     stream = metadata["core.data_stream"]
     tier = metadata["core.data_tier"].replace("-virtual","")
     
@@ -295,7 +297,7 @@ def makeName(md,jobtag,tier,skip,chunk,stage):
     
     
 
-    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,localtag,stream,source,tier,sskip,schunk,stage,timestamp)
+    fname = "%s_%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,campaign,localtag,stream,source,tier,sskip,schunk,stage,timestamp)
     return fname
 
     # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
@@ -389,7 +391,7 @@ if __name__ == "__main__":
     parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
     parser.add_argument("--maketar",help="make a gzipped tar file",default=False,action='store_true')
     parser.add_argument("--copylocal",help="copy files to local cache from remote",default=False,action='store_true')
-    parser.add_argument("--campaign",type=str,default=None,help="campaign name")
+    #parser.add_argument("--campaign",type=str,default=None,help="campaign name")
 
     
 
@@ -702,7 +704,7 @@ if __name__ == "__main__":
                     newnamespace = namespace
                     
                 retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
-                                datatier="root-tuple", application=args.application, configf=args.lar_config, campaign=args.campaign, version=args.merge_version, flist=goodfiles, 
+                                datatier="root-tuple", application=args.application, configf=args.lar_config, version=args.merge_version, flist=goodfiles, 
                                 merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage)
                 
                 
