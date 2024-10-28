@@ -275,7 +275,7 @@ if __name__ == "__main__":
             if args.campaign:
                 newline = newline.replace("$CAMPAIGN", args.campaign)
             else:
-                newline = newline.replace("--campaign","")
+                newline = newline.replace("--campaign=$CAMPAIGN","")
             sub.write(newline)
             #print (newline)
         sub.close()
