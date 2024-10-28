@@ -34,9 +34,10 @@ def timeform(now):
 
 def makeDataSetName(meta):
     tags = meta["metadata"]
-    order = ["core.run_type", "DUNE.campaign", "core.data_tier", "core.application.version",
+    # have to do dune.campaign twice due to old metadata
+    order = ["core.run_type", "DUNE.campaign", "dune.campaign","core.data_tier", "core.application.version",
              "dune.config_file", "dune_mc.gen_fcl_filename", "core.data_stream", "deftag"]
-    name = "merged_"
+    name = meta["namespace"]+":"+"merged_"
     for i in order:
         if i in tags and tags[i] is not None:
             new = tags[i]
@@ -350,7 +351,7 @@ class mergeMeta():
             newJsonMetaData["core.runs"] = runlist
             newJsonMetaData["core.runs_subruns"] = subrunlist
             newJsonData["parents"] = parentage
-
+        
         fixes = {
         "core.file_content_status": "good",
         "retention.status": "active",
@@ -473,8 +474,8 @@ class mergeMeta():
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=None, application=None, configf=None, campaign=None, version=None, flist=None, \
-               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False):
+def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=None, application=None, configf=None,  version=None, flist=None, \
+               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False, campaign=None, istar=False):
     
     opts = {}
     maker = mergeMeta(opts,debug)
@@ -527,11 +528,16 @@ def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=No
         externals["core.application.name"] = application
     if version is not None:
         externals["core.application.version"] = version
-    externals["dune.config_file"] =  configf
-    externals["dune.campaign"] =  campaign
- 
-    if "-tar" in datatier:
+    if configf is not None:
+        externals["dune.config_file"] =  configf
+    if campaign is not None and len(campaign)>0:  # this really should not happen. campaign should inherit
+        print ("campaign from parents overidden by ",campaign)
+        externals["dune.campaign"] =  campaign
+    if istar:
         externals["core.file_format"] = "tar"
+        if "-tar" not in externals["core.data_tier"]:
+            externals["core.data_tier"] = externals["core.data_tier"] + "-tar"
+        print ("patch the format for tar",externals["core.file_format"],externals["core.data_tier"])
 
     # DEBUG = 0
     # if DEBUG:
@@ -603,4 +609,4 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datasetName=args.datasetName, datatier=args.dataTier, application=args.application, configf=args.config, campaign=args.campaign, version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage)
+    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datasetName=args.datasetName, datatier=args.dataTier, application=args.application, configf=args.config,  version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage,campaign=args.campaign)

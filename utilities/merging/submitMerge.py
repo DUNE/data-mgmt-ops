@@ -47,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
     parser.add_argument('--direct_parentage',default=False,action='store_true')
     parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
-    parser.add_argument("--campaign", type=str, help="campaign", default=None)
+    parser.add_argument("--campaign", type=str, help="campaign for the merge, default is campaign of the parents", default=None)
     
     
     args = parser.parse_args()
@@ -56,6 +56,10 @@ if __name__ == "__main__":
 
     if not args.detector:
         print ("You must specify a detector: hd-protodune, fardet-vd ... or we won't know what to do with the output")
+        sys.exit(1)
+
+    if args.datasetName is not None and ":" not in args.datasetName:
+        print ("datasetName must have the format <namespace>:<filename>",args.datasetName)
         sys.exit(1)
 
     if (args.run is None  or  args.version is None) and args.dataset is None:
@@ -238,6 +242,8 @@ if __name__ == "__main__":
                 newline = newline.replace("$STAGE",args.merge_stage)
             if args.datasetName: 
                 newline = newline.replace("${DATASETNAME}",args.datasetName)
+            else:
+                newline = newline.replace("--datasetName=${DATASETNAME}","")
             if args.run:
                 newline = newline.replace("$RUN","%d"%args.run)
 
@@ -268,6 +274,8 @@ if __name__ == "__main__":
                 newline = newline.replace("$LARCONFIG",args.lar_config)
             if args.campaign:
                 newline = newline.replace("$CAMPAIGN", args.campaign)
+            else:
+                newline = newline.replace("--campaign=$CAMPAIGN","")
             sub.write(newline)
             #print (newline)
         sub.close()

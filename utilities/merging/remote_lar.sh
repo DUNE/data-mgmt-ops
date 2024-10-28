@@ -46,9 +46,9 @@ echo "env"
 
 env > $SKIP_$NFILES_env.txt
 
-echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --uselar --lar_config=$LARCONFIG --merge_stage=$STAGE  $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN >& local.log"
+echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --uselar --lar_config=$LARCONFIG --merge_stage=$STAGE  $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN  >& local.log"
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --uselar --lar_config=$LARCONFIG --merge_stage=$STAGE  $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN  >& local.log
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --uselar --lar_config=$LARCONFIG --merge_stage=$STAGE  $DIRECT_PARENTAGE --datasetName=${DATASETNAME}  --campaign=$CAMPAIGN  >& local.log
 
 
 echo "run returned " $?

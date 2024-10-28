@@ -46,7 +46,7 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo " python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN >& local.log"
+echo " python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN  >& local.log"
 
 
 time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN >& local.log
