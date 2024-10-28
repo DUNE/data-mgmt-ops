@@ -272,6 +272,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='check and fix metadata')
     #parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
     parser.add_argument("--workflows",default=False,action='store_true', help="use worflow id for min/max")
+    parser.add_argument("--dataset",default=None,type=str, help="name of dataset to check")
     parser.add_argument("--runs",default=False,action='store_true', help="use run id for min/max")
     parser.add_argument("--min",type=int, help="minimum id to check",default = None)
     parser.add_argument("--max",type=int, help="maximum id to check",default = None)
@@ -281,7 +282,7 @@ if __name__ == '__main__':
     parser.add_argument("--mc",help="set if mc",default=False,action='store_true')
     parser.add_argument("--fix",help="do or suggest a fix",default=False,action='store_true')
     parser.add_argument("--debug",help="do a short run with printout", default=False,action='store_true')
-
+    
     #data_tier = "full-reconstructed"
     #workflow = 1630
     args = parser.parse_args()
@@ -295,7 +296,9 @@ if __name__ == '__main__':
     #for workflow in [1638,1650]:
     #hd = [1630,1631,1632,1650,1638,1633,1596,1597,1598,1599,1600,1601,1602,1604,1606,1608,1609,1581,1582,1584,1594,1586,1587,1588,1595]
     #vd = [1583,1590,1591,1593] + list(range(1610,1630))
-
+    if args.dataset:
+        args.min = 0
+        args.max = 0
           
     for id in range(args.min,args.max+1):
         for data_tier in data_tiers:
@@ -307,17 +310,22 @@ if __name__ == '__main__':
                 if "duplicates" in tests:
 
                     testquery =  "files from dune:all where core.data_tier='%s' and core.runs[any] in (%d) and dune.output_status=confirmed "%(data_tier,id)
-            else:
-                if args.workflows:
-                    if  "parentage" in tests:
-                            testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)"%(data_tier,id)
-                            print ("top level query metacat query",testquery)
-                    if "duplicates" in tests:
+            elif args.workflows:
+                if  "parentage" in tests:
+                        testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d)"%(data_tier,id)
+                        print ("top level query metacat query",testquery)
+                if "duplicates" in tests:
 
-                        testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) and dune.output_status=confirmed "%(data_tier,id)
-                else:
-                    print ("need to specify --workflows or --runs")
-                    sys.exit(1)
+                    testquery =  "files from dune:all where core.data_tier='%s' and dune.workflow['workflow_id'] in (%d) and dune.output_status=confirmed "%(data_tier,id)
+            elif args.dataset:
+                if "duplicates" in tests:
+
+                    testquery =  "files from %s where core.data_tier='%s' and dune.output_status=confirmed "%(args.dataset,data_tier)
+  
+
+            else:
+                print ("need to specify --workflows or --runs or --dataset")
+                sys.exit(1)
             if TESTME:
                 testquery += " limit 100"
             print (testquery)
@@ -331,8 +339,11 @@ if __name__ == '__main__':
             #     print ("you seem to have parents for all files - quitting")
             #     sys.exit(0)
             now = "%10.0f"%datetime.datetime.now().timestamp()
+            errname = "%s_%d_%s.txt"%(data_tier,id,now)
+            if args.dataset:
+                errname = "%s_%s_%s.txt"%(data_tier,dataset,now)
 
-            fixer=MetaFixer(verbose=False,errname="%s_%d_%s.txt"%(data_tier,id,now),tests=tests, fix=FIX)
+            fixer=MetaFixer(verbose=False,errname=errname,tests=tests, fix=FIX)
             thelimit=100
             theskip=0
             for i in range(0, thelimit):
