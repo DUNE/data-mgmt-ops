@@ -1,3 +1,39 @@
+"""
+Script to check:
+        1) whether files from metacat are declared in rucio
+        2) whether files declared in rucio have replicas
+
+Usage:
+  1) Checking metacat files
+    check_rucio_files check_content \
+        --mql <mql query> \
+        -n <number of concurrent processes -- default:number of available cpus> \
+        --outstr <output>
+
+    Will check rucio for files matching the mql query.
+
+    Runs in parallel.
+
+    Will produce 2 output files:
+        - <output>_good_files.txt -- Files that do exist in rucio
+        - <output>_bad_files.txt -- Files that do not exist in rucio
+
+  2) Checking rucio replicas
+    check_rucio_files check_replicas \
+        -i <input_file> \
+        -n <number of chunks -- default:1> \
+        --outstr <output>
+
+    Will check rucio for replicas for files listed in the input file.
+    This file should have one did (scope:file_name) per line. This can be the 
+    '*_good_files.txt' file produced from the check_content routine.
+
+    Will produce 2 output files:
+        - <output>_with_replicas.txt -- Files that have a replica in rucio 
+        - <output>_no_replicas.txt -- Files that do not have a replica in rucio 
+"""
+
+
 import rucio
 from rucio.client.replicaclient import ReplicaClient
 from rucio.client.didclient import DIDClient
