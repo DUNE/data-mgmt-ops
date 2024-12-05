@@ -37,10 +37,6 @@ import argparse
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 3:
-        print ("arguments are --workflow or --run, --min, --max, optional --version")
-        sys.exit(1)
-
     fieldnames = ["run", "data_stream", "timestamp", "version", "check", 
                   "raw:count", "raw:total_size_gb", "raw:size_per_file_gb", 
                   "trigprim:count", "trigprim:total_size_gb", "trigprim:size_per_file_gb", 
