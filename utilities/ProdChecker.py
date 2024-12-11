@@ -45,12 +45,12 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='check by run or workflow')
 
-    parser.add_argument("--workflow",help='key is workflow',default=False,action='store_true')
-    parser.add_argument("--run",help='key is run',default=False,action='store_true')
-    parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
-    parser.add_argument('--min',help='minimum key',type=int,default=None)
-    parser.add_argument('--max',help='maximum key',type=int,default=None)
-    parser.add_argument('--version',help='code version',type=str,default=None)
+    parser.add_argument("--workflow", help='key is workflow. unspecified: use run', action='store_true')
+    parser.add_argument("--run", help='key is run', action='store_true')
+    parser.add_argument('--debug', help='make very verbose', action='store_true')
+    parser.add_argument('--min', help='minimum key (run or workflow)', type=int, default=None)
+    parser.add_argument('--max', help='maximum key (run or workflow)', type=int, default=None)
+    parser.add_argument('--version', help='code version', type=str, default=None)
 
     now = datetime.datetime.now().timestamp()
     timestamp = unix_to_timestamp(now)
