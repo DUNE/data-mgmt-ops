@@ -582,7 +582,7 @@ if __name__ == "__main__":
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
     parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--config',help='config file',default=None)
-    parser.add_argument('--campaign',help='campaign name',default=None)
+    parser.add_argument('--campaign',help='output overide campaign name',default=None)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--direct_parentage',default=False,action='store_true')
