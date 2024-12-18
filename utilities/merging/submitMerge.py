@@ -271,9 +271,20 @@ if __name__ == "__main__":
             _nfiles = last_file_idx-first_file_idx
             newline = newline.replace("$NFILES","%d"%_nfiles)
             newline = newline.replace("$DETECTOR",args.detector)
-            if args.input_data_tier: newline = newline.replace("$INPUT_DATA_TIER",args.input_data_tier)
-            if args.output_data_tier: newline = newline.replace("$OUTPUT_DATA_TIER",args.output_data_tier)
-            if args.output_file_format: newline = newline.replace("$OUTPUT_FILE_FORMAT",args.output_file_format)
+            if args.input_data_tier: 
+                newline = newline.replace("$INPUT_DATA_TIER",args.input_data_tier)
+            
+            if args.output_data_tier: 
+                newline = newline.replace("$OUTPUT_DATA_TIER",args.output_data_tier)
+            else:
+                print ("--output_data_tier is now required")
+                sys.exit(1)
+            if args.output_file_format: 
+                newline = newline.replace("$OUTPUT_FILE_FORMAT",args.output_file_format)
+            else:
+                print ("--output_file_format is now required")
+                sys.exit(1)
+
             newline = newline.replace("$FILETYPE",args.file_type)
             if args.version: newline = newline.replace("$VERSION",args.version)
             if args.merge_version: newline = newline.replace("$MERGE_VERSION",args.merge_version)
