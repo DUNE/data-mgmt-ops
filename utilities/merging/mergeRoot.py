@@ -140,6 +140,7 @@ def metacat2location(alist=None,copylocal=False,debug=False,skip=0,chunk=0):
         location = None
         goodsite = 0
 
+
         for rse in pfns:
             if debug: print ("\n RSE",rse)
             badsite=0
@@ -164,11 +165,16 @@ def metacat2location(alist=None,copylocal=False,debug=False,skip=0,chunk=0):
                 location = rse
                 break
 
+        if len(pfns) < 1:
+            print ("giving up on this file, no pfns")
+            missed.append(did)    
+            continue
+
         if location is None:
             print ("giving up on this file",rse)
             missed.append(did)
-
             continue
+        
         if "fnal" not in location:
             if debug: print ("good location but need to copy it over",location)
             newlocation,retcode = makeLocalCopy(locationlist=[location],cache="cache",debug=debug)
@@ -263,7 +269,7 @@ def cleanup(local,debug=False):
         if debug: print ("removing",file)
         os.remove(file)
 
-def makeName(md,jobtag,tier,skip,chunk,stage,campaign=None):
+def makeName(md,jobtag,output_tier,skip,chunk,stage,campaign=None):
    
     sskip = str(skip).zfill(6)
     schunk = str(chunk).zfill(6)
@@ -283,7 +289,7 @@ def makeName(md,jobtag,tier,skip,chunk,stage,campaign=None):
     ftype = metadata["core.file_type"]
     if campaign is None: campaign = metadata["dune.campaign"]
     stream = metadata["core.data_stream"]
-    tier = metadata["core.data_tier"].replace("-virtual","")
+    #tier = metadata["core.data_tier"].replace("-virtual","")
     
     source = metadata["dune.config_file"].replace(".fcl","")
 
@@ -297,7 +303,7 @@ def makeName(md,jobtag,tier,skip,chunk,stage,campaign=None):
     
     
 
-    fname = "%s_%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,campaign,localtag,stream,source,tier,sskip,schunk,stage,timestamp)
+    fname = "%s_%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,campaign,localtag,stream,source,output_tier,sskip,schunk,stage,timestamp)
     return fname
 
     # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
@@ -307,7 +313,7 @@ def makeName(md,jobtag,tier,skip,chunk,stage,campaign=None):
     detector = metadata["core.run_type"]
     ftype = metadata["core.file_type"]
     stream = metadata["core.data_stream"]
-    tier = metadata["core.data_tier"].replace("-virtual","")
+    # = metadata["core.data_tier"].replace("-virtual","")
     
     source = metadata["dune.config_file"].replace(".fcl","")
 
@@ -321,7 +327,7 @@ def makeName(md,jobtag,tier,skip,chunk,stage,campaign=None):
     
     
 
-    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,localtag,stream,source,tier,sskip,schunk,stage,timestamp)
+    fname = "%s_%s_%s_%s_%s_%s_merged_skip%s_lim%s_%s_%s.root"%(detector,ftype,localtag,stream,source,output_tier,sskip,schunk,stage,timestamp)
     return fname
 
     # hd-protodune-det-reco:np04hd_raw_run027311_0000_dataflow1_datawriter_0_20240620T044028_reco_stage1_20240623T095830_keepup_hists.root
@@ -375,8 +381,9 @@ if __name__ == "__main__":
     parser.add_argument("--run",type=int, help="run number", default=None)
     parser.add_argument("--dataset",type=str, help="input dataset", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
-    parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+    parser.add_argument("--input_data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
     parser.add_argument("--output_data_tier",type=str,default=None,help="output data tier [None]")
+    parser.add_argument("--output_file_format",type=str,default=None,help="output file_format [None]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
 
     parser.add_argument("--test",help="write to test area",default=False,action='store_true')
@@ -421,14 +428,14 @@ if __name__ == "__main__":
         print ("you need to choose your merging method - cannot do both lar and tar")
         sys.exit(1)
 
-    if "-virtual" in args.data_tier and not args.maketar:
-        args.output_data_tier = args.data_tier.replace("-virtual","")
+    # if "-virtual" in args.input_data_tier and not args.maketar:
+    #     args.output_data_tier = args.input_data_tier.replace("-virtual","")
 
-    if args.uselar and not args.output_data_tier:
-        args.output_data_tier = args.data_tier
+    # if args.uselar and not args.output_data_tier:
+    #     args.output_data_tier = args.input_data_tier
 
-    if args.maketar and not args.output_data_tier:
-        args.output_data_tier = args.data_tier + "-tar"
+    # if args.maketar and not args.output_data_tier:
+    #     args.output_data_tier = args.input_data_tier + "-tar"
 
     
     nfiles_total = args.nfiles
@@ -465,13 +472,13 @@ if __name__ == "__main__":
             last_file_idx = min(first_file_idx + chunk_size, skip_files + nfiles_total)
     
             if args.workflow is not None:
-                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.data_tier,data_stream,args.version, first_file_idx, last_file_idx - first_file_idx )
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.input_data_tier,data_stream,args.version, first_file_idx, last_file_idx - first_file_idx )
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             
             elif args.run is not None:
-                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.data_tier,data_stream,args.version,first_file_idx, last_file_idx - first_file_idx)
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.input_data_tier,data_stream,args.version,first_file_idx, last_file_idx - first_file_idx)
                 srun = str(args.run).zfill(10)
                 jobtag = "run%s"%srun
                 
@@ -640,7 +647,7 @@ if __name__ == "__main__":
                     else:
                         namespace = "unknown"
                     f1.close()
-                #firstmeta["core.data_tier"] = args.data_tier
+                #firstmeta["core.data_tier"] = args.input_data_tier
                 # firstname = firstmeta["name"]
                 # pieces = firstname.split("_")
                 # pieces = pieces[0:2]+pieces[7:]
@@ -673,7 +680,7 @@ if __name__ == "__main__":
                 filecount = last_file_idx - first_file_idx
                 if len(goodfiles) < last_file_idx:
                     filecount = len(goodfiles) 
-                newname = makeName(firstmeta,jobtag,args.data_tier,first_file_idx,filecount,args.merge_stage,args.campaign)
+                newname = makeName(firstmeta,jobtag,args.output_data_tier,first_file_idx,filecount,args.merge_stage,args.campaign)
                 print ("newname",newname)
                 if args.maketar:
                     newname=newname+".tgz"
@@ -710,9 +717,13 @@ if __name__ == "__main__":
                     merge_type="local"
                     newnamespace = namespace
                     
-                retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName,
-                                datatier="root-tuple", application=args.application, configf=args.lar_config, version=args.merge_version, flist=goodfiles, 
-                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage,skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage,campaign=args.campaign,istar=args.maketar)
+                retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName, \
+                                output_data_tier=args.output_data_tier, output_file_format=args.output_file_format, \
+                                    application=args.application, configf=args.lar_config, version=args.merge_version, \
+                                        flist=goodfiles, 
+                                merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage, \
+                                    skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage, \
+                                        campaign=args.campaign,istar=args.maketar)
                 
                 
                 jsonfile = newfile+".json"

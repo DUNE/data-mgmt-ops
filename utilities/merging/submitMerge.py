@@ -32,7 +32,9 @@ if __name__ == "__main__":
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
-    parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+    parser.add_argument("--input_data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+    parser.add_argument("--output_data_tier",type=str,default=None,help="output data tier ")
+    parser.add_argument("--output_file_format",type=str,default=None,help="output file_format [None]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
 
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
@@ -53,6 +55,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     debug = args.debug
+
+    if args.output_data_tier is None:
+        print ("must specify an output data_tier")
+
+    if args.output_file_format is None:
+        print ("must specify an output file format")
+
+
 
     if not args.detector:
         print ("You must specify a detector: hd-protodune, fardet-vd ... or we won't know what to do with the output")
@@ -86,7 +96,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.run:
-        query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
+        query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.input_data_tier,args.version)
 
     
     elif args.dataset:
@@ -261,7 +271,9 @@ if __name__ == "__main__":
             _nfiles = last_file_idx-first_file_idx
             newline = newline.replace("$NFILES","%d"%_nfiles)
             newline = newline.replace("$DETECTOR",args.detector)
-            if args.data_tier: newline = newline.replace("$DATA_TIER",args.data_tier)
+            if args.input_data_tier: newline = newline.replace("$INPUT_DATA_TIER",args.input_data_tier)
+            if args.output_data_tier: newline = newline.replace("$OUTPUT_DATA_TIER",args.output_data_tier)
+            if args.output_file_format: newline = newline.replace("$OUTPUT_FILE_FORMAT",args.output_file_format)
             newline = newline.replace("$FILETYPE",args.file_type)
             if args.version: newline = newline.replace("$VERSION",args.version)
             if args.merge_version: newline = newline.replace("$MERGE_VERSION",args.merge_version)
@@ -298,7 +310,7 @@ if __name__ == "__main__":
         #environs += "-e NFILES=%d "%nfiles
         #environs += "-e DETECTOR=%s "%args.detector
         #environs += "-e FILETYPE=%s "%args.file_type
-        #environs += "-e DATA_TIER=%s "%args.data_tier
+        #environs += "-e DATA_TIER=%s "%args.input_data_tier
 
         # these are needed to set up lar
         #if args.run and args.version: environs += "-e VERSION=%s "%args.version 

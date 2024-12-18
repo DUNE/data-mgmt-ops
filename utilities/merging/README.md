@@ -6,7 +6,7 @@ H. Schellman, August 2024
 
 ~~~
 usage: submitMerge.py [-h] [--detector DETECTOR] [--dataset DATASET] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP] [--run RUN]
-                      [--destination DESTINATION] [--data_tier DATA_TIER] [--file_type FILE_TYPE] [--application APPLICATION]
+                      [--destination DESTINATION] [--input_data_tier DATA_TIER] [--file_type FILE_TYPE] [--application APPLICATION]
                       [--version VERSION] [--merge_version MERGE_VERSION] [--debug] [--maketar] [--usetar USETAR] [--uselar]
                       [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE] [--project_tag PROJECT_TAG]
 
@@ -22,7 +22,7 @@ options:
   --run RUN             run number
   --destination DESTINATION
                         destination directory
-  --data_tier DATA_TIER
+  --input_data_tier DATA_TIER
                         input data tier [root-tuple-virtual]
   --file_type FILE_TYPE
                         input detector or mc, default=detector
@@ -50,8 +50,8 @@ the --dataset option uses an existing metacat dataset and does not build its own
 example of submissions split up within a run
 
 ~~~
-python submitMerge.py --run=28023 --chunk=50 --data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=0 --project_tag=hd-keepup-tuples# first 2000
-python submitMerge.py --run=28023 --chunk=50 --data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=2000 --project_tag=pdhd-keepup-tuples # next 2000
+python submitMerge.py --run=28023 --chunk=50 --input_data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=0 --project_tag=hd-keepup-tuples# first 2000
+python submitMerge.py --run=28023 --chunk=50 --input_data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=2000 --project_tag=pdhd-keepup-tuples # next 2000
 ....
 ~~~
 
@@ -96,7 +96,7 @@ arguments are similar to `submitMerge.py`
 
 ~~~
 usage: mergeRoot.py [-h] [--listfile LISTFILE] [--workflow WORKFLOW] [--detector DETECTOR] [--chunk CHUNK] [--nfiles NFILES]
-                    [--skip SKIP] [--run RUN] [--dataset DATASET] [--destination DESTINATION] [--data_tier DATA_TIER]
+                    [--skip SKIP] [--run RUN] [--dataset DATASET] [--destination DESTINATION] [--input_data_tier DATA_TIER]
                     [--file_type FILE_TYPE] [--test] [--application APPLICATION] [--version VERSION] [--merge_version MERGE_VERSION]
                     [--debug] [--uselar] [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE] 
 
@@ -114,7 +114,7 @@ options:
   --dataset DATASET     dataset
   --destination DESTINATION
                         destination directory
-  --data_tier DATA_TIER
+  --input_data_tier DATA_TIER
                         input data tier [root-tuple-virtual]
   --file_type FILE_TYPE
                         input detector or mc, default=detector

@@ -4,7 +4,9 @@ export RUN=28005
 export VERSION=v09_91_02d01  # this is used to chose the files to merge
 export DETECTOR=hd-protodune
 export FILETYPE=detector
-export DATATIER="root-tuple-virtual"
+export INPUT_DATA_TIER="root-tuple-virtual"
+export OUTPUT_DATA_TIER="root-tuple"
+export OUTPUT_FILE_FORMAT="root"
 
 # these say how the merging will be done 
 export SKIP=0
@@ -13,4 +15,4 @@ export NFILES=12
 export STAGE=testing
 
 python mergeRoot.py --run $RUN --version $VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES\
- --file_type=$FILETYPE --detector=$DETECTOR --data_tier=$DATATIER --merge_stage=$STAGE --destination=local
+ --file_type=$FILETYPE --detector=$DETECTOR --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --merge_stage=$STAGE --destination=local

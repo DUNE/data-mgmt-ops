@@ -9,7 +9,7 @@ cd $INPUT_TAR_DIR_LOCAL
 # export CHUNK=50
 # export SKIP=0
 # export NFILES=1000
-# export DATA_TIER='root-tuple-virtual'
+# export INPUT_DATA_TIER='root-tuple-virtual'
 # export RUN=28023
 
 export USER=$USERNAME  # help fix not having user defined? 
@@ -47,9 +47,9 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE  --campaign=$CAMPAIGN >& local.log"
+echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$INPUT_FILE_FORMAT --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE  --campaign=$CAMPAIGN >& local.log"
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --data_tier=$DATA_TIER --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE --campaign=$CAMPAIGN >& local.log
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$INPUT_FILE_FORMAT --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE --campaign=$CAMPAIGN >& local.log
 
 
 echo "run returned " $?

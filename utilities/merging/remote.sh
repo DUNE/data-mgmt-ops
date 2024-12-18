@@ -8,7 +8,7 @@ cd $INPUT_TAR_DIR_LOCAL
 # export CHUNK=50
 # export SKIP=0
 # export NFILES=1000
-# export DATA_TIER='root-tuple-virtual'
+# export INPUT_DATA_TIER='root-tuple-virtual'
 # export RUN=28023
 
 export USER=$USERNAME  # help fix not having user defined? 
@@ -46,20 +46,21 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo " python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN  >& local.log"
+echo " python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$INPUT_FILE_FORMAT --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN  >& local.log"
 
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --data_tier=$DATA_TIER --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN >& local.log
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --input_data_tier=$INPUT_DATA_TIER 
+ --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$INPUT_FILE_FORMAT --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN >& local.log
 
 export retcode=$?
 echo "run returned " retcode
 
 cat local.log
-# mv local.log run_$RUN_$SKIP_$CHUNK_$DATA_TIER.log
+# mv local.log run_$RUN_$SKIP_$CHUNK_$INPUT_DATA_TIER.log
 # ls 
-echo "ifdh cp run_$RUN_$SKIP_$CHUNK_$DATA_TIER.log $DESTINATION"
+echo "ifdh cp run_$RUN_$SKIP_$CHUNK_$INPUT_DATA_TIER.log $DESTINATION"
 ls -lrt local.log
-ifdh cp local.log $DESTINATION/run_$RUN_$SKIP_$CHUNK_$DATA_TIER.log
+ifdh cp local.log $DESTINATION/run_$RUN_$SKIP_$CHUNK_$INPUT_DATA_TIER.log
 ifdh cp -D *.json $DESTINATION
 ifdh cp -D *.root $DESTINATION 
 echo '#cmd: 	ls -lrt'
