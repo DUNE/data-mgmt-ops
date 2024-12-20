@@ -137,7 +137,7 @@ class mergeMeta():
     def concatenate(self, the_list, externals, user='', direct_parentage=False, inherit_config=False):
         ''' actually do the merge of metadata'''
     
-        print ("CONFIG concat",inherit_config)
+        #print ("CONFIG concat",inherit_config)
       # here are things that are unique to the output and must be supplied externally
         for tag in self.externals:
             if not tag in externals:
@@ -340,7 +340,7 @@ class mergeMeta():
                 newJsonMetaData[tag.lower()] = special_md[tag]
 
 # special to get config from input file when doing hadd style merge that has no real config
-        print ("CONFIG doit",inherit_config,theconfig)
+        #print ("CONFIG doit",inherit_config,theconfig)
         if inherit_config and theconfig is not None:
             newJsonMetaData["dune.config_file"] =theconfig
 
@@ -502,7 +502,7 @@ class mergeMeta():
 def run_merge(newfilename=None, output_namespace=None, datasetName=None, output_data_tier=None, output_file_format=None, application=None, configf=None,  version=None, flist=None, \
                merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False, inherit_config=False, campaign=None, istar=False):
     
-    print ("CONFIG run_merge",inherit_config)
+    #print ("CONFIG run_merge",inherit_config)
     opts = {}
     maker = mergeMeta(opts,debug)
     if merge_type == 'local':
