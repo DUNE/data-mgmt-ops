@@ -3,7 +3,7 @@ H. Schellman, Sept 2024
 """
 
 import os,sys
-import argpars
+import argparse
 import json
 
 from metacat.webapi import MetaCatClient

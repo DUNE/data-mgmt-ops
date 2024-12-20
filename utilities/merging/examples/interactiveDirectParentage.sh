@@ -14,4 +14,4 @@ export THELIST=examples/test.txt
 
 python mergeRoot.py --listfile=$THELIST  --file_type=$FILE_TYPE  --chunk=$CHUNK --nfiles=$NFILES --skip=$SKIP \
 --destination=local  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT \
---output_namespace=$OUTPUT_NAMESPACE --merge_stage=final --direct_parentage --inherit_config --debug
+--output_namespace=$OUTPUT_NAMESPACE --merge_stage=direct-test --direct_parentage --inherit_config --debug
