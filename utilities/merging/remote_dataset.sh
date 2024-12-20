@@ -47,9 +47,9 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE  --campaign=$CAMPAIGN >& local.log"
+echo "python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --input_dataset=$INPUT_DATASET --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --output_namespace=$OUTPUT_NAMESPACE --input_version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --output_datasetName=${OUTPUT_DATASETNAME} $DIRECT_PARENTAGE  $INHERIT_CONFIG --campaign=$CAMPAIGN >& local.log"
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --dataset=$DATASET --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --datasetName=${DATASETNAME} $DIRECT_PARENTAGE --campaign=$CAMPAIGN >& local.log
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles $NFILES --chunk=$CHUNK --file_type=$FILETYPE --skip=$SKIP --input_dataset=$INPUT_DATASET --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT  --output_namespace=$OUTPUT_NAMESPACE --input_version=$VERSION --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --output_datasetName=${OUTPUT_DATASETNAME} $DIRECT_PARENTAGE $INHERIT_CONFIG --campaign=$CAMPAIGN >& local.log
 
 
 echo "run returned " $?

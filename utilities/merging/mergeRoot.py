@@ -372,34 +372,35 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Merge Data - need to choose run, workflow, dataset or listfile')
     #parser.add_argument("--fileName", type=str, help="Name of merged file, will be padded with timestamp if already exists", default="merged.root")
-    parser.add_argument("--listfile",type=str, help="file containing a list of files to merge, they must have json in the same director")
+    parser.add_argument("--listfile",type=str, help="file containing a list of files to merge, they must have json in the same directory")
     parser.add_argument("--workflow",type=int, help="workflow id to merge",default=None)
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default="hd-protodune")
     parser.add_argument("--chunk",type=int, help="number of files/merge",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
-    parser.add_argument("--dataset",type=str, help="input dataset", default=None)
+    parser.add_argument("--input_dataset",type=str, help="input dataset", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
     parser.add_argument("--input_data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
     parser.add_argument("--output_data_tier",type=str,default=None,help="output data tier [None]")
     parser.add_argument("--output_file_format",type=str,default=None,help="output file_format [None]")
+    parser.add_argument("--output_namespace",type=str,default=None,help="output namespace [None]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
 
     parser.add_argument("--test",help="write to test area",default=False,action='store_true')
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
-    parser.add_argument('--version',help='software version for input query',default=None,type=str)
+    parser.add_argument('--input_version',help='software version for input query',default=None,type=str)
     parser.add_argument('--merge_version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
-    parser.add_argument('--direct_parentage',default=False,action='store_true')
-    parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
+    parser.add_argument('--direct_parentage',default=False,action='store_true',help="parents are the files you are merging, not their parents")
+    parser.add_argument("--output_datasetName", type=str, help="optional name of output dataset this will go into", default=None)
     parser.add_argument("--maketar",help="make a gzipped tar file",default=False,action='store_true')
     parser.add_argument("--copylocal",help="copy files to local cache from remote",default=False,action='store_true')
     parser.add_argument("--campaign",type=str,default=None,help="campaign for the merge, default is campaign of the parents")
-
+    parser.add_argument('--inherit_config',default=False,action='store_true',help="inherit config file - use for hadd stype merges")
     
 
     args = parser.parse_args()
@@ -409,12 +410,12 @@ if __name__ == "__main__":
         args.copylocal=True
 
     debug = args.debug
-    if args.workflow is None and args.run is None and args.dataset is None and args.listfile is None:
+    if args.workflow is None and args.run is None and args.input_dataset is None and args.listfile is None:
         print ("ERROR: need to specify either workflow or run or dataset or listfile ")
         sys.exit(1)
 
-    if args.datasetName is not None and ":" not in args.datasetName:
-        print("--datasetName must have format  <scope>:<datasetname>")
+    if args.output_datasetName is not None and ":" not in args.output_datasetName:
+        print("--output_datasetName must have format  <scope>:<datasetname>")
 
     # get a list of files from metacat
 
@@ -441,19 +442,18 @@ if __name__ == "__main__":
     nfiles_total = args.nfiles
 
     if args.listfile:
-        thelistfile = open(args.listfile,'r')
-        theflist = thelistfile.readlines()
-        
-        # theskip = args.skip
-        # theend = args.skip + nfiles_total
-        # if theend > len(theflist):
-        #     theend = len(theflist)
-        
-        # theflist = theflist[theskip:theend]
-        thelistfile.close()
-        #nfiles_total = len(theflist)
+        try:
+            thelistfile = open(args.listfile,'r')
+            theflist = thelistfile.readlines()
+            thelistfile.close()
+        except Exception as e:
+            print ("failed to read in listfile", args.listfile)
+            sys.exit(1)
+
+
         jobtag = "list-%s"%os.path.basename(args.listfile)
         #print (" use files ",theskip,"thru",theend-1,"from the file list")
+
     chunk_size = args.chunk
     skip_files = args.skip
        
@@ -461,30 +461,32 @@ if __name__ == "__main__":
 
     print ("starting up")
     for data_stream in ["", "physics","cosmics","calibration"]:
-        if (args.dataset or args.listfile) and data_stream != "":
+        if (args.input_dataset or args.listfile) and data_stream != "":
             continue # dataset doesn't look at stream so only do once
-        elif not (args.dataset or args.listfile) and data_stream == "":
+        elif not (args.input_dataset or args.listfile) and data_stream == "":
             continue # this is when you need to do the loop over data_stream
 
         for chunk_idx in range(n_chunks):
             first_file_idx = skip_files + chunk_idx * chunk_size  # Starting index for this chunk
             # For the last chunk, ensure we don't exceed the total number of files
             last_file_idx = min(first_file_idx + chunk_size, skip_files + nfiles_total)
+
+            if not args.listfile: theflist = []
     
             if args.workflow is not None:
-                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.input_data_tier,data_stream,args.version, first_file_idx, last_file_idx - first_file_idx )
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and dune.workflow['workflow_id']=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.workflow,args.input_data_tier,data_stream,args.input_version, first_file_idx, last_file_idx - first_file_idx )
                 sworkflow = str(args.workflow).zfill(10)
                 jobtag = "workflow%s"%sworkflow
                 
             
             elif args.run is not None:
-                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.input_data_tier,data_stream,args.version,first_file_idx, last_file_idx - first_file_idx)
+                query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s and core.data_stream=%s and core.application.version=%s ordered skip %d limit %d"%(args.detector,args.file_type,args.run,args.input_data_tier,data_stream,args.input_version,first_file_idx, last_file_idx - first_file_idx)
                 srun = str(args.run).zfill(10)
                 jobtag = "run%s"%srun
                 
-            elif args.dataset is not None:
-                query = "files from %s ordered skip %d limit %d"%(args.dataset,first_file_idx, last_file_idx - first_file_idx)
-                jobtag = "set-%s"%(args.dataset.replace(":",'_x_')).replace(".fcl","")
+            elif args.input_dataset is not None:
+                query = "files from %s ordered skip %d limit %d"%(args.input_dataset,first_file_idx, last_file_idx - first_file_idx)
+                jobtag = "set-%s"%(args.input_dataset.replace(":",'_x_')).replace(".fcl","")
 
             elif args.listfile is not None:
                 print('doing listfile',first_file_idx,last_file_idx)
@@ -512,7 +514,7 @@ if __name__ == "__main__":
                     # store xroot for actual file
                     alist.append(pnfs2xrootd(file))
             else:
-                print ("ERROR: need to supply --run, --workflow or --dataset")
+                print ("ERROR: need to supply --run, --workflow or --input_dataset")
                 sys.exit(1)
 
             if not args.listfile:  
@@ -642,10 +644,11 @@ if __name__ == "__main__":
                 else:
                     f1 = open(goodfiles[0],'r')
                     firstmeta = json.load(f1)
-                    if "namespace" in firstmeta:
-                        namespace = firstmeta["namespace"]
-                    else:
-                        namespace = "unknown"
+                    # output namespace must now be defined
+                    # if "namespace" in firstmeta:
+                    #     output_namespace = firstmeta["namespace"]
+                    # else:
+                    #     output_namespace = "unknown"
                     f1.close()
                 #firstmeta["core.data_tier"] = args.input_data_tier
                 # firstname = firstmeta["name"]
@@ -654,7 +657,7 @@ if __name__ == "__main__":
                 # keep = []
                 
                 # if args.listfile: 
-                #     namespace=firstmeta["namespace"]
+                #     output_namespace=firstmeta["namespace"]
                 # for i in range(0,len(pieces)):
                 #     x = pieces[i]
                 #     #print (x[0:3],x[0:3])
@@ -711,19 +714,19 @@ if __name__ == "__main__":
             if debug: print (flist)
             if True:
                 merge_type = "metacat"
-                newnamespace=None
+                #output_namespace=None
                 jsonlist = None
                 if args.listfile: 
                     merge_type="local"
-                    newnamespace = namespace
+                    #output_namespace = output_namespace
                     
-                retcode = run_merge(newfilename=newfile, newnamespace=newnamespace, datasetName=args.datasetName, \
+                retcode = run_merge(newfilename=newfile, output_namespace=args.output_namespace, datasetName=args.output_datasetName, \
                                 output_data_tier=args.output_data_tier, output_file_format=args.output_file_format, \
                                     application=args.application, configf=args.lar_config, version=args.merge_version, \
                                         flist=goodfiles, 
                                 merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage, \
-                                    skip=first_file_idx,nfiles=last_file_idx,direct_parentage=args.direct_parentage, \
-                                        campaign=args.campaign,istar=args.maketar)
+                                    skip=first_file_idx,nfiles=last_file_idx, direct_parentage=args.direct_parentage, \
+                                        inherit_config=args.inherit_config, campaign=args.campaign,istar=args.maketar)
                 
                 
                 jsonfile = newfile+".json"
@@ -765,6 +768,7 @@ if __name__ == "__main__":
                     
                     cmd = "ifdh cp %s %s %s"%(newfile,jsonfile,destination)
                     print (cp_args)
+                    
                     try:
                         completed_process = run(cp_args, capture_output=True,text=True)   
                         print (completed_process)  

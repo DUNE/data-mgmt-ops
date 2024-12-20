@@ -5,9 +5,9 @@ H. Schellman, August 2024
 ## main script submitMerge.py
 
 ~~~
-usage: submitMerge.py [-h] [--detector DETECTOR] [--dataset DATASET] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP] [--run RUN]
+usage: submitMerge.py [-h] [--detector DETECTOR] [--input_dataset DATASET] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP] [--run RUN]
                       [--destination DESTINATION] [--input_data_tier DATA_TIER] [--file_type FILE_TYPE] [--application APPLICATION]
-                      [--version VERSION] [--merge_version MERGE_VERSION] [--debug] [--maketar] [--usetar USETAR] [--uselar]
+                      [--input_version VERSION] [--merge_version MERGE_VERSION] [--debug] [--maketar] [--usetar USETAR] [--uselar]
                       [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE] [--project_tag PROJECT_TAG]
 
 Merge root files
@@ -15,7 +15,7 @@ Merge root files
 options:
   -h, --help            show this help message and exit
   --detector DETECTOR   detector id [hd-protodune]
-  --dataset DATASET     metacat dataset
+  --input_dataset DATASET     metacat dataset
   --chunk CHUNK         number of files/merge this step, should be < 100
   --nfiles NFILES       number of files to merge total
   --skip SKIP           number of files to skip before doing nfiles
@@ -28,7 +28,7 @@ options:
                         input detector or mc, default=detector
   --application APPLICATION
                         merge application name [inherits]
-  --version VERSION     software version of files to merge (required)
+  --input_version VERSION     software version of files to merge (required)
   --merge_version MERGE_VERSION
                         software version for merged file [inherits]
   --debug               make very verbose
@@ -45,13 +45,13 @@ options:
 
 the `--run` and `--workflow` options create a query from DETECTOR, FILE_TYPE, DATA_TIER, VERSION
 
-the --dataset option uses an existing metacat dataset and does not build its own query. 
+the --input_dataset option uses an existing metacat dataset and does not build its own query. 
 
 example of submissions split up within a run
 
 ~~~
-python submitMerge.py --run=28023 --chunk=50 --input_data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=0 --project_tag=hd-keepup-tuples# first 2000
-python submitMerge.py --run=28023 --chunk=50 --input_data_tier="root-tuple-virtual" --detector="hd-protodune" --version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=2000 --project_tag=pdhd-keepup-tuples # next 2000
+python submitMerge.py --run=28023 --chunk=50 --input_data_tier="root-tuple-virtual" --detector="hd-protodune" --input_version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=0 --project_tag=hd-keepup-tuples# first 2000
+python submitMerge.py --run=28023 --chunk=50 --input_data_tier="root-tuple-virtual" --detector="hd-protodune" --input_version=v09_91_02d01 --file_type=detector --maketar --nfiles=2000 --skip=2000 --project_tag=pdhd-keepup-tuples # next 2000
 ....
 ~~~
 
@@ -63,7 +63,7 @@ example of using lar to create Cafs.
 here $MERGE_VERSION is the dunesw version you are running to do the caf creation
 
 ~~~
-python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES  --maketar --skip=$SKIP --destination=$DESTINATION --project_tag=fdvd-make-caf--debug
+python submitMerge.py --input_dataset=$INPUT_DATASET --file_type=$FILE_TYPE --detector=$DETECTOR --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES  --maketar --skip=$SKIP --destination=$DESTINATION --project_tag=fdvd-make-caf--debug
 ~~~
 
 currently the lar version only works with datasets. 
@@ -96,8 +96,8 @@ arguments are similar to `submitMerge.py`
 
 ~~~
 usage: mergeRoot.py [-h] [--listfile LISTFILE] [--workflow WORKFLOW] [--detector DETECTOR] [--chunk CHUNK] [--nfiles NFILES]
-                    [--skip SKIP] [--run RUN] [--dataset DATASET] [--destination DESTINATION] [--input_data_tier DATA_TIER]
-                    [--file_type FILE_TYPE] [--test] [--application APPLICATION] [--version VERSION] [--merge_version MERGE_VERSION]
+                    [--skip SKIP] [--run RUN] [--input_dataset DATASET] [--destination DESTINATION] [--input_data_tier DATA_TIER]
+                    [--file_type FILE_TYPE] [--test] [--application APPLICATION] [--input_version VERSION] [--merge_version MERGE_VERSION]
                     [--debug] [--uselar] [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE] 
 
 Merge Data - need to choose run, workflow, dataset or listfile
@@ -111,7 +111,7 @@ options:
   --nfiles NFILES       number of files to merge total
   --skip SKIP           number of files to skip before doing nfiles
   --run RUN             run number
-  --dataset DATASET     dataset
+  --input_dataset DATASET     dataset
   --destination DESTINATION
                         destination directory
   --input_data_tier DATA_TIER
@@ -121,7 +121,7 @@ options:
   --test                write to test area
   --application APPLICATION
                         merge application name [inherits]
-  --version VERSION     software version for input query
+  --input_version VERSION     software version for input query
   --merge_version MERGE_VERSION
                         software version for merge [inherits]
   --debug               make very verbose

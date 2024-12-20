@@ -5,6 +5,7 @@ export MERGE_VERSION=v09_91_02d01
 export THEDATE=`date +%Y%m%dT%H%M%S`
 export OUTPUT_DATA_TIER="root-tuple"
 export OUTPUT_FILE_FORMAT="root"
+export OUTPUT_NAMESPACE="usertests"
 
 
 export SKIP=0  # start at the begining 
@@ -13,7 +14,8 @@ export NFILES=50 # place a small limit for testing, you can raise this a lot. if
 export DETECTOR=fardet-vd
 export FILE_TYPE=mc
 export DESTINATION=${DSCRATCH}/merging/${DETECTOR}_${SKIP}_${NFILES}_${FCL}_${THEDATE}
-python submitMerge.py --dataset=$DATASET --file_type=$FILE_TYPE --detector=$DETECTOR \
+python submitMerge.py --input_dataset=$INPUT_DATASET --file_type=$FILE_TYPE --detector=$DETECTOR \
  --merge_version=$MERGE_VERSION --uselar --lar_config=$FCL --chunk=$CHUNK --nfiles=$NFILES \
-  --maketar --skip=$SKIP --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --destination=$DESTINATION --debug --merge_stage=makecaf \
+  --maketar --skip=$SKIP --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT \
+  --output_namespace=$OUTPUT_NAMESPACE --destination=$DESTINATION --debug --merge_stage=makecaf \
   --project_tag="fdvd-makecaf-nuenergy" --campaign="special-caf-Oct-24"

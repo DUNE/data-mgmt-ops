@@ -1,4 +1,4 @@
-source  examples/MergeLar.sh >& examples/MergeLar.sh.log &
+source  examples/MergeLar_hd.sh >& examples/MergeLar_hd.sh.log &
 source  examples/MergeTar.sh >& examples/MergeTar.sh.log &
 #source  examples/TarSmall.sh >& examples/TarSmall.sh.log &
 source  examples/interactiveDirectParentage.sh >& examples/interactiveDirectParentage.sh.log &

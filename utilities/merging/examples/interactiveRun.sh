@@ -13,6 +13,7 @@ export SKIP=0
 export CHUNK=5
 export NFILES=12
 export STAGE=testing
+export OUTPUT_NAMESPACE="usertests"
 
-python mergeRoot.py --run $RUN --version $VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES\
- --file_type=$FILETYPE --detector=$DETECTOR --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --merge_stage=$STAGE --destination=local
+python mergeRoot.py --run $RUN --input_version $VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES\
+ --file_type=$FILETYPE --detector=$DETECTOR --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --output_namespace=$OUTPUT_NAMESPACE --merge_stage=$STAGE --destination=local

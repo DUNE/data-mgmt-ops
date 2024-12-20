@@ -46,11 +46,11 @@ echo '#cmd: 	cd $_CONDOR_SCRATCH_DIR'
 cd $_CONDOR_SCRATCH_DIR
 
 
-echo " python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN  >& local.log"
+echo " python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --input_data_tier=$INPUT_DATA_TIER  --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT  --output_namespace=$OUTPUT_NAMESPACE --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --input_version=$VERSION $DIRECT_PARENTAGE $INHERIT_CONFIG --output_datasetName=${OUTPUT_DATASETNAME} --campaign=$CAMPAIGN  >& local.log"
 
 
-time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --input_data_tier=$INPUT_DATA_TIER 
- --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --version=$VERSION $DIRECT_PARENTAGE --datasetName=${DATASETNAME} --campaign=$CAMPAIGN >& local.log
+time python $INPUT_TAR_DIR_LOCAL/mergeRoot.py --detector=$DETECTOR --nfiles=$NFILES --chunk=$CHUNK --file_type=$FILETYPE --run=$RUN --skip=$SKIP --input_data_tier=$INPUT_DATA_TIER \
+ --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT  --output_namespace=$OUTPUT_NAMESPACE  --merge_version=$MERGE_VERSION --destination=local --merge_stage=$STAGE --input_version=$VERSION $DIRECT_PARENTAGE $INHERIT_CONFIG --output_datasetName=${OUTPUT_DATASETNAME} --campaign=$CAMPAIGN >& local.log
 
 export retcode=$?
 echo "run returned " retcode
