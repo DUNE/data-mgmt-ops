@@ -397,7 +397,7 @@ if __name__ == "__main__":
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--direct_parentage',default=False,action='store_true',help="parents are the files you are merging, not their parents")
     parser.add_argument("--output_datasetName", type=str, help="optional name of output dataset this will go into", default=None)
-    parser.add_argument("--maketar",help="make a gzipped tar file",default=False,action='store_true')
+    parser.add_argument("--mergetar",help="make a gzipped tar file",default=False,action='store_true')
     parser.add_argument("--copylocal",help="copy files to local cache from remote",default=False,action='store_true')
     parser.add_argument("--campaign",type=str,default=None,help="campaign for the merge, default is campaign of the parents")
     parser.add_argument('--inherit_config',default=False,action='store_true',help="inherit config file - use for hadd stype merges")
@@ -405,8 +405,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.maketar:  
-        print ("setting copylocal to true for maketar")
+    if not args.uselar:
+        print ("if not using lar, config file needs to come from parent files, set --inherit_config")
+        args.inherit_config=True
+
+    if args.mergetar:  
+        print ("setting copylocal to true for mergetar")
         args.copylocal=True
 
     debug = args.debug
@@ -425,17 +429,17 @@ if __name__ == "__main__":
         print ("If using Lar you should provide --lar_config and --merge_version=lar_version")
         sys.exit(1)
 
-    if args.uselar and args.maketar:
+    if args.uselar and args.mergetar:
         print ("you need to choose your merging method - cannot do both lar and tar")
         sys.exit(1)
 
-    # if "-virtual" in args.input_data_tier and not args.maketar:
+    # if "-virtual" in args.input_data_tier and not args.mergetar:
     #     args.output_data_tier = args.input_data_tier.replace("-virtual","")
 
     # if args.uselar and not args.output_data_tier:
     #     args.output_data_tier = args.input_data_tier
 
-    # if args.maketar and not args.output_data_tier:
+    # if args.mergetar and not args.output_data_tier:
     #     args.output_data_tier = args.input_data_tier + "-tar"
 
     
@@ -685,7 +689,7 @@ if __name__ == "__main__":
                     filecount = len(goodfiles) 
                 newname = makeName(firstmeta,jobtag,args.output_data_tier,first_file_idx,filecount,args.merge_stage,args.campaign)
                 print ("newname",newname)
-                if args.maketar:
+                if args.mergetar:
                     newname=newname+".tgz"
                 print ("newname",newname)    
                 
@@ -695,7 +699,7 @@ if __name__ == "__main__":
             outputfile = newname
             if args.uselar:
                 newfile,retcode = mergeLar(outputfile,local,args.lar_config) #lar
-            elif args.maketar:
+            elif args.mergetar:
                 newfile,retcode = maketargz(list=local,tarname=outputfile,debug=debug)
                 print ("use tar to merge")
             else:  
@@ -726,7 +730,7 @@ if __name__ == "__main__":
                                         flist=goodfiles, 
                                 merge_type=merge_type, do_sort=0, user='', debug=debug, stage=args.merge_stage, \
                                     skip=first_file_idx,nfiles=last_file_idx, direct_parentage=args.direct_parentage, \
-                                        inherit_config=args.inherit_config, campaign=args.campaign,istar=args.maketar)
+                                        inherit_config=args.inherit_config, campaign=args.campaign,istar=args.mergetar)
                 
                 
                 jsonfile = newfile+".json"

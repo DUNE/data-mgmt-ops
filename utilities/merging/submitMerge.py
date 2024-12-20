@@ -3,7 +3,7 @@ H. Schellman, Sept 2024
 """
 
 import os,sys
-import argparse
+import argpars
 import json
 
 from metacat.webapi import MetaCatClient
@@ -41,8 +41,8 @@ if __name__ == "__main__":
     parser.add_argument('--input_version',help='software version of files to merge (required)',default=None,type=str)
     parser.add_argument('--merge_version',help='software version for merged file [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
-    parser.add_argument('--maketar',help="make a tarball",default=False,action='store_true')
-    parser.add_argument('--usetar',help="full path for existing tarball",default=None,type=str)
+    parser.add_argument('--maketarball',help="make a tarball of source",default=False,action='store_true')
+    parser.add_argument('--usetarball',help="full path for existing tarball",default=None,type=str)
     parser.add_argument("--uselar",help='use lar instead of hadd or tar',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
@@ -87,12 +87,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
 
-    if args.maketar is False and args.usetar is None:
-        print ("you either have to set --maketar or provide --usetar value")
+    if args.maketarball is False and args.usetarball is None:
+        print ("you either have to set --maketarball or provide --usetarball value")
         sys.exit(1)
 
-    if args.usetar and not os.path.exists(args.usetar):
-        print("tarfile does not exist",args.usetar)
+    if args.usetarball and not os.path.exists(args.usetarball):
+        print("tarfile does not exist",args.usetarball)
         sys.exit(1)
 
     if args.uselar and args.lar_config is None:
@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     print ("number of files to process is ",numfiles)
     location = None
-    if args.maketar:
+    if args.maketarball:
         tmpdir = "/exp/dune/data/users/%s/tars"%(os.getenv("USER"))
         tardir = "/pnfs/dune/scratch/users/%s/tars"%(os.getenv("USER"))
 
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         location = MakeTarball(tmpdir=tmpdir,tardir=tardir,tag = tag,basedirname=basedirname,debug=True)
         #print ("tar location is ",location)
     else:
-        location = args.usetar
+        location = args.usetarball
     print ("tarfile is ",location)
     logdir = os.path.join(os.getenv("PWD"),"logs")
     if not os.path.exists(logdir):

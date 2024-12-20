@@ -18,4 +18,4 @@ export STAGE=testing
 
 python submitMerge.py --run $RUN --input_version=$INPUT_VERSION --skip=$SKIP --chunk=$CHUNK --nfiles=$NFILES\
  --file_type=$FILETYPE --detector=$DETECTOR --input_data_tier=$INPUT_DATA_TIER --output_data_tier=$OUTPUT_DATA_TIER  \
- --output_file_format=$OUTPUT_FILE_FORMAT --output_namespace=$OUTPUT_NAMESPACE --merge_stage=$STAGE --maketar
+ --output_file_format=$OUTPUT_FILE_FORMAT --output_namespace=$OUTPUT_NAMESPACE --merge_stage=$STAGE --inherit_config --maketar

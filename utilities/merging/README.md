@@ -7,7 +7,7 @@ H. Schellman, August 2024
 ~~~
 usage: submitMerge.py [-h] [--detector DETECTOR] [--input_dataset DATASET] [--chunk CHUNK] [--nfiles NFILES] [--skip SKIP] [--run RUN]
                       [--destination DESTINATION] [--input_data_tier DATA_TIER] [--file_type FILE_TYPE] [--application APPLICATION]
-                      [--input_version VERSION] [--merge_version MERGE_VERSION] [--debug] [--maketar] [--usetar USETAR] [--uselar]
+                      [--input_version VERSION] [--merge_version MERGE_VERSION] [--debug] [--maketar] [--usetarball USETAR] [--uselar]
                       [--lar_config LAR_CONFIG] [--merge_stage MERGE_STAGE] [--project_tag PROJECT_TAG]
 
 Merge root files
@@ -33,7 +33,7 @@ options:
                         software version for merged file [inherits]
   --debug               make very verbose
   --maketar             make a tarball
-  --usetar USETAR       full path for existing tarball
+  --usetarball USETAR       full path for existing tarball
   --uselar              use lar instead of hadd
   --lar_config LAR_CONFIG
                         fcl file to use with lar when making tuples, required with --uselar
