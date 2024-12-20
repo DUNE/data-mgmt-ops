@@ -30,4 +30,4 @@ python mergeRoot.py --listfile=$THELIST --output_data_tier=$OUTPUT_DATA_TIER \
   --output_file_format=$OUTPUT_FILE_FORMAT  \
   --output_namespace=$OUTPUT_NAMESPACE --input_version=$VERSION \
   --uselar --lar_config=fcl/$FCL  --chunk=$CHUNK --nfiles=$NFILES \
-  --skip=$SKIP --destination=$DESTINATION --debug --merge_stage=mergeLar --inherit_config --output_datasetName=$OUT_DATASET
+  --skip=$SKIP --destination=$DESTINATION --merge_stage=mergeLar --inherit_config --output_datasetName=$OUT_DATASET

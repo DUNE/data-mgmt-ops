@@ -21,4 +21,4 @@ python mergeRoot.py --listfile=$LISTFILE --file_type=$FILE_TYPE --detector=$DETE
   --mergetar  --chunk=$CHUNK --nfiles=$NFILES  \
   --skip=$SKIP --output_data_tier=$OUTPUT_DATA_TIER  --output_file_format=$OUTPUT_FILE_FORMAT \
   --output_namespace=$OUTPUT_NAMESPACE --destination=$DESTINATION \
-  --debug --merge_stage=final --direct_parentage --inherit_config #--copylocal  disable for now
+  --merge_stage=final --direct_parentage --inherit_config #--copylocal  disable for now
