@@ -64,7 +64,7 @@ class mergeMeta():
         self.externals = ["name","core.start_time","core.end_time","size",'core.data_tier']
 
         # these are things you cannot mix in a merge
-        self.consistent = ["core.file_type","namespace","core.file_format","core.data_tier","core.data_stream", 'core.application.name','dune.campaign','DUNE.requestid','dune.requestid']
+        self.consistent = ["core.file_type","core.run_type","namespace","core.file_format","core.data_tier","core.data_stream", 'core.application.name','dune.campaign','DUNE.requestid','dune.requestid']
 
         # these are things you can ignore or merge
         self.ignore = ["checksum","created_timestamp","Offline.options","core.first_event_number","parents","Offline.machine","core.last_event_number","core.runs","core.runs_subruns"]
