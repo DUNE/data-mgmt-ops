@@ -26,27 +26,30 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Merge root files')
     
     parser.add_argument("--detector",type=str, help="detector id [hd-protodune]",default=None)
-    parser.add_argument("--dataset",type=str, help= "metacat dataset",default=None)
+    parser.add_argument("--input_dataset",type=str, help= "metacat dataset as input",default=None)
     parser.add_argument("--chunk",type=int, help="number of files/merge this step, should be < 100",default=50)
     parser.add_argument("--nfiles",type=int, help="number of files to merge total",default=100000)
     parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
     parser.add_argument("--run",type=int, help="run number", default=None)
     parser.add_argument("--destination",type=str,help="destination directory", default=None)
-    parser.add_argument("--data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+    parser.add_argument("--input_data_tier",type=str,default="root-tuple-virtual",help="input data tier [root-tuple-virtual]")
+    parser.add_argument("--output_data_tier",type=str,default=None,help="output data tier ")
+    parser.add_argument("--output_file_format",type=str,default=None,help="output file_format [None]")
+    parser.add_argument("--output_namespace",type=str,default=None,help="output namespace [None]")
     parser.add_argument("--file_type",type=str,default="detector",help="input detector or mc, default=detector")
-
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
-    parser.add_argument('--version',help='software version of files to merge (required)',default=None,type=str)
+    parser.add_argument('--input_version',help='software version of files to merge (required)',default=None,type=str)
     parser.add_argument('--merge_version',help='software version for merged file [inherits]',default=None,type=str)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
-    parser.add_argument('--maketar',help="make a tarball",default=False,action='store_true')
-    parser.add_argument('--usetar',help="full path for existing tarball",default=None,type=str)
-    parser.add_argument("--uselar",help='use lar instead of hadd',default=False,action='store_true')
+    parser.add_argument('--maketarball',help="make a tarball of source",default=False,action='store_true')
+    parser.add_argument('--usetarball',help="full path for existing tarball",default=None,type=str)
+    parser.add_argument("--uselar",help='use lar instead of hadd or tar',default=False,action='store_true')
     parser.add_argument('--lar_config',type=str,default=None,help="fcl file to use with lar when making tuples, required with --uselar")
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
     parser.add_argument('--project_tag',type=str,default=None,help="tag to describe the project you are doing")
-    parser.add_argument('--direct_parentage',default=False,action='store_true')
-    parser.add_argument("--datasetName", type=str, help="optional name of output dataset this will go into", default=None)
+    parser.add_argument('--direct_parentage',default=False,action='store_true',help="parents are the files you are merging, not their parents")
+    parser.add_argument('--inherit_config',default=False,action='store_true',help="inherit config file - use for hadd stype merges")
+    parser.add_argument("--output_datasetName", type=str, help="optional name of output dataset this will go into", default=None)
     parser.add_argument("--campaign", type=str, help="campaign for the merge, default is campaign of the parents", default=None)
     
     
@@ -54,31 +57,42 @@ if __name__ == "__main__":
 
     debug = args.debug
 
+    if args.output_data_tier is None:
+        print ("must specify an output data_tier")
+
+    if args.output_file_format is None:
+        print ("must specify an output file format")
+    
+    if args.output_namespace is None:
+        print ("must specify an output namespace")
+
+
+
     if not args.detector:
         print ("You must specify a detector: hd-protodune, fardet-vd ... or we won't know what to do with the output")
         sys.exit(1)
 
-    if args.datasetName is not None and ":" not in args.datasetName:
-        print ("datasetName must have the format <namespace>:<filename>",args.datasetName)
+    if args.output_datasetName is not None and ":" not in args.output_datasetName:
+        print ("output_datasetName must have the format <namespace>:<filename>",args.output_datasetName)
         sys.exit(1)
 
-    if (args.run is None  or  args.version is None) and args.dataset is None:
-        print ("You have to set a run number --run and a --version, or a --dataset",args.run, args.version, args.dataset)
+    if (args.run is None  or  args.input_version is None) and args.input_dataset is None:
+        print ("You have to set a run number --run and a --input_version, or a --input_dataset",args.run, args.input_version, args.input_dataset)
 
         
         sys.exit(1)
 
-    if args.uselar and not args.dataset:
-        print ("right now you can only use lar with the dataset option")
+    if args.uselar and not args.input_dataset:
+        print ("right now you can only use lar with the input_dataset option")
         sys.exit(1)
 
 
-    if args.maketar is False and args.usetar is None:
-        print ("you either have to set --maketar or provide --usetar value")
+    if args.maketarball is False and args.usetarball is None:
+        print ("you either have to set --maketarball or provide --usetarball value")
         sys.exit(1)
 
-    if args.usetar and not os.path.exists(args.usetar):
-        print("tarfile does not exist",args.usetar)
+    if args.usetarball and not os.path.exists(args.usetarball):
+        print("tarfile does not exist",args.usetarball)
         sys.exit(1)
 
     if args.uselar and args.lar_config is None:
@@ -86,11 +100,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.run:
-        query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.data_tier,args.version)
+        query = "files where dune.output_status=confirmed and core.run_type=%s and core.file_type=%s and core.runs[any]=%d and core.data_tier=%s  and core.application.version=%s ordered "%(args.detector,args.file_type,args.run,args.input_data_tier,args.input_version)
 
     
-    elif args.dataset:
-        query = "files from %s ordered skip %d limit %d "%(args.dataset,args.skip,args.nfiles)
+    elif args.input_dataset:
+        query = "files from %s ordered skip %d limit %d "%(args.input_dataset,args.skip,args.nfiles)
 
     print ("query",query)
 
@@ -103,7 +117,7 @@ if __name__ == "__main__":
 
     
 
-    if args.uselar and args.dataset is None:
+    if args.uselar and args.input_dataset is None:
         print("currently can only run lar with datasets")
         sys.exit(1)
 
@@ -172,8 +186,8 @@ if __name__ == "__main__":
         missed.close()
         sys.exit(1)
 
-    if args.merge_version is None and not args.dataset:
-        args.merge_version = args.version
+    if args.merge_version is None and not args.input_dataset:
+        args.merge_version = args.input_version
 
     if not os.path.exists(destination):
         print ("make a destination",destination)
@@ -182,7 +196,7 @@ if __name__ == "__main__":
 
     print ("number of files to process is ",numfiles)
     location = None
-    if args.maketar:
+    if args.maketarball:
         tmpdir = "/exp/dune/data/users/%s/tars"%(os.getenv("USER"))
         tardir = "/pnfs/dune/scratch/users/%s/tars"%(os.getenv("USER"))
 
@@ -195,7 +209,7 @@ if __name__ == "__main__":
         location = MakeTarball(tmpdir=tmpdir,tardir=tardir,tag = tag,basedirname=basedirname,debug=True)
         #print ("tar location is ",location)
     else:
-        location = args.usetar
+        location = args.usetarball
     print ("tarfile is ",location)
     logdir = os.path.join(os.getenv("PWD"),"logs")
     if not os.path.exists(logdir):
@@ -226,7 +240,7 @@ if __name__ == "__main__":
         subname = "%s/%d_%d_%s.sh"%(logdir,first_file_idx,last_file_idx,thetag)
         if args.run:
             g = open("remote.sh",'r')
-        if args.dataset:
+        if args.input_dataset:
             g = open("remote_dataset.sh",'r')
         if args.uselar:
             g = open("remote_lar.sh",'r')
@@ -240,30 +254,56 @@ if __name__ == "__main__":
             newline = newline.replace("$SKIP","%d"%first_file_idx)
             if args.merge_stage: 
                 newline = newline.replace("$STAGE",args.merge_stage)
-            if args.datasetName: 
-                newline = newline.replace("${DATASETNAME}",args.datasetName)
+            if args.output_datasetName: 
+                newline = newline.replace("${OUTPUT_DATASETNAME}",args.output_datasetName)
             else:
-                newline = newline.replace("--datasetName=${DATASETNAME}","")
+                newline = newline.replace("--output_datasetName=${OUTPUT_DATASETNAME}","")
             if args.run:
                 newline = newline.replace("$RUN","%d"%args.run)
-
             else:
                 newline = newline.replace("$RUN","%d"%0)
-            if args.dataset:
-                newline = newline.replace("$DATASET",args.dataset)
+
+            if args.input_dataset:
+                newline = newline.replace("$INPUT_DATASET",args.input_dataset)
             else:
-                newline = newline.replace("$DATASET","0")
+                newline = newline.replace("$INPUT_DATASET","0")
+
             if args.direct_parentage:
-                newline = newline.replace("$DIRECTPARENTAGE","--direct_parentage")
+                newline = newline.replace("$DIRECT_PARENTAGE","--direct_parentage")
             else:
-                newline = newline.replace("$DIRECTPARENTAGE","")
+                newline = newline.replace("$DIRECT_PARENTAGE","")
+            
+            if args.inherit_config:
+                newline = newline.replace("$INHERIT_CONFIG","--inherit_config")
+            else:
+                newline = newline.replace("$INHERIT_CONFIG","")
             # tmp variable for number of files as we are ajusting the number of files per chunk
             _nfiles = last_file_idx-first_file_idx
             newline = newline.replace("$NFILES","%d"%_nfiles)
             newline = newline.replace("$DETECTOR",args.detector)
-            if args.data_tier: newline = newline.replace("$DATA_TIER",args.data_tier)
+            if args.input_data_tier: 
+                newline = newline.replace("$INPUT_DATA_TIER",args.input_data_tier)
+            
+            if args.output_data_tier: 
+                newline = newline.replace("$OUTPUT_DATA_TIER",args.output_data_tier)
+            else:
+                print ("--output_data_tier is now required")
+                sys.exit(1)
+            if args.output_file_format: 
+                newline = newline.replace("$OUTPUT_FILE_FORMAT",args.output_file_format)
+            else:
+                print ("--output_file_format is now required")
+                sys.exit(1)
+            
+            if args.output_namespace: 
+                newline = newline.replace("$OUTPUT_NAMESPACE",args.output_namespace)
+            else:
+                print ("--output_namespace is now required")
+                sys.exit(1)
+
+
             newline = newline.replace("$FILETYPE",args.file_type)
-            if args.version: newline = newline.replace("$VERSION",args.version)
+            if args.input_version: newline = newline.replace("$VERSION",args.input_version)
             if args.merge_version: newline = newline.replace("$MERGE_VERSION",args.merge_version)
             newline = newline.replace("$DESTINATION",destination)
             newline = newline.replace("$TIMESTAMP",thetime)
@@ -284,12 +324,12 @@ if __name__ == "__main__":
         #environs = "-e CHUNK=%d "%args.chunk
         #environs += "-e SKIP=%d "%bigskip
         #environs += "-e STAGE=%s "%args.merge_stage
-        if args.datasetName:
-            environs += "-e DATASETNAME=%s "%args.datasetName
+        if args.output_datasetName:
+            environs += "-e DATASETNAME=%s "%args.output_datasetName
         #if args.run: 
         #    environs += "-e RUN=%d "%args.run
-        # if args.dataset: 
-        #     environs += "-e DATASET=%s "%args.dataset
+        # if args.input_dataset: 
+        #     environs += "-e DATASET=%s "%args.input_dataset
         #     environs += "-e RUN=0 "
         # if args.direct_parentage:
         #     environs += "-e DIRECT_PARENTAGE='--direct_parentage' "
@@ -298,10 +338,10 @@ if __name__ == "__main__":
         #environs += "-e NFILES=%d "%nfiles
         #environs += "-e DETECTOR=%s "%args.detector
         #environs += "-e FILETYPE=%s "%args.file_type
-        #environs += "-e DATA_TIER=%s "%args.data_tier
+        #environs += "-e DATA_TIER=%s "%args.input_data_tier
 
         # these are needed to set up lar
-        #if args.run and args.version: environs += "-e VERSION=%s "%args.version 
+        #if args.run and args.input_version: environs += "-e VERSION=%s "%args.input_version 
         if args.merge_version: environs += "-e MERGE_VERSION=%s "%args.merge_version
         # environs += "-e DESTINATION=%s "%destination
         # environs += "-e TIMESTAMP=%s "%thetime
@@ -332,7 +372,7 @@ if __name__ == "__main__":
                 
         # if args.run:
         #     rcmd =  "cp remote.sh "+subname
-        # if args.dataset:
+        # if args.input_dataset:
         #     rcmd =  "cp remote_dataset.sh "+subname
         # if args.uselar:
         #     rcmd =  "cp remote_lar.sh "+subname

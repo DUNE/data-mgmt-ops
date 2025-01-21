@@ -26,7 +26,7 @@ replica_client=ReplicaClient()
 
 parser = argparse.ArgumentParser(description='check contents of a dataset')
 
-parser.add_argument("--dataset",type=str, help="dataset", default=None)
+parser.add_argument("--input_dataset",type=str, help="dataset", default=None)
 parser.add_argument("--nfiles",type=int, help="number of files to check total",default=1000)
 parser.add_argument("--skip",type=int, help="number of files to skip before doing nfiles",default=0)
 parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
@@ -36,7 +36,7 @@ args = parser.parse_args()
 
 debug = args.debug
 
-query = "files from %s ordered skip %d limit %d"%(args.dataset,args.skip,args.nfiles)
+query = "files from %s ordered skip %d limit %d"%(args.input_dataset,args.skip,args.nfiles)
 
 alist = list(mc_client.query(query=query))
 print ("this many files",len(alist))

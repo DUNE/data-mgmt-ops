@@ -1,6 +1,8 @@
-# test suite for batch
-source examples/TarSmall.sh >& testTar.log
-source examples/interactiveRun.sh >& testInteractive.log
-source examples/makeCAF.sh >& testCAF.log
+# test suite 
+# interactive
+#source examples/MergeTar.sh >& MergeTar.log
+#source examples/interactiveRun.sh >& testInteractive.log
+# batch
+source examples/submitCAFmaker.sh >& testCAF.log
 source examples/submitRun.sh >& testRun.log
-#source examples/MergeLar.sh >& testLar.log
+#source examples/MergeLar.sh >& testLar.logt

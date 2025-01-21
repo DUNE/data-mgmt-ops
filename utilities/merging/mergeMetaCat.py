@@ -20,6 +20,7 @@ mc_client = MetaCatClient(os.environ["METACAT_SERVER_URL"])
 
 #-------utilities ------#
 
+
 def dumpList(the_list):
     'dump something item by item'
     for item in the_list:
@@ -63,7 +64,7 @@ class mergeMeta():
         self.externals = ["name","core.start_time","core.end_time","size",'core.data_tier']
 
         # these are things you cannot mix in a merge
-        self.consistent = ["core.file_type","namespace","core.file_format","core.data_tier",'core.application.name','dune.campaign']
+        self.consistent = ["core.file_type","core.run_type","namespace","core.file_format","core.data_tier","core.data_stream", 'core.application.name','dune.campaign','DUNE.requestid','dune.requestid']
 
         # these are things you can ignore or merge
         self.ignore = ["checksum","created_timestamp","Offline.options","core.first_event_number","parents","Offline.machine","core.last_event_number","core.runs","core.runs_subruns"]
@@ -97,11 +98,10 @@ class mergeMeta():
                     print(" looking at: ", f)
           
                 with open(f, 'r') as metafile:
-                    thismeta = json.load(metafile)
+                    themeta = json.load(metafile)
             else:
                 themeta = mc_client.get_file(did=f,with_metadata=True)
-            if self.debug:
-                dumpList(themeta)
+
 
 # consistency for top level items like namespace
 
@@ -134,9 +134,10 @@ class mergeMeta():
         return True
 
   
-    def concatenate(self, the_list, externals, user='', direct_parentage=False):
+    def concatenate(self, the_list, externals, user='', direct_parentage=False, inherit_config=False):
         ''' actually do the merge of metadata'''
     
+        #print ("CONFIG concat",inherit_config)
       # here are things that are unique to the output and must be supplied externally
         for tag in self.externals:
             if not tag in externals:
@@ -165,6 +166,7 @@ class mergeMeta():
         # loop over files in the list
         a = 0
         special_md = {}
+        theconfig = None
         for f in the_list:
             if self.debug: print ("mergeMetaCat: look at ",f)
             if not a%100: print('%i/%i'%(a, len(the_list)), end='\r')
@@ -198,17 +200,28 @@ class mergeMeta():
                 sys.exit(1)
             
             thismeta = mainmeta["metadata"]
-            thisparents = mainmeta["parents"]
+
+            
             if "name" not in mainmeta:
                 thename = os.path.basename(f).replace(".json","")
                 print (" WARNING: had to make name from name of json file", thename)
             else:
                 thename = mainmeta["name"]
-            if thisparents is None or len(thisparents) == 0 or direct_parentage:
+
+
+            # create list of parents.
+            # could be the files themselves or parents of the files we are merging. 
+
+            if direct_parentage:
                 print ("making this file the parent rather than from metadata")
                 
                 newparent = {"name":thename,"namespace":mainmeta["namespace"]}
                 thisparents = [newparent]
+            else:
+                if "parents" in mainmeta:
+                     thisparents = mainmeta["parents"]
+                else:
+                     thisparents = []
             #print (thismeta)
             if self.debug:
                 dumpList(thismeta)
@@ -243,6 +256,10 @@ class mergeMeta():
                 if tag not in thismeta: continue
                 if thismeta[tag] not in checks[tag]:
                     checks[tag].append(thismeta[tag])
+           
+            if inherit_config and "dune.config_file" in thismeta:      
+                theconfig = thismeta["dune.config_file"]
+            
 
             #See how many mixed fields are here
             for tag in mix:
@@ -277,6 +294,8 @@ class mergeMeta():
             # Get the list of parents
             for parent in thisparents:
                 parentage.append(parent)
+            if parentage is None or len(parentage) == 0:
+                parentage = None
             
         
         #Start building the new metadata 
@@ -295,16 +314,16 @@ class mergeMeta():
                 sys.exit(1)
             else:
                 if "." in tag:
-                    newJsonMetaData[tag] = checks[tag][0]
+                    newJsonMetaData[tag.lower()] = checks[tag][0]
                 else:
-                    newJsonData[tag] = checks[tag][0]
+                    newJsonData[tag.lower()] = checks[tag][0]
 
         for tag in mix:
           #ignore certain ones
             if tag in self.ignore or tag == 'core.runs' or tag == 'core.event_count':
                 continue
             if len(mix[tag]) == 1:
-                newJsonMetaData[tag] = mix[tag][0]
+                newJsonMetaData[tag.lower()] = mix[tag][0]
             elif len(mix[tag]) > 1:
                 print ("mergeMetaCat: don't write out mixed tags", tag)
                 #print (mix[tag])
@@ -315,12 +334,16 @@ class mergeMeta():
         for tag in externals:
             if "." in tag:
                 if self.debug:  print("overwrite top levein info with external",tag,externals[tag])
-                newJsonMetaData[tag] = externals[tag]
+                newJsonMetaData[tag.lower()] = externals[tag]
         for tag in special_md:
             if "." in special_md:
-                newJsonMetaData[tag] = special_md[tag]
+                newJsonMetaData[tag.lower()] = special_md[tag]
 
-        
+# special to get config from input file when doing hadd style merge that has no real config
+        #print ("CONFIG doit",inherit_config,theconfig)
+        if inherit_config and theconfig is not None:
+            newJsonMetaData["dune.config_file"] =theconfig
+
       
         #if no event count was provided from externals, use the input files
         if("core.event_count" not in newJsonMetaData or newJsonMetaData["core.event_count"] == -1):
@@ -333,8 +356,7 @@ class mergeMeta():
             newJsonMetaData["core.event_count"] = eventcount
             newJsonMetaData["core.runs"] = runlist
             newJsonMetaData["core.runs_subruns"] = subrunlist
-            newJsonData["parents"] = parentage
-
+            
         #events/lumblock info is missing
         else:
             newJsonMetaData["core.first_event_number"] = firstevent
@@ -342,7 +364,7 @@ class mergeMeta():
             newJsonMetaData["core.event_count"] = eventcount
             newJsonMetaData["core.runs"] = runlist
             newJsonMetaData["core.runs_subruns"] = subrunlist
-            newJsonData["parents"] = parentage
+           
 
         if newJsonMetaData["core.data_stream"] == "mc":
             newJsonMetaData["core.first_event_number"] = firstevent
@@ -350,7 +372,10 @@ class mergeMeta():
             newJsonMetaData["core.event_count"] = eventcount
             newJsonMetaData["core.runs"] = runlist
             newJsonMetaData["core.runs_subruns"] = subrunlist
-            newJsonData["parents"] = parentage
+            
+
+        if parentage is not None: newJsonData["parents"] = parentage
+
         
         fixes = {
         "core.file_content_status": "good",
@@ -468,15 +493,16 @@ class mergeMeta():
                 special_md[tag] = []
             special_md[tag].append(val)
         elif tag == 'DUNE.fcl_name':
-            special_md[tag] = val.split('/')[-1]
+            special_md[tag] = os.path.basename(val) #val.split('/')[-1]
 
     def finishSpecialMD(self, special_md):
         if 'info.memory' in special_md.keys():
             special_md['info.memory'] = mean(special_md['info.memory'])
 
-def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=None, application=None, configf=None,  version=None, flist=None, \
-               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False, campaign=None, istar=False):
+def run_merge(newfilename=None, output_namespace=None, datasetName=None, output_data_tier=None, output_file_format=None, application=None, configf=None,  version=None, flist=None, \
+               merge_type=None, do_sort=0, user='', debug=False, stage="unknown", skip=None, nfiles=None, direct_parentage=False, inherit_config=False, campaign=None, istar=False):
     
+    #print ("CONFIG run_merge",inherit_config)
     opts = {}
     maker = mergeMeta(opts,debug)
     if merge_type == 'local':
@@ -502,14 +528,13 @@ def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=No
  
     externals = {
                 "name": os.path.basename(newfilename),
-                #"namespace": newnamespace,
+                "namespace": output_namespace,
                 "creator": os.getenv("USER"),
                 "size": os.path.getsize(newfilename),
-                "core.data_tier": datatier,
+                "core.data_tier": output_data_tier,
                 #"core.application.name": application,
                 #"core.application.version": version,
-                "core.data_stream": "physics",
-                "core.file_format": "root",
+                "core.file_format": output_file_format,
                 "core.start_time": timeform(datetime.datetime.now()),
                 "core.end_time": timeform(datetime.datetime.now()),
                 "retired":False,
@@ -548,7 +573,7 @@ def run_merge(newfilename=None, newnamespace=None, datasetName=None, datatier=No
     if debug: print ("mergeMetaCat: concatenate")
 
 
-    meta = maker.concatenate(inputfiles,externals, user=user, direct_parentage=False)
+    meta = maker.concatenate(inputfiles,externals, user=user, direct_parentage=direct_parentage, inherit_config=inherit_config)
 
     if not datasetName:
         datasetName = makeDataSetName(meta)
@@ -571,24 +596,32 @@ if __name__ == "__main__":
   
     parser = argparse.ArgumentParser(description='Merge Meta')
     parser.add_argument("--fileName", type=str, help="Name of merged file", default="new.root")
-    parser.add_argument("--nameSpace", type=str, help="new namespace for merged file [same as parents]", default=None)
-    parser.add_argument("--datasetName", type=str, help="optional name of dataset this will go into", default=None)
+    parser.add_argument("--output_namespace", type=str, help="new namespace for merged file", default=None)
+    parser.add_argument("--output_datasetName", type=str, help="optional name of dataset this will go into", default=None)
     parser.add_argument('--jsonList', help='Name of file containing list of json files if -t=local', default=None, type=str)
     parser.add_argument('--fileList', help='Name of file containing list of metacat did if -t=metacat', default=None, type=str)
     parser.add_argument('-s', help='Do Sort?', default=1, type=int)
     parser.add_argument('-t', help='local or metacat [metacat]', type=str, default='metacat')
     parser.add_argument('-u', help='Patch user to specified. Leave empty to not patch', type=str, default='')
-    parser.add_argument('--dataTier',help='data_tier for output [root-tuple]',default='root-tuple',type=str)
+    parser.add_argument('--output_data_tier',help='data_tier for output',default=None,type=str)
+    parser.add_argument('--output_file_format',help='file_format for output',default=None,type=str)
     parser.add_argument('--application',help='merge application name [inherits]',default=None,type=str)
-    parser.add_argument('--version',help='software version for merge [inherits]',default=None,type=str)
+    parser.add_argument('--input_version',help='software version for merge [inherits]',default=None,type=str)
     parser.add_argument('--config',help='config file',default=None)
-    parser.add_argument('--campaign',help='campaign name',default=None)
+    parser.add_argument('--campaign',help='output overide campaign name',default=None)
     parser.add_argument('--debug',help='make very verbose',default=False,action='store_true')
     parser.add_argument('--merge_stage',type=str,default="unknown",help="stage of merging, final for last step")
-    parser.add_argument('--direct_parentage',default=False,action='store_true')
+    parser.add_argument('--direct_parentage',default=False,action='store_true',help="parents are the files you are merging, not their parents")
+    parser.add_argument('--inherit_config',default=False,action='store_true',help="inherit config file - use for hadd stype merges")
     args = parser.parse_args()
     # print (args.fileList)
-    
+    if args.output_data_tier is None:
+        print ("must specify output data_tier --output_data_tier")
+        sys.exit(1)
+    if args.output_file_format is None:
+        print ("must specify output data_tier --output_file_format")
+        sys.exit(1)
+
     if args.jsonList is None and args.fileList is None:
         print ("mergeMetaCat: need to provide name of a file containing either a list of local files or a list of metacat dids")
         sys.exit(1)
@@ -609,4 +642,9 @@ if __name__ == "__main__":
         print (fname, " does not exist")
         sys.exit(1)
 
-    run_merge(newfilename=args.fileName, newnamespace = args.nameSpace, datasetName=args.datasetName, datatier=args.dataTier, application=args.application, configf=args.config,  version=args.version, flist=flist, do_sort=args.s, merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage,direct_parentage=args.direct_parentage,campaign=args.campaign)
+    run_merge(newfilename=args.fileName, output_namespace = args.output_namespace, \
+               datasetName=args.output_datasetName, output_data_tier=args.output_data_tier, \
+                output_file_format=args.output_file_format, application=args.application, \
+                    configf=args.config,  version=args.input_version, flist=flist, do_sort=args.s, \
+                        merge_type=args.t, user=args.u, debug=args.debug, stage=args.merge_stage, \
+                            direct_parentage=args.direct_parentage, inherit_config=args.inherit_config, campaign=args.campaign)

@@ -15,10 +15,10 @@ echo "cmake"
 spack load cmake@3.27.7
 echo "gcc"
 spack load gcc@12.2.0%gcc@11.4.1
-spack load fife-utils@3.7.0
-spack load metacat@4.0.0
-spack load rucio-clients@33.3.0
-spack load sam-web-client@3.4%gcc@12.2.0 
+spack load fife-utils@3.7.4
+#spack load metacat@4.0.0
+#spack load rucio-clients@33.3.0
+#spack load sam-web-client@3.4%gcc@12.2.0 
 spack load r-m-dd-config experiment=dune
 
 export DATA_DISPATCHER_URL=https://metacat.fnal.gov:9443/dune/dd/data
