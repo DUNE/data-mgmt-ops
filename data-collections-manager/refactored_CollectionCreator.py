@@ -31,7 +31,7 @@ def make_name(tags):
         - Tags not present in the 'order' list or with None values are not included in the name.
         - This function is specifically designed for a set of metadata tags
     """
-    order = ["core.run_type", "DUNE.campaign", "core.data_tier", "core.application.version",
+    order = ["core.run_type", "dune.campaign", "core.data_tier", "core.application.version",
              "dune.config_file", "dune_mc.gen_fcl_filename", "core.data_stream", "deftag"]
     name = ""
     for i in order:
@@ -225,6 +225,8 @@ def setup():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', type=str, default=None, help='filename for a json list of parameters to and')
+    parser.add_argument('--use_query', type=bool, default=False, const=True, nargs="?", help='use query instead of json')
+    parser.add_argument('--query', type=str, default=None, help='query')
     parser.add_argument('--min_time', type=str, help='min time range (inclusive) YYYY-MM-DD UTC')
     parser.add_argument('--max_time', type=str, help='end time range (inclusive) YYYY-MM-DD UTC')
     parser.add_argument('--deftag', type=str, default="test", help='tag to distinguish different runs of this script, default is test')
@@ -236,8 +238,8 @@ def setup():
     xtratags = ["min_time", "max_time", "deftag"]
     args = parser.parse_args()
 
-    if args.json is None:
-        print("no json file, cannot generate a dataset")
+    if args.json is None and args.query is None:
+        print("no json file, no query, cannot generate a dataset")
         sys.exit(1)
     else:
         # read the data description tags from json file
@@ -261,16 +263,25 @@ if __name__ == "__main__":
     # It initializes the parser and processes command line arguments.
     metacat = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_prod/app', timeout=600)
     metadata, args = setup()
-    thequery = makequery(metadata, args.remove_from_query)
-    dataset_name = make_name(metadata)
-    metacat_files = list(metacat.query(thequery))
+    metacat_files =[]
+    if args.use_query:
+        metacat_files = list(metacat.query(args.query))
+        print("MetaCat query \"", args.query, "\"\n")
+    else:
+        print("Using json")
+        thequery = makequery(metadata, args.remove_from_query)
+        metacat_files = list(metacat.query(thequery))
+        print("MetaCat query \"", thequery, "\"\n")
     if not metacat_files:
         print("===> MetaCat query return 0 files")
-    print("MetaCat query \"", thequery, "\"\n")
+    dataset_name = make_name(metadata)
     print(dataset_name)
     print_summary(metacat_files)
     if not args.test:
-        makedataset(thequery, dataset_name, metadata)
+        if args.use_query:
+            makedataset(args.query, dataset_name, metadata)
+        else: 
+            makedataset(thequery, dataset_name, metadata)
         if args.rucio_container:
             print('proceed with rucio container')
             rucio_container(dataset_name, args.scope, args.rucio_datasets)
