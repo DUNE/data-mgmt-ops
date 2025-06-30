@@ -224,12 +224,12 @@ def setup():
         tuple: A tuple containing the data description tags from the JSON file and the test mode flag.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--json', type=str, default=None, help='filename for a json list of parameters to and')
+    parser.add_argument('--json', type=str, default=None, required=True, help='filename for a json list of parameters to and')
     parser.add_argument('--use_query', type=bool, default=False, const=True, nargs="?", help='use query instead of json')
     parser.add_argument('--query', type=str, default=None, help='query')
     parser.add_argument('--min_time', type=str, help='min time range (inclusive) YYYY-MM-DD UTC')
     parser.add_argument('--max_time', type=str, help='end time range (inclusive) YYYY-MM-DD UTC')
-    parser.add_argument('--deftag', type=str, default="test", help='tag to distinguish different runs of this script, default is test')
+    parser.add_argument('--deftag', type=str, required=True, default="test", help='tag to distinguish different runs of this script, default is test')
     parser.add_argument('--remove_from_query', type=lambda s: s.split(','), default=[], help='remove parameter(s) from query, parsed as list')
     parser.add_argument('--test', type=bool, default=False, const=True, nargs="?", help='do in test mode')
     parser.add_argument('--rucio_container', type=bool, default=False, const=True, nargs="?", help='do rucio container')
@@ -241,22 +241,28 @@ def setup():
     if args.json is None and args.query is None:
         print("no json file, no query, cannot generate a dataset")
         sys.exit(1)
-    else:
-        # read the data description tags from json file
+    metadata = {}
+
+    # If a JSON file is provided, read and extract metadata
+    if args.json is not None:
         if not os.path.exists(args.json):
             print(args.json, 'does not exist, quitting')
             sys.exit(1)
-        f = open(args.json, 'r')
-        if f:
-            metadata = json.load(f)
-            for tag in xtratags:
-                argis = tag
-                val = getattr(args, argis)
-                metadata[tag] = val
-                if type(val) == 'str' and "-" in val:
-                    metadata[tag] = "\'%s\'" % (val)
 
-        return metadata, args
+        with open(args.json, 'r') as f:
+            metadata = json.load(f)
+
+        for tag in xtratags:
+            val = getattr(args, tag)
+            if val is not None:
+                metadata[tag] = f"'{val}'" if isinstance(val, str) and "-" in val else val
+
+    # If a query file is provided
+    # Add query string to metadata
+    if args.query is not None:
+        metadata["query"] = args.query
+
+    return metadata, args
 
 if __name__ == "__main__":
     # This block will run if the script is executed directly.
@@ -268,8 +274,8 @@ if __name__ == "__main__":
         metacat_files = list(metacat.query(args.query))
         print("MetaCat query \"", args.query, "\"\n")
     else:
-        print("Using json")
         thequery = makequery(metadata, args.remove_from_query)
+        metadata["query"] = thequery
         metacat_files = list(metacat.query(thequery))
         print("MetaCat query \"", thequery, "\"\n")
     if not metacat_files:
@@ -277,6 +283,8 @@ if __name__ == "__main__":
     dataset_name = make_name(metadata)
     print(dataset_name)
     print_summary(metacat_files)
+    print("dataset metadata:")
+    print(metadata)
     if not args.test:
         if args.use_query:
             makedataset(args.query, dataset_name, metadata)
