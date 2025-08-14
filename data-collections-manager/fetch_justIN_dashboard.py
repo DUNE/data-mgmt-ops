@@ -1,15 +1,25 @@
 import argparse
 import requests
 import json
+import os
 from datetime import datetime
 from collections import Counter
 
 def fetch_justIN(workflow_id: int, event_type: str):
+    
     url = (
         "https://dunejustin.fnal.gov/dashboard/"
         f"?method=download-events&event_type_name={event_type}&workflow_id={workflow_id}"
         f"&stage_id=&file_did=&jobsub_id=&jobscript_exit=&site_name=&entry_name=&rse_name=&format=json"
     )
+    
+    '''
+    url = (
+        "https://justin.dune.hep.ac.uk/dashboard/"
+        f"?method=download-events&event_type_name={event_type}&workflow_id={workflow_id}"
+        f"&stage_id=&file_did=&jobsub_id=&jobscript_exit=&site_name=&entry_name=&rse_name=&format=json"
+    )
+    '''
     print(f"[INFO] Fetching events from: {url}")
     response = requests.get(url)
     response.raise_for_status()
@@ -51,6 +61,9 @@ def main():
     parser.add_argument('--event_type', type=str, required=True, help="Event type, e.g. FILE_ALLOCATED")
     parser.add_argument('--output', type=str, default="event_rate.txt", help="Output file to write rate info.")
     args = parser.parse_args()
+    # Build JSON path with same basename as output (replace extension with .json)
+    base, _ = os.path.splitext(args.output)
+    json_path = base + ".json"
 
     try:
         data = fetch_justIN(args.workflow, args.event_type)
@@ -58,6 +71,11 @@ def main():
         if not events:
             print("[!] No events found.")
             return
+
+        # Save raw JSON payload
+        with open(json_path, "w") as jf:
+            json.dump(data, jf, indent=2, ensure_ascii=False)
+        print(f"[✓] JSON saved to {json_path}")
 
         rate_lines, summary = calculate_rate(events)
 
