@@ -31,6 +31,22 @@ def make_name(tags):
         - Tags not present in the 'order' list or with None values are not included in the name.
         - This function is specifically designed for a set of metadata tags
     """
+    mandatory_tags = [
+    "core.run_type", 
+    "dune.campaign", 
+    "core.data_tier", 
+    "core.application.version",
+    #"dune.config_file",        // do not apply to raw data
+    #"dune_mc.gen_fcl_filename" // do not apply to data  
+    "core.data_stream", 
+    "deftag"
+    ]
+    # --- Check policy compliance docdb 29787---
+    missing = [t for t in mandatory_tags if t not in tags or tags[t] is None]
+    if missing:
+        raise ValueError(f"Error: tags do not comply with policy. Missing mandatory tags: {missing}")
+
+
     order = ["core.run_type", "dune.campaign", "core.data_tier", "core.application.version",
              "dune.config_file", "dune_mc.gen_fcl_filename", "core.data_stream", "deftag"]
     name = ""
