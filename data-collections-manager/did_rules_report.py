@@ -1,8 +1,9 @@
 import argparse
+import json
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 from rucio.client.didclient import DIDClient
-from rucio.client.ruleclient import RuleClient
 from rucio.common.exception import DataIdentifierNotFound, RucioException
 
 did_client = DIDClient()
@@ -22,38 +23,33 @@ def parse_did(did_str: str):
 
 def fmt_dt(dt):
     if not dt:
-        return "-"
-    # dt can be a datetime or string depending on client; normalize
+        return None
     if isinstance(dt, datetime):
         return dt.isoformat()
     try:
         return str(dt)
     except Exception:
-        return "-"
+        return None
 
 def collect_content(dc: DIDClient, scope: str, name: str):
     """Return a list of dicts (scope, name, type) for direct content."""
     items = []
     try:
         for item in dc.list_content(scope=scope, name=name):
-            # item keys often include: scope, name, did_type or type
             itype = item.get("type") or item.get("did_type") or "UNKNOWN"
             items.append({"scope": item["scope"], "name": item["name"], "type": itype})
     except DataIdentifierNotFound:
-        # No content or DID not found handled at caller
         return []
     return items
 
 def collect_rules(dc: DIDClient, scope: str, name: str):
-    """
-    Return a list of rules for the DID with selected fields.
-    Compatible with Rucio clients that don't have list_did_rules.
-    """
+    """Return a list of rules for the DID with selected fields."""
     rules = []
-    iterator = None
-    iterator = dc.list_did_rules(scope = scope, name=name)
+    try:
+        iterator = dc.list_did_rules(scope=scope, name=name)
+    except Exception:
+        return rules
     for r in iterator:
-        print(r.get('id'))
         rules.append({
             "id": r.get("id"),
             "account": r.get("account"),
@@ -67,12 +63,53 @@ def collect_rules(dc: DIDClient, scope: str, name: str):
             "locks_stuck_cnt": r.get("locks_stuck_cnt"),
         })
     return rules
+def build_did_report(scope: str, name: str) -> Optional[Dict[str, Any]]:
+    """Create a structured JSON-able dict for a single DID (with direct content and rules)."""
+    try:
+        did_info = did_client.get_did(scope=scope, name=name)
+        did_type = did_info.get("type", "UNKNOWN")
+    except DataIdentifierNotFound:
+        # Return a sentinel entry if you want to record missing DIDs, or return None to skip
+        return {
+            "did": f"{scope}:{name}",
+            "scope": scope,
+            "name": name,
+            "error": "DataIdentifierNotFound"
+        }
+    except RucioException as e:
+        return {
+            "did": f"{scope}:{name}",
+            "scope": scope,
+            "name": name,
+            "error": f"RucioException: {e}"
+        }
+
+    content = collect_content(did_client, scope, name)
+    content_entries = []
+    for c in content:
+        child_rules = collect_rules(did_client, scope=c["scope"], name=c["name"])
+        content_entries.append({
+            "scope": c["scope"],
+            "name": c["name"],
+            "type": c["type"],
+            "rules": child_rules
+        })
+
+    return {
+        "did": f"{scope}:{name}",
+        "scope": scope,
+        "name": name,
+        "type": did_type,
+        "content_count_direct": len(content_entries),
+        "content": content_entries
+    }
 
 def process_dids(input_path: str, output_path: str):
-
-    lines_out = []
+    # Read all DID lines
     with open(input_path, "r") as f:
         did_lines = [ln.strip() for ln in f if ln.strip() and not ln.strip().startswith("#")]
+
+    all_reports = []  # <--- accumulate every DID’s dict here
 
     for idx, ln in enumerate(did_lines, start=1):
         try:
@@ -81,9 +118,7 @@ def process_dids(input_path: str, output_path: str):
                 continue
             scope, name = parsed
         except ValueError as e:
-            msg = f"[{idx}] Skipping invalid line: {e}"
-            print(msg)
-            lines_out.append(msg)
+            print(f"[{idx}] Skipping invalid line: {e}")
             continue
 
         header = f"DID: {scope}:{name}"
@@ -91,61 +126,30 @@ def process_dids(input_path: str, output_path: str):
         print(header)
         print("=" * len(header))
 
-        lines_out.append("")
-        lines_out.append(header)
-        lines_out.append("-" * len(header))
-
-        try:
-            did_info = did_client.get_did(scope=scope, name=name)
-            did_type = did_info.get("type", "UNKNOWN")
-        except DataIdentifierNotFound:
-            msg = f"  [!] DID not found: {scope}:{name}"
-            print(msg)
-            lines_out.append(msg)
-            continue
-        except RucioException as e:
-            msg = f"  [!] Error fetching DID info for {scope}:{name}: {e}"
-            print(msg)
-            lines_out.append(msg)
+        report = build_did_report(scope, name)
+        if report is None:
+            # If you prefer to include an explicit error entry, handle above in build_did_report
+            print(f"  [!] Skipping {scope}:{name} (no report built).")
             continue
 
-        print(f"  Type: {did_type}")
-        lines_out.append(f"  Type: {did_type}")
+        # Optional console feedback
+        if "error" in report:
+            print(f"  [!] {report['error']}")
+        else:
+            print(f"  Type: {report['type']}")
+            print(f"  Content count (direct): {report['content_count_direct']}")
 
-        # Content (direct children)
-        content = collect_content(did_client, scope, name)
-        print(f"  Content count (direct): {len(content)}")
-        lines_out.append(f"  Content count (direct): {len(content)}")
-        if content:
-            lines_out.append("  Content (scope:name, type):")
-            for c in content:
-                line = f"    - {c['scope']}:{c['name']} , {c['type']}"
-                print(line)
-                lines_out.append(line)
-                rules = collect_rules(did_client, scope=c['scope'], name=c['name'])
-                if rules:
-                    lines_out.append("  Rules:")
-                for r in rules:
-                    rlines = [
-                    f"    - id={r['id']}",
-                    f"      account={r['account']}",
-                    f"      rse_expression={r['rse_expression']}",
-                    f"      state={r['state']}, copies={r['copies']}",
-                    f"      created_at={r['created_at']}, expires_at={r['expires_at']}",
-                    f"      locks_ok={r['locks_ok_cnt']}, replicating={r['locks_replicating_cnt']}, stuck={r['locks_stuck_cnt']}",
-                    ]
-                    for rl in rlines:
-                        print(rl)
-                        lines_out.append(rl)
+        all_reports.append(report)
 
-    with open(output_path, "w") as out:
-        out.write("\n".join(lines_out) + "\n")
+    # Write ONE JSON array with all DIDs
+    with open(output_path, "w", encoding="utf-8") as out:
+        json.dump(all_reports, out, indent=2, ensure_ascii=False)
 
-    print(f"\n[✓] Report written to {output_path}")
+    print(f"\n[✓] JSON report with {len(all_reports)} DID(s) written to {output_path}")
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Read a list of DIDs, show direct content and list Rucio rules for each, and write a report."
+        description="Read a list of DIDs, gather direct content + rules for each, and write a JSON report."
     )
     parser.add_argument(
         "-i", "--input", required=True,
@@ -153,7 +157,7 @@ def main():
     )
     parser.add_argument(
         "-o", "--output", required=True,
-        help="Path to output text file where the report will be written."
+        help="Path to output JSON file."
     )
     args = parser.parse_args()
     process_dids(args.input, args.output)
