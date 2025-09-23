@@ -18,7 +18,7 @@ client = Client(account=os.getenv("USER"))
 did_client = DIDClient()
 
 
-def make_name(tags):
+def make_name(tags, raw):
     """
     Constructs a formatted name string (dataset name) based on specified metadata tags.
     Args:
@@ -41,11 +41,17 @@ def make_name(tags):
     "core.data_stream", 
     "deftag"
     ]
-    # --- Check policy compliance docdb 29787---
+    # --- Check policy compliance ---
+    
     missing = [t for t in mandatory_tags if t not in tags or tags[t] is None]
-    if missing:
+    if not raw and missing:
         raise ValueError(f"Error: tags do not comply with policy. Missing mandatory tags: {missing}")
-
+    
+    if raw: 
+        missing = [t for t in ["core.run_type", "core.data_tier","core.data_stream", "deftag"] if t not in tags or tags[t] is None]
+        if missing:
+            raise ValueError(f"Error: tags do not comply with policy. Missing mandatory tags: {missing}")
+ 
 
     order = ["core.run_type", "dune.campaign", "core.data_tier", "core.application.version",
              "dune.config_file", "dune_mc.gen_fcl_filename", "core.data_stream", "deftag"]
@@ -54,7 +60,7 @@ def make_name(tags):
         if i in tags and tags[i] is not None:
             new = tags[i]
             if i == "deftag":
-                new = tags[i]
+                new = tags[i].strip("'\"")
             name += new
             name += "__"
     name = name[:-2]
@@ -248,6 +254,7 @@ def setup():
     parser.add_argument('--deftag', type=str, required=True, default="test", help='tag to distinguish different runs of this script, default is test')
     parser.add_argument('--remove_from_query', type=lambda s: s.split(','), default=[], help='remove parameter(s) from query, parsed as list')
     parser.add_argument('--test', type=bool, default=False, const=True, nargs="?", help='do in test mode')
+    parser.add_argument('--raw_data', type=bool, default=False, const=True, nargs="?", help='is this raw data?')
     parser.add_argument('--rucio_container', type=bool, default=False, const=True, nargs="?", help='do rucio container')
     parser.add_argument('--rucio_datasets', type=str, help='text file containing the Rucio datasets')
     parser.add_argument('--scope', type=str, default=None, help='rucio scope')
@@ -296,7 +303,7 @@ if __name__ == "__main__":
         print("MetaCat query \"", thequery, "\"\n")
     if not metacat_files:
         print("===> MetaCat query return 0 files")
-    dataset_name = make_name(metadata)
+    dataset_name = make_name(metadata, args.raw_data)
     print(dataset_name)
     print_summary(metacat_files)
     print("dataset metadata:")
