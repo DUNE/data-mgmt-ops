@@ -200,11 +200,20 @@ def rucio_container(dataset, scope, rucio_datasets):
         print("Detach this files for Rucio datasets :")
         for missing_file in files_to_detach:
             print(missing_file)
+        with open('detach_files.txt', 'w') as f:
+            for missing_file in files_to_detach:
+                f.write(missing_file + '\n')
+        print(f"Saved {len(files_to_detach)} files to detach_files.txt")
 
     if files_to_retire:
         print("Retire this files from Metacat datasets if not rucio replica :")
         for missing_file in files_to_retire:
             print(missing_file)
+        with open('retire_files.txt', 'w') as f:
+            for missing_file in files_to_retire:
+                f.write(missing_file + '\n')
+        print(f"Saved {len(files_to_retire)} files to retire_files.txt")
+
  
     
     container_name = dataset
