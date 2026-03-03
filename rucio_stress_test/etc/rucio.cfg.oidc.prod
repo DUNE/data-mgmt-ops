@@ -1,0 +1,9 @@
+[client]
+rucio_host = https://dune-rucio.fnal.gov
+auth_host = https://dune-rucio.fnal.gov
+
+
+ca_cert = /etc/grid-security/certificates
+account = timm
+auth_type = oidc
+request_retries = 3

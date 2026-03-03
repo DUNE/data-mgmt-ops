@@ -1,0 +1,25 @@
+To set up the rucio stress test, do the following:
+
+1) it is recommended that you have a standalone rucio client
+2) create a python virtual environment, activate it, and then 
+    pip install rucio-clients
+3) copy the files from this etc directory into the etc directory of the
+   rucio environment.  There are two, one for the dune-int-rucio and one
+   for the regular dune-rucio
+4) copy the shell scripts into the main level of the rucio directory
+5) There is a set of shell scripts (launch0100f.sh and so forth).. 
+each one of them will make 100
+   simultaneous rucio uploads of a file, in the background.
+6) For full stress test, log into each of dunegpvm01-16
+7) do "htgettoken -i dune -r production -a htvaultprod.fnal.gov"
+   on each of those dunegpvm.. you will need to auth with the browser on each one and then stay logged in
+8) make a test file on each of the machines
+dd if=/dev/zero of=/tmp/1gbtestfile.<YYYYMMDD> bs=1024 count=1000000
+where YYYYMMDD is today's date
+9) modify the launch script such that you have the name of the files you want, if necessary
+10) each launch script can only be run once per day.. if you need to make another set of files you have to modify by hand the suffix to something else.
+11) modify the atjob_f.sh file to set the actual time that you want the job to run
+12) launch the atjobs
+13) use the window you have on each vm to monitor the load.. typically the load will go up to 80 or 90 on each vm while the rucio uploads are happening
+14) once all is done, check that the right number of rules were made
+and grep all the individual error files for errors

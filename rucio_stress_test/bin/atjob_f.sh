@@ -1,0 +1,18 @@
+#!/bin/bash
+
+ssh timm@dunegpvm01 "at 15:11 -f ~/ruciov38_3/launch0100_f.sh"
+ssh timm@dunegpvm02 "at 15:11 -f ~/ruciov38_3/launch0200_f.sh"
+ssh timm@dunegpvm03 "at 15:11 -f ~/ruciov38_3/launch0300_f.sh"
+ssh timm@dunegpvm04 "at 15:11 -f ~/ruciov38_3/launch0400_f.sh"
+ssh timm@dunegpvm05 "at 15:11 -f ~/ruciov38_3/launch0500_f.sh"
+ssh timm@dunegpvm06 "at 15:11 -f ~/ruciov38_3/launch0600_f.sh"
+ssh timm@dunegpvm07 "at 15:11 -f ~/ruciov38_3/launch0700_f.sh"
+ssh timm@dunegpvm08 "at 15:11 -f ~/ruciov38_3/launch0800_f.sh"
+ssh timm@dunegpvm09 "at 15:11 -f ~/ruciov38_3/launch0900_f.sh"
+ssh timm@dunegpvm10 "at 15:11 -f ~/ruciov38_3/launch1000_f.sh"
+ssh timm@dunegpvm11 "at 15:11 -f ~/ruciov38_3/launch1100_f.sh"
+ssh timm@dunegpvm12 "at 15:11 -f ~/ruciov38_3/launch1200_f.sh"
+ssh timm@dunegpvm13 "at 15:11 -f ~/ruciov38_3/launch1300_f.sh"
+ssh timm@dunegpvm14 "at 15:11 -f ~/ruciov38_3/launch1400_f.sh"
+ssh timm@dunegpvm15 "at 15:11 -f ~/ruciov38_3/launch1500_f.sh"
+ssh timm@dunegpvm16 "at 15:11 -f ~/ruciov38_3/launch1600_f.sh"
