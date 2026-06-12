@@ -12,7 +12,7 @@ import json
 from metacat.webapi import MetaCatClient
 from rucio.client.client import Client
 from rucio.client.didclient import DIDClient
-from rucio.common.exception import Duplicate, DataIdentifierNotFound
+from rucio.common.exception import Duplicate, DataIdentifierNotFound, DataIdentifierAlreadyExists
 
 client = Client(account=os.getenv("USER"))
 did_client = DIDClient()
@@ -96,16 +96,18 @@ def makequery(meta, remove_from_query):
             if "namespace" not in item:
                 continue
         val = meta[item]
-        if '(' in val and ')' in val:
+        if '(' in str(val) and ')' in str(val):
             query += f' {item} in {val} and '
             continue
-        if type(val) == str and "-" in val and "'" not in val:
-            val = "\'%s\'" % val
-        query += " "+item+"="+str(val)
+        if isinstance(val, str) and "'" not in val:
+            # Quote if it contains a hyphen OR looks like a number
+            if "-" in val or val.lstrip('-').replace('.', '', 1).isdigit():
+                val = "'%s'" % val
+        query += " " + item + "=" + str(val)
         query += " and"
     query = query[:-4]
-    return query
 
+    return query
 
 def makedataset(query, name, meta):
     """
@@ -138,6 +140,10 @@ def makedataset(query, name, meta):
                 cleanmeta.pop(x)
         else:
             cleanmeta[x] = meta[x]
+    # Add standard dataset parameters
+    cleanmeta["datasetpar.current"] = True
+    cleanmeta["datasetpar.official"] = True
+    cleanmeta["datasetpar.diskresident"] = True
 
     if os.getenv("USER") == "dunepro":
         namespace = meta['namespace']
@@ -214,17 +220,18 @@ def rucio_container(dataset, scope, rucio_datasets):
                 f.write(missing_file + '\n')
         print(f"Saved {len(files_to_retire)} files to retire_files.txt")
 
- 
-    
     container_name = dataset
-    did_client.add_container(scope=scope, name=container_name)
-    print(f"Container {scope}:{container_name} created.")
+    try:
+        did_client.add_container(scope=scope, name=container_name)
+        print(f"Container {scope}:{container_name} created.")
+    except DataIdentifierAlreadyExists:
+        print(f"Container {scope}:{container_name} already exists. Continuing...")
+
     try:
         did_client.attach_dids(scope=scope, name=container_name, dids=datasets_to_attach)
         print("DIDs attached to the container.")
     except DataIdentifierNotFound as e:
-        print(f"Error attaching DIDs: {str(e)}")
-    
+        print(f"Error attaching DIDs: {str(e)}") 
 
 def convert_size(size):
     """Converts a file size to a human-readable format with appropriate units."""
