@@ -1,107 +1,126 @@
 #!/bin/bash
-cd ~/ruciov38_3
-htgettoken -i dune -r production -a htvaultprod.fnal.gov
-. bin/activate
-nohup sh ./rucio_upload_test_bkg.sh f1000 < /dev/null  > test.out.f1000 2> test.err.f1000 &
-nohup sh ./rucio_upload_test_bkg.sh f1001 < /dev/null  > test.out.f1001 2> test.err.f1001 &
-nohup sh ./rucio_upload_test_bkg.sh f1002 < /dev/null  > test.out.f1002 2> test.err.f1002 &
-nohup sh ./rucio_upload_test_bkg.sh f1003 < /dev/null  > test.out.f1003 2> test.err.f1003 &
-nohup sh ./rucio_upload_test_bkg.sh f1004 < /dev/null  > test.out.f1004 2> test.err.f1004 &
-nohup sh ./rucio_upload_test_bkg.sh f1005 < /dev/null  > test.out.f1005 2> test.err.f1005 &
-nohup sh ./rucio_upload_test_bkg.sh f1006 < /dev/null  > test.out.f1006 2> test.err.f1006 &
-nohup sh ./rucio_upload_test_bkg.sh f1007 < /dev/null  > test.out.f1007 2> test.err.f1007 &
-nohup sh ./rucio_upload_test_bkg.sh f1008 < /dev/null  > test.out.f1008 2> test.err.f1008 &
-nohup sh ./rucio_upload_test_bkg.sh f1009 < /dev/null  > test.out.f1009 2> test.err.f1009 &
-nohup sh ./rucio_upload_test_bkg.sh f1010 < /dev/null  > test.out.f1010 2> test.err.f1010 &
-nohup sh ./rucio_upload_test_bkg.sh f1011 < /dev/null  > test.out.f1011 2> test.err.f1011 &
-nohup sh ./rucio_upload_test_bkg.sh f1012 < /dev/null  > test.out.f1012 2> test.err.f1012 &
-nohup sh ./rucio_upload_test_bkg.sh f1013 < /dev/null  > test.out.f1013 2> test.err.f1013 &
-nohup sh ./rucio_upload_test_bkg.sh f1014 < /dev/null  > test.out.f1014 2> test.err.f1014 &
-nohup sh ./rucio_upload_test_bkg.sh f1015 < /dev/null  > test.out.f1015 2> test.err.f1015 &
-nohup sh ./rucio_upload_test_bkg.sh f1016 < /dev/null  > test.out.f1016 2> test.err.f1016 &
-nohup sh ./rucio_upload_test_bkg.sh f1017 < /dev/null  > test.out.f1017 2> test.err.f1017 &
-nohup sh ./rucio_upload_test_bkg.sh f1018 < /dev/null  > test.out.f1018 2> test.err.f1018 &
-nohup sh ./rucio_upload_test_bkg.sh f1019 < /dev/null  > test.out.f1019 2> test.err.f1019 &
-nohup sh ./rucio_upload_test_bkg.sh f1020 < /dev/null  > test.out.f1020 2> test.err.f1020 &
-nohup sh ./rucio_upload_test_bkg.sh f1021 < /dev/null  > test.out.f1021 2> test.err.f1021 &
-nohup sh ./rucio_upload_test_bkg.sh f1022 < /dev/null  > test.out.f1022 2> test.err.f1022 &
-nohup sh ./rucio_upload_test_bkg.sh f1023 < /dev/null  > test.out.f1023 2> test.err.f1023 &
-nohup sh ./rucio_upload_test_bkg.sh f1024 < /dev/null  > test.out.f1024 2> test.err.f1024 &
-nohup sh ./rucio_upload_test_bkg.sh f1025 < /dev/null  > test.out.f1025 2> test.err.f1025 &
-nohup sh ./rucio_upload_test_bkg.sh f1026 < /dev/null  > test.out.f1026 2> test.err.f1026 &
-nohup sh ./rucio_upload_test_bkg.sh f1027 < /dev/null  > test.out.f1027 2> test.err.f1027 &
-nohup sh ./rucio_upload_test_bkg.sh f1028 < /dev/null  > test.out.f1028 2> test.err.f1028 &
-nohup sh ./rucio_upload_test_bkg.sh f1029 < /dev/null  > test.out.f1029 2> test.err.f1029 &
-nohup sh ./rucio_upload_test_bkg.sh f1030 < /dev/null  > test.out.f1030 2> test.err.f1030 &
-nohup sh ./rucio_upload_test_bkg.sh f1031 < /dev/null  > test.out.f1031 2> test.err.f1031 &
-nohup sh ./rucio_upload_test_bkg.sh f1032 < /dev/null  > test.out.f1032 2> test.err.f1032 &
-nohup sh ./rucio_upload_test_bkg.sh f1033 < /dev/null  > test.out.f1033 2> test.err.f1033 &
-nohup sh ./rucio_upload_test_bkg.sh f1034 < /dev/null  > test.out.f1034 2> test.err.f1034 &
-nohup sh ./rucio_upload_test_bkg.sh f1035 < /dev/null  > test.out.f1035 2> test.err.f1035 &
-nohup sh ./rucio_upload_test_bkg.sh f1036 < /dev/null  > test.out.f1036 2> test.err.f1036 &
-nohup sh ./rucio_upload_test_bkg.sh f1037 < /dev/null  > test.out.f1037 2> test.err.f1037 &
-nohup sh ./rucio_upload_test_bkg.sh f1038 < /dev/null  > test.out.f1038 2> test.err.f1038 &
-nohup sh ./rucio_upload_test_bkg.sh f1039 < /dev/null  > test.out.f1039 2> test.err.f1039 &
-nohup sh ./rucio_upload_test_bkg.sh f1040 < /dev/null  > test.out.f1040 2> test.err.f1040 &
-nohup sh ./rucio_upload_test_bkg.sh f1041 < /dev/null  > test.out.f1041 2> test.err.f1041 &
-nohup sh ./rucio_upload_test_bkg.sh f1042 < /dev/null  > test.out.f1042 2> test.err.f1042 &
-nohup sh ./rucio_upload_test_bkg.sh f1043 < /dev/null  > test.out.f1043 2> test.err.f1043 &
-nohup sh ./rucio_upload_test_bkg.sh f1044 < /dev/null  > test.out.f1044 2> test.err.f1044 &
-nohup sh ./rucio_upload_test_bkg.sh f1045 < /dev/null  > test.out.f1045 2> test.err.f1045 &
-nohup sh ./rucio_upload_test_bkg.sh f1046 < /dev/null  > test.out.f1046 2> test.err.f1046 &
-nohup sh ./rucio_upload_test_bkg.sh f1047 < /dev/null  > test.out.f1047 2> test.err.f1047 &
-nohup sh ./rucio_upload_test_bkg.sh f1048 < /dev/null  > test.out.f1048 2> test.err.f1048 &
-nohup sh ./rucio_upload_test_bkg.sh f1049 < /dev/null  > test.out.f1049 2> test.err.f1049 &
-nohup sh ./rucio_upload_test_bkg.sh f1050 < /dev/null  > test.out.f1050 2> test.err.f1050 &
-nohup sh ./rucio_upload_test_bkg.sh f1051 < /dev/null  > test.out.f1051 2> test.err.f1051 &
-nohup sh ./rucio_upload_test_bkg.sh f1052 < /dev/null  > test.out.f1052 2> test.err.f1052 &
-nohup sh ./rucio_upload_test_bkg.sh f1053 < /dev/null  > test.out.f1053 2> test.err.f1053 &
-nohup sh ./rucio_upload_test_bkg.sh f1054 < /dev/null  > test.out.f1054 2> test.err.f1054 &
-nohup sh ./rucio_upload_test_bkg.sh f1055 < /dev/null  > test.out.f1055 2> test.err.f1055 &
-nohup sh ./rucio_upload_test_bkg.sh f1056 < /dev/null  > test.out.f1056 2> test.err.f1056 &
-nohup sh ./rucio_upload_test_bkg.sh f1057 < /dev/null  > test.out.f1057 2> test.err.f1057 &
-nohup sh ./rucio_upload_test_bkg.sh f1058 < /dev/null  > test.out.f1058 2> test.err.f1058 &
-nohup sh ./rucio_upload_test_bkg.sh f1059 < /dev/null  > test.out.f1059 2> test.err.f1059 &
-nohup sh ./rucio_upload_test_bkg.sh f1060 < /dev/null  > test.out.f1060 2> test.err.f1060 &
-nohup sh ./rucio_upload_test_bkg.sh f1061 < /dev/null  > test.out.f1061 2> test.err.f1061 &
-nohup sh ./rucio_upload_test_bkg.sh f1062 < /dev/null  > test.out.f1062 2> test.err.f1062 &
-nohup sh ./rucio_upload_test_bkg.sh f1063 < /dev/null  > test.out.f1063 2> test.err.f1063 &
-nohup sh ./rucio_upload_test_bkg.sh f1064 < /dev/null  > test.out.f1064 2> test.err.f1064 &
-nohup sh ./rucio_upload_test_bkg.sh f1065 < /dev/null  > test.out.f1065 2> test.err.f1065 &
-nohup sh ./rucio_upload_test_bkg.sh f1066 < /dev/null  > test.out.f1066 2> test.err.f1066 &
-nohup sh ./rucio_upload_test_bkg.sh f1067 < /dev/null  > test.out.f1067 2> test.err.f1067 &
-nohup sh ./rucio_upload_test_bkg.sh f1068 < /dev/null  > test.out.f1068 2> test.err.f1068 &
-nohup sh ./rucio_upload_test_bkg.sh f1069 < /dev/null  > test.out.f1069 2> test.err.f1069 &
-nohup sh ./rucio_upload_test_bkg.sh f1070 < /dev/null  > test.out.f1070 2> test.err.f1070 &
-nohup sh ./rucio_upload_test_bkg.sh f1071 < /dev/null  > test.out.f1071 2> test.err.f1071 &
-nohup sh ./rucio_upload_test_bkg.sh f1072 < /dev/null  > test.out.f1072 2> test.err.f1072 &
-nohup sh ./rucio_upload_test_bkg.sh f1073 < /dev/null  > test.out.f1073 2> test.err.f1073 &
-nohup sh ./rucio_upload_test_bkg.sh f1074 < /dev/null  > test.out.f1074 2> test.err.f1074 &
-nohup sh ./rucio_upload_test_bkg.sh f1075 < /dev/null  > test.out.f1075 2> test.err.f1075 &
-nohup sh ./rucio_upload_test_bkg.sh f1076 < /dev/null  > test.out.f1076 2> test.err.f1076 &
-nohup sh ./rucio_upload_test_bkg.sh f1077 < /dev/null  > test.out.f1077 2> test.err.f1077 &
-nohup sh ./rucio_upload_test_bkg.sh f1078 < /dev/null  > test.out.f1078 2> test.err.f1078 &
-nohup sh ./rucio_upload_test_bkg.sh f1079 < /dev/null  > test.out.f1079 2> test.err.f1079 &
-nohup sh ./rucio_upload_test_bkg.sh f1080 < /dev/null  > test.out.f1080 2> test.err.f1080 &
-nohup sh ./rucio_upload_test_bkg.sh f1081 < /dev/null  > test.out.f1081 2> test.err.f1081 &
-nohup sh ./rucio_upload_test_bkg.sh f1082 < /dev/null  > test.out.f1082 2> test.err.f1082 &
-nohup sh ./rucio_upload_test_bkg.sh f1083 < /dev/null  > test.out.f1083 2> test.err.f1083 &
-nohup sh ./rucio_upload_test_bkg.sh f1084 < /dev/null  > test.out.f1084 2> test.err.f1084 &
-nohup sh ./rucio_upload_test_bkg.sh f1085 < /dev/null  > test.out.f1085 2> test.err.f1085 &
-nohup sh ./rucio_upload_test_bkg.sh f1086 < /dev/null  > test.out.f1086 2> test.err.f1086 &
-nohup sh ./rucio_upload_test_bkg.sh f1087 < /dev/null  > test.out.f1087 2> test.err.f1087 &
-nohup sh ./rucio_upload_test_bkg.sh f1088 < /dev/null  > test.out.f1088 2> test.err.f1088 &
-nohup sh ./rucio_upload_test_bkg.sh f1089 < /dev/null  > test.out.f1089 2> test.err.f1089 &
-nohup sh ./rucio_upload_test_bkg.sh f1090 < /dev/null  > test.out.f1090 2> test.err.f1090 &
-nohup sh ./rucio_upload_test_bkg.sh f1091 < /dev/null  > test.out.f1091 2> test.err.f1091 &
-nohup sh ./rucio_upload_test_bkg.sh f1092 < /dev/null  > test.out.f1092 2> test.err.f1092 &
-nohup sh ./rucio_upload_test_bkg.sh f1093 < /dev/null  > test.out.f1093 2> test.err.f1093 &
-nohup sh ./rucio_upload_test_bkg.sh f1094 < /dev/null  > test.out.f1094 2> test.err.f1094 &
-nohup sh ./rucio_upload_test_bkg.sh f1095 < /dev/null  > test.out.f1095 2> test.err.f1095 &
-nohup sh ./rucio_upload_test_bkg.sh f1096 < /dev/null  > test.out.f1096 2> test.err.f1096 &
-nohup sh ./rucio_upload_test_bkg.sh f1097 < /dev/null  > test.out.f1097 2> test.err.f1097 &
-nohup sh ./rucio_upload_test_bkg.sh f1098 < /dev/null  > test.out.f1098 2> test.err.f1098 &
-nohup sh ./rucio_upload_test_bkg.sh f1099 < /dev/null  > test.out.f1099 2> test.err.f1099 &
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+OUTPUT_DIR="$REPO_DIR/output"
+TOKEN_DST="/tmp/.rucio/duneprod.token"
+FILE_BASE="${1:-1gbtestfile}"
+MYDATE="$(date +%Y%m%d)"
+BASE_FILE="/tmp/${FILE_BASE}.${MYDATE}"
+
+# Use the shared rucio client virtualenv.
+. ~/ruciov38_3/bin/activate
+export RUCIO_CONFIG="$REPO_DIR/etc/rucio.cfg.oidc.int"
+
+if [ ! -s "$TOKEN_DST" ]; then
+  echo "Shared token not found at $TOKEN_DST" >&2
+  echo "Run $SCRIPT_DIR/sync_oidc_token_local.sh once after htgettoken" >&2
+  exit 1
+fi
+
+# Create the base test file once per launcher run.
+if [ ! -s "$BASE_FILE" ]; then
+  dd if=/dev/zero of="$BASE_FILE" bs=1024 count=1000000
+fi
+
+mkdir -p "$OUTPUT_DIR"
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1000 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1000" 2> "$OUTPUT_DIR/test.err.f1000" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1001 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1001" 2> "$OUTPUT_DIR/test.err.f1001" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1002 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1002" 2> "$OUTPUT_DIR/test.err.f1002" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1003 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1003" 2> "$OUTPUT_DIR/test.err.f1003" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1004 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1004" 2> "$OUTPUT_DIR/test.err.f1004" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1005 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1005" 2> "$OUTPUT_DIR/test.err.f1005" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1006 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1006" 2> "$OUTPUT_DIR/test.err.f1006" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1007 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1007" 2> "$OUTPUT_DIR/test.err.f1007" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1008 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1008" 2> "$OUTPUT_DIR/test.err.f1008" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1009 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1009" 2> "$OUTPUT_DIR/test.err.f1009" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1010 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1010" 2> "$OUTPUT_DIR/test.err.f1010" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1011 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1011" 2> "$OUTPUT_DIR/test.err.f1011" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1012 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1012" 2> "$OUTPUT_DIR/test.err.f1012" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1013 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1013" 2> "$OUTPUT_DIR/test.err.f1013" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1014 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1014" 2> "$OUTPUT_DIR/test.err.f1014" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1015 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1015" 2> "$OUTPUT_DIR/test.err.f1015" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1016 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1016" 2> "$OUTPUT_DIR/test.err.f1016" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1017 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1017" 2> "$OUTPUT_DIR/test.err.f1017" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1018 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1018" 2> "$OUTPUT_DIR/test.err.f1018" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1019 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1019" 2> "$OUTPUT_DIR/test.err.f1019" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1020 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1020" 2> "$OUTPUT_DIR/test.err.f1020" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1021 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1021" 2> "$OUTPUT_DIR/test.err.f1021" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1022 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1022" 2> "$OUTPUT_DIR/test.err.f1022" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1023 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1023" 2> "$OUTPUT_DIR/test.err.f1023" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1024 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1024" 2> "$OUTPUT_DIR/test.err.f1024" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1025 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1025" 2> "$OUTPUT_DIR/test.err.f1025" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1026 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1026" 2> "$OUTPUT_DIR/test.err.f1026" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1027 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1027" 2> "$OUTPUT_DIR/test.err.f1027" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1028 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1028" 2> "$OUTPUT_DIR/test.err.f1028" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1029 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1029" 2> "$OUTPUT_DIR/test.err.f1029" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1030 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1030" 2> "$OUTPUT_DIR/test.err.f1030" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1031 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1031" 2> "$OUTPUT_DIR/test.err.f1031" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1032 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1032" 2> "$OUTPUT_DIR/test.err.f1032" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1033 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1033" 2> "$OUTPUT_DIR/test.err.f1033" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1034 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1034" 2> "$OUTPUT_DIR/test.err.f1034" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1035 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1035" 2> "$OUTPUT_DIR/test.err.f1035" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1036 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1036" 2> "$OUTPUT_DIR/test.err.f1036" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1037 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1037" 2> "$OUTPUT_DIR/test.err.f1037" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1038 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1038" 2> "$OUTPUT_DIR/test.err.f1038" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1039 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1039" 2> "$OUTPUT_DIR/test.err.f1039" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1040 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1040" 2> "$OUTPUT_DIR/test.err.f1040" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1041 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1041" 2> "$OUTPUT_DIR/test.err.f1041" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1042 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1042" 2> "$OUTPUT_DIR/test.err.f1042" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1043 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1043" 2> "$OUTPUT_DIR/test.err.f1043" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1044 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1044" 2> "$OUTPUT_DIR/test.err.f1044" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1045 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1045" 2> "$OUTPUT_DIR/test.err.f1045" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1046 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1046" 2> "$OUTPUT_DIR/test.err.f1046" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1047 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1047" 2> "$OUTPUT_DIR/test.err.f1047" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1048 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1048" 2> "$OUTPUT_DIR/test.err.f1048" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1049 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1049" 2> "$OUTPUT_DIR/test.err.f1049" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1050 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1050" 2> "$OUTPUT_DIR/test.err.f1050" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1051 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1051" 2> "$OUTPUT_DIR/test.err.f1051" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1052 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1052" 2> "$OUTPUT_DIR/test.err.f1052" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1053 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1053" 2> "$OUTPUT_DIR/test.err.f1053" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1054 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1054" 2> "$OUTPUT_DIR/test.err.f1054" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1055 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1055" 2> "$OUTPUT_DIR/test.err.f1055" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1056 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1056" 2> "$OUTPUT_DIR/test.err.f1056" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1057 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1057" 2> "$OUTPUT_DIR/test.err.f1057" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1058 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1058" 2> "$OUTPUT_DIR/test.err.f1058" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1059 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1059" 2> "$OUTPUT_DIR/test.err.f1059" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1060 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1060" 2> "$OUTPUT_DIR/test.err.f1060" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1061 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1061" 2> "$OUTPUT_DIR/test.err.f1061" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1062 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1062" 2> "$OUTPUT_DIR/test.err.f1062" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1063 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1063" 2> "$OUTPUT_DIR/test.err.f1063" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1064 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1064" 2> "$OUTPUT_DIR/test.err.f1064" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1065 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1065" 2> "$OUTPUT_DIR/test.err.f1065" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1066 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1066" 2> "$OUTPUT_DIR/test.err.f1066" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1067 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1067" 2> "$OUTPUT_DIR/test.err.f1067" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1068 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1068" 2> "$OUTPUT_DIR/test.err.f1068" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1069 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1069" 2> "$OUTPUT_DIR/test.err.f1069" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1070 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1070" 2> "$OUTPUT_DIR/test.err.f1070" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1071 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1071" 2> "$OUTPUT_DIR/test.err.f1071" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1072 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1072" 2> "$OUTPUT_DIR/test.err.f1072" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1073 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1073" 2> "$OUTPUT_DIR/test.err.f1073" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1074 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1074" 2> "$OUTPUT_DIR/test.err.f1074" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1075 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1075" 2> "$OUTPUT_DIR/test.err.f1075" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1076 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1076" 2> "$OUTPUT_DIR/test.err.f1076" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1077 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1077" 2> "$OUTPUT_DIR/test.err.f1077" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1078 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1078" 2> "$OUTPUT_DIR/test.err.f1078" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1079 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1079" 2> "$OUTPUT_DIR/test.err.f1079" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1080 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1080" 2> "$OUTPUT_DIR/test.err.f1080" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1081 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1081" 2> "$OUTPUT_DIR/test.err.f1081" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1082 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1082" 2> "$OUTPUT_DIR/test.err.f1082" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1083 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1083" 2> "$OUTPUT_DIR/test.err.f1083" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1084 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1084" 2> "$OUTPUT_DIR/test.err.f1084" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1085 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1085" 2> "$OUTPUT_DIR/test.err.f1085" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1086 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1086" 2> "$OUTPUT_DIR/test.err.f1086" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1087 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1087" 2> "$OUTPUT_DIR/test.err.f1087" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1088 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1088" 2> "$OUTPUT_DIR/test.err.f1088" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1089 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1089" 2> "$OUTPUT_DIR/test.err.f1089" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1090 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1090" 2> "$OUTPUT_DIR/test.err.f1090" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1091 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1091" 2> "$OUTPUT_DIR/test.err.f1091" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1092 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1092" 2> "$OUTPUT_DIR/test.err.f1092" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1093 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1093" 2> "$OUTPUT_DIR/test.err.f1093" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1094 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1094" 2> "$OUTPUT_DIR/test.err.f1094" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1095 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1095" 2> "$OUTPUT_DIR/test.err.f1095" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1096 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1096" 2> "$OUTPUT_DIR/test.err.f1096" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1097 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1097" 2> "$OUTPUT_DIR/test.err.f1097" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1098 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1098" 2> "$OUTPUT_DIR/test.err.f1098" &
+nohup sh "$SCRIPT_DIR/rucio_upload_test_bkg.sh" f1099 "$FILE_BASE" < /dev/null > "$OUTPUT_DIR/test.out.f1099" 2> "$OUTPUT_DIR/test.err.f1099" &
 sleep 1800
-
-

@@ -5,10 +5,10 @@
 rucio_host = https://dune-int-rucio.fnal.gov
 auth_host = https://dune-int-rucio.fnal.gov
 
-ca_cert = /etc/grid-security/certificates
-account = timm
+#ca_cert = /etc/grid-security/certificates
+#account = timm
 auth_type = oidc
-#auth_token_file_path = /tmp/mynonewline.token
+auth_token_file_path = /tmp/.rucio/duneprod.token
 #oidc_scope = storage.read:/  openid profile email org.cilogon.userinfo wlcg.capabilityset:/dunepro wlcg.groups:/dune wlcg.groups:/dune/production
 #oidc_audience = https://wlcg.cern.ch/jwt/v1/any
 #client_x509_proxy = $X509_USER_PROXY
