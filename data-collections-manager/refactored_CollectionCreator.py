@@ -17,6 +17,26 @@ from rucio.common.exception import Duplicate, DataIdentifierNotFound, DataIdenti
 client = Client(account=os.getenv("USER"))
 did_client = DIDClient()
 
+# Maximum allowed length (in characters) for a dataset name.
+MAX_DATASET_NAME_LENGTH = 250
+
+
+def check_name_length(name, max_length=MAX_DATASET_NAME_LENGTH):
+    """
+    Checks that a dataset name does not exceed the maximum allowed length.
+    Args:
+        name (str): The dataset name to check.
+        max_length (int): The maximum allowed number of characters.
+    Raises:
+        ValueError: If the name is longer than max_length characters.
+    """
+    if len(name) > max_length:
+        raise ValueError(
+            f"Error: dataset name is {len(name)} characters long, which exceeds "
+            f"the maximum of {max_length}. The dataset will not be created.\n"
+            f"Name: {name}"
+        )
+
 
 def make_name(tags, raw):
     """
@@ -65,6 +85,7 @@ def make_name(tags, raw):
             name += "__"
     name = name[:-2]
     name = name.replace('.fcl', '')
+    check_name_length(name)
     return name
 
 
@@ -123,6 +144,9 @@ def makedataset(query, name, meta):
         It assumes that the provided metadata contains a key 'core.run_type'
         used for namespace determination as agreed in the data management meeting on 2023/12/19.
     """
+    # Refuse to create a dataset whose name is too long.
+    check_name_length(name)
+
     cleanmeta = meta.copy()
     # move dataset creation flags into dataset....
     for x in meta.keys():
@@ -319,8 +343,13 @@ if __name__ == "__main__":
         print("MetaCat query \"", thequery, "\"\n")
     if not metacat_files:
         print("===> MetaCat query return 0 files")
-    dataset_name = make_name(metadata, args.raw_data)
+    try:
+        dataset_name = make_name(metadata, args.raw_data)
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
     print(dataset_name)
+    print(f"Dataset name length: {len(dataset_name)} (max {MAX_DATASET_NAME_LENGTH})")
     print_summary(metacat_files)
     print("dataset metadata:")
     print(metadata)
