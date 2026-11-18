@@ -2,11 +2,38 @@ import sys
 import os
 import argparse
 import json
+import hashlib
 
 from rucio.client import Client
 from rucio.common.exception import DataIdentifierNotFound
 
 client = Client(account=os.getenv("USER"))
+
+# Most Linux filesystems cap a single file name at 255 bytes (NAME_MAX).
+# Rucio container names can be longer than that, so the log name is shortened.
+MAX_FILENAME_BYTES = 255
+
+
+def make_log_filename(container_name, suffix='_rucio_rules.log'):
+    """
+    Build a log file name from the container name that fits within the
+    filesystem's file name limit.
+
+    If container_name + suffix fits, it is used unchanged. Otherwise the
+    container name is truncated and a short hash of the full name is appended,
+    so the name stays unique and readable.
+    """
+    filename = container_name + suffix
+    if len(filename.encode('utf-8')) <= MAX_FILENAME_BYTES:
+        return filename
+
+    digest = hashlib.sha1(container_name.encode('utf-8')).hexdigest()[:10]
+    tail = '__' + digest + suffix
+    keep = MAX_FILENAME_BYTES - len(tail.encode('utf-8'))
+    prefix = container_name.encode('utf-8')[:keep].decode('utf-8', 'ignore')
+    return prefix + tail
+
+
 def add_replication_rule(container_name, scope, rse, copies=1):
     """
     Adds replication rules for datasets within a specified Rucio container.
@@ -23,8 +50,11 @@ def add_replication_rule(container_name, scope, rse, copies=1):
     - copies (int, optional): The number of copies to replicate. Defaults to 1.
     """
    
-    output_file = container_name+'_rucio_rules.log'
+    output_file = make_log_filename(container_name)
     with open(output_file, 'w') as file:  # Open a file to log the outputs
+        # Record the full container name, since the file name may be shortened
+        file.write(f"Container: {scope}:{container_name}\n")
+        file.write(f"RSE: {rse}\n")
         try:
             # Get all contents of the container
             contents = client.list_content(scope=scope, name=container_name)
